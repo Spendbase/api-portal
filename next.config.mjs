@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  basePath: process.env.NODE_ENV === 'production' ? '/developers-portal' : '',
+  basePath: process.env.NODE_ENV === 'production' ? '/api-portal' : '',
   typescript: {
     ignoreBuildErrors: true,
   },
