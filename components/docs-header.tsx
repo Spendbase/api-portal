@@ -99,19 +99,26 @@ export function DocsHeader() {
           <span className="font-mono text-sm text-muted-foreground hidden sm:inline">API Reference</span>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <div className="relative hidden w-64 md:block">
+          <div className="relative w-full md:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               ref={inputRef}
               type="search"
               placeholder="Search docs..."
+              aria-label="Search documentation"
               className="w-full pl-8 pr-8"
               value={query}
               onChange={(e) => {
+                const scrollY = window.scrollY
                 setQuery(e.target.value)
                 setOpen(true)
+                requestAnimationFrame(() => window.scrollTo(0, scrollY))
               }}
-              onFocus={() => query && setOpen(true)}
+              onFocus={() => {
+                const scrollY = window.scrollY
+                requestAnimationFrame(() => window.scrollTo(0, scrollY))
+                if (query) setOpen(true)
+              }}
             />
             {query && (
               <button
@@ -145,7 +152,16 @@ export function DocsHeader() {
               </div>
             )}
           </div>
-          <Button variant="ghost" size="icon" className="md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            aria-label="Open search"
+            onClick={() => {
+              setOpen(true)
+              inputRef.current?.focus({ preventScroll: true })
+            }}
+          >
             <Search className="h-5 w-5" />
           </Button>
         </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
@@ -65,6 +65,14 @@ export function DocsSidebar() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>(
     Object.fromEntries(sections.map((s) => [s.title, true]))
   )
+  const [hash, setHash] = useState("")
+
+  useEffect(() => {
+    setHash(window.location.hash)
+    const onHashChange = () => setHash(window.location.hash)
+    window.addEventListener("hashchange", onHashChange)
+    return () => window.removeEventListener("hashchange", onHashChange)
+  }, [])
 
   const toggle = (title: string) =>
     setExpanded((prev) => ({ ...prev, [title]: !prev[title] }))
@@ -108,23 +116,26 @@ export function DocsSidebar() {
                 </button>
                 {open && (
                   <ul className="mt-1 mb-2">
-                    {section.items.map((item) => (
-                      <li key={item.id}>
-                        <Link
-                          href={`${section.path}#${item.id}`}
-                          className={`flex items-center rounded-md px-2 py-1.5 text-sm transition-colors ${
-                            active
-                              ? "text-foreground hover:bg-muted"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                          }`}
-                        >
-                          {active && (
-                            <span className="mr-2 h-1 w-1 rounded-full bg-primary shrink-0" />
-                          )}
-                          {item.label}
-                        </Link>
-                      </li>
-                    ))}
+                    {section.items.map((item) => {
+                      const itemActive = active && hash === `#${item.id}`
+                      return (
+                        <li key={item.id}>
+                          <Link
+                            href={`${section.path}#${item.id}`}
+                            className={`flex items-center rounded-md px-2 py-1.5 text-sm transition-colors ${
+                              active
+                                ? "text-foreground hover:bg-muted"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                            }`}
+                          >
+                            {itemActive && (
+                              <span className="mr-2 h-1 w-1 rounded-full bg-primary shrink-0" />
+                            )}
+                            {item.label}
+                          </Link>
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
               </div>
