@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -7,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 const sections = [
   {
     title: "Getting Started",
+    path: "/docs/getting-started",
     items: [
       { label: "Basic Requirements", id: "basic-requirements" },
       { label: "Authentication & TLS", id: "authentication-tls" },
@@ -14,6 +17,7 @@ const sections = [
   },
   {
     title: "Accounts",
+    path: "/docs/accounts",
     items: [
       { label: "Get Accounts by Currency", id: "get-accounts-by-currency" },
       { label: "Get Bank Accounts", id: "get-bank-accounts" },
@@ -27,6 +31,7 @@ const sections = [
   },
   {
     title: "Cards",
+    path: "/docs/cards",
     items: [
       { label: "Card Status Overview", id: "card-status-overview" },
       { label: "Create Card", id: "create-card" },
@@ -45,6 +50,7 @@ const sections = [
   },
   {
     title: "Transactions",
+    path: "/docs/transactions",
     items: [
       { label: "Get Card Transactions", id: "get-card-transactions" },
       { label: "Get Transactions", id: "get-transactions" },
@@ -55,6 +61,7 @@ const sections = [
 ]
 
 export function DocsSidebar() {
+  const pathname = usePathname()
   const [expanded, setExpanded] = useState<Record<string, boolean>>(
     Object.fromEntries(sections.map((s) => [s.title, true]))
   )
@@ -62,43 +69,68 @@ export function DocsSidebar() {
   const toggle = (title: string) =>
     setExpanded((prev) => ({ ...prev, [title]: !prev[title] }))
 
+  const isActive = (sectionPath: string) =>
+    pathname === sectionPath || pathname.startsWith(sectionPath + "/")
+
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-border lg:block">
-      <ScrollArea className="h-[calc(100vh-3.5rem)]">
-        <div className="px-4 py-6">
-          <nav className="space-y-6">
-            {sections.map((section) => (
+    <aside className="hidden w-64 shrink-0 border-r border-border lg:block sticky top-14 h-[calc(100vh-3.5rem)] self-start">
+      <ScrollArea className="h-full">
+        <div className="px-4 py-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-foreground tracking-wide">API Reference</span>
+            <span className="inline-flex items-center rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-mono text-muted-foreground">
+              v1
+            </span>
+          </div>
+        </div>
+
+        <nav className="px-3 py-4 space-y-1">
+          {sections.map((section) => {
+            const active = isActive(section.path)
+            const open = expanded[section.title]
+            return (
               <div key={section.title}>
                 <button
                   type="button"
-                  className="flex w-full items-center justify-between text-sm font-medium"
+                  className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                    active
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                   onClick={() => toggle(section.title)}
                 >
                   {section.title}
-                  {expanded[section.title] ? (
-                    <ChevronDown className="h-4 w-4" />
+                  {open ? (
+                    <ChevronDown className="h-3.5 w-3.5" />
                   ) : (
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-3.5 w-3.5" />
                   )}
                 </button>
-                {expanded[section.title] && (
-                  <ul className="mt-3 space-y-2">
+                {open && (
+                  <ul className="mt-1 mb-2">
                     {section.items.map((item) => (
                       <li key={item.id}>
-                        <a
-                          href={`#${item.id}`}
-                          className="block text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+                        <Link
+                          href={`${section.path}#${item.id}`}
+                          className={`flex items-center rounded-md px-2 py-1.5 text-sm transition-colors ${
+                            active
+                              ? "text-foreground hover:bg-muted"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          }`}
                         >
+                          {active && (
+                            <span className="mr-2 h-1 w-1 rounded-full bg-primary shrink-0" />
+                          )}
                           {item.label}
-                        </a>
+                        </Link>
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
-            ))}
-          </nav>
-        </div>
+            )
+          })}
+        </nav>
       </ScrollArea>
     </aside>
   )

@@ -2,37 +2,38 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Search, Menu, X } from "lucide-react"
+import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 const ALL_SECTIONS = [
-  { label: "Basic Requirements", id: "basic-requirements", group: "Getting Started" },
-  { label: "Authentication & TLS", id: "authentication-tls", group: "Getting Started" },
-  { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts" },
-  { label: "Get Bank Accounts", id: "get-bank-accounts", group: "Accounts" },
-  { label: "Create Account", id: "create-account", group: "Accounts" },
-  { label: "Get Ledger Accounts", id: "get-ledger-accounts", group: "Accounts" },
-  { label: "Get Account by ID", id: "get-account-by-id", group: "Accounts" },
-  { label: "Transfer Money", id: "transfer-money", group: "Accounts" },
-  { label: "Transfer with Note", id: "transfer-with-note", group: "Accounts" },
-  { label: "Rename Account", id: "rename-account", group: "Accounts" },
-  { label: "Card Status Overview", id: "card-status-overview", group: "Cards" },
-  { label: "Create Card", id: "create-card", group: "Cards" },
-  { label: "Get Card", id: "get-card", group: "Cards" },
-  { label: "Get All Cards", id: "get-all-cards", group: "Cards" },
-  { label: "Get Account Cards", id: "get-account-cards", group: "Cards" },
-  { label: "Get Card Details", id: "get-card-details", group: "Cards" },
-  { label: "Get Card Frame", id: "get-card-frame", group: "Cards" },
-  { label: "Lock Card", id: "lock-card", group: "Cards" },
-  { label: "Unlock Card", id: "unlock-card", group: "Cards" },
-  { label: "Terminate Card", id: "terminate-card", group: "Cards" },
-  { label: "Set Limit", id: "set-limit", group: "Cards" },
-  { label: "Add Cardholder", id: "add-cardholder", group: "Cards" },
-  { label: "Get Cardholder", id: "get-cardholder", group: "Cards" },
-  { label: "Get Card Transactions", id: "get-card-transactions", group: "Transactions" },
-  { label: "Get Transactions", id: "get-transactions", group: "Transactions" },
-  { label: "Get Master Transactions", id: "get-master-transactions", group: "Transactions" },
-  { label: "Add Note to Transaction", id: "add-note-to-tx", group: "Transactions" },
+  { label: "Basic Requirements", id: "basic-requirements", group: "Getting Started", page: "/docs/getting-started" },
+  { label: "Authentication & TLS", id: "authentication-tls", group: "Getting Started", page: "/docs/getting-started" },
+  { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts", page: "/docs/accounts" },
+  { label: "Get Bank Accounts", id: "get-bank-accounts", group: "Accounts", page: "/docs/accounts" },
+  { label: "Create Account", id: "create-account", group: "Accounts", page: "/docs/accounts" },
+  { label: "Get Ledger Accounts", id: "get-ledger-accounts", group: "Accounts", page: "/docs/accounts" },
+  { label: "Get Account by ID", id: "get-account-by-id", group: "Accounts", page: "/docs/accounts" },
+  { label: "Transfer Money", id: "transfer-money", group: "Accounts", page: "/docs/accounts" },
+  { label: "Transfer with Note", id: "transfer-with-note", group: "Accounts", page: "/docs/accounts" },
+  { label: "Rename Account", id: "rename-account", group: "Accounts", page: "/docs/accounts" },
+  { label: "Card Status Overview", id: "card-status-overview", group: "Cards", page: "/docs/cards" },
+  { label: "Create Card", id: "create-card", group: "Cards", page: "/docs/cards" },
+  { label: "Get Card", id: "get-card", group: "Cards", page: "/docs/cards" },
+  { label: "Get All Cards", id: "get-all-cards", group: "Cards", page: "/docs/cards" },
+  { label: "Get Account Cards", id: "get-account-cards", group: "Cards", page: "/docs/cards" },
+  { label: "Get Card Details", id: "get-card-details", group: "Cards", page: "/docs/cards" },
+  { label: "Get Card Frame", id: "get-card-frame", group: "Cards", page: "/docs/cards" },
+  { label: "Lock Card", id: "lock-card", group: "Cards", page: "/docs/cards" },
+  { label: "Unlock Card", id: "unlock-card", group: "Cards", page: "/docs/cards" },
+  { label: "Terminate Card", id: "terminate-card", group: "Cards", page: "/docs/cards" },
+  { label: "Set Limit", id: "set-limit", group: "Cards", page: "/docs/cards" },
+  { label: "Add Cardholder", id: "add-cardholder", group: "Cards", page: "/docs/cards" },
+  { label: "Get Cardholder", id: "get-cardholder", group: "Cards", page: "/docs/cards" },
+  { label: "Get Card Transactions", id: "get-card-transactions", group: "Transactions", page: "/docs/transactions" },
+  { label: "Get Transactions", id: "get-transactions", group: "Transactions", page: "/docs/transactions" },
+  { label: "Get Master Transactions", id: "get-master-transactions", group: "Transactions", page: "/docs/transactions" },
+  { label: "Add Note to Transaction", id: "add-note-to-tx", group: "Transactions", page: "/docs/transactions" },
 ]
 
 export function DocsHeader() {
@@ -40,6 +41,8 @@ export function DocsHeader() {
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+  const pathname = usePathname()
 
   const results = query.trim()
     ? ALL_SECTIONS.filter(
@@ -63,9 +66,12 @@ export function DocsHeader() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
-  const handleNavigate = (id: string) => {
-    const el = document.getElementById(id)
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+  const handleNavigate = (page: string, id: string) => {
+    if (pathname === page) {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    } else {
+      router.push(`${page}#${id}`)
+    }
     setQuery("")
     setOpen(false)
   }
@@ -130,7 +136,7 @@ export function DocsHeader() {
                     key={r.id}
                     type="button"
                     className="w-full text-left px-3 py-2 hover:bg-muted flex flex-col gap-0.5"
-                    onMouseDown={() => handleNavigate(r.id)}
+                    onMouseDown={() => handleNavigate(r.page, r.id)}
                   >
                     <span className="text-sm">{r.label}</span>
                     <span className="text-xs text-muted-foreground">{r.group}</span>
