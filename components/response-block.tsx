@@ -20,6 +20,7 @@ export function ResponseBlock({ status, children }: { status?: string; children:
         </span>
         <button
           type="button"
+          aria-label={copied ? "Response copied" : "Copy response"}
           title="Copy response"
           onClick={handleCopy}
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"

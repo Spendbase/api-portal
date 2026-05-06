@@ -136,7 +136,7 @@ export function DocsHeader() {
                     key={r.id}
                     type="button"
                     className="w-full text-left px-3 py-2 hover:bg-muted flex flex-col gap-0.5"
-                    onMouseDown={() => handleNavigate(r.page, r.id)}
+                    onClick={() => handleNavigate(r.page, r.id)}
                   >
                     <span className="text-sm">{r.label}</span>
                     <span className="text-xs text-muted-foreground">{r.group}</span>
