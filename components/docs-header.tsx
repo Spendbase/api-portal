@@ -1,8 +1,75 @@
-import { Search, Menu } from "lucide-react"
+"use client"
+
+import { useState, useRef, useEffect } from "react"
+import { Search, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+const ALL_SECTIONS = [
+  { label: "Basic Requirements", id: "basic-requirements", group: "Getting Started" },
+  { label: "Authentication & TLS", id: "authentication-tls", group: "Getting Started" },
+  { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts" },
+  { label: "Get Bank Accounts", id: "get-bank-accounts", group: "Accounts" },
+  { label: "Create Account", id: "create-account", group: "Accounts" },
+  { label: "Get Ledger Accounts", id: "get-ledger-accounts", group: "Accounts" },
+  { label: "Get Account by ID", id: "get-account-by-id", group: "Accounts" },
+  { label: "Transfer Money", id: "transfer-money", group: "Accounts" },
+  { label: "Transfer with Note", id: "transfer-with-note", group: "Accounts" },
+  { label: "Rename Account", id: "rename-account", group: "Accounts" },
+  { label: "Card Status Overview", id: "card-status-overview", group: "Cards" },
+  { label: "Create Card", id: "create-card", group: "Cards" },
+  { label: "Get Card", id: "get-card", group: "Cards" },
+  { label: "Get All Cards", id: "get-all-cards", group: "Cards" },
+  { label: "Get Account Cards", id: "get-account-cards", group: "Cards" },
+  { label: "Get Card Details", id: "get-card-details", group: "Cards" },
+  { label: "Get Card Frame", id: "get-card-frame", group: "Cards" },
+  { label: "Lock Card", id: "lock-card", group: "Cards" },
+  { label: "Unlock Card", id: "unlock-card", group: "Cards" },
+  { label: "Terminate Card", id: "terminate-card", group: "Cards" },
+  { label: "Set Limit", id: "set-limit", group: "Cards" },
+  { label: "Add Cardholder", id: "add-cardholder", group: "Cards" },
+  { label: "Get Cardholder", id: "get-cardholder", group: "Cards" },
+  { label: "Get Card Transactions", id: "get-card-transactions", group: "Transactions" },
+  { label: "Get Transactions", id: "get-transactions", group: "Transactions" },
+  { label: "Get Master Transactions", id: "get-master-transactions", group: "Transactions" },
+  { label: "Add Note to Transaction", id: "add-note-to-tx", group: "Transactions" },
+]
+
 export function DocsHeader() {
+  const [query, setQuery] = useState("")
+  const [open, setOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const results = query.trim()
+    ? ALL_SECTIONS.filter(
+        (s) =>
+          s.label.toLowerCase().includes(query.toLowerCase()) ||
+          s.group.toLowerCase().includes(query.toLowerCase())
+      )
+    : []
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        !inputRef.current?.contains(e.target as Node)
+      ) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  const handleNavigate = (id: string) => {
+    const el = document.getElementById(id)
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+    setQuery("")
+    setOpen(false)
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6">
@@ -28,13 +95,52 @@ export function DocsHeader() {
         <div className="ml-auto flex items-center gap-2">
           <div className="relative hidden w-64 md:block">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Search docs..." className="w-full pl-8" />
+            <Input
+              ref={inputRef}
+              type="search"
+              placeholder="Search docs..."
+              className="w-full pl-8 pr-8"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setOpen(true)
+              }}
+              onFocus={() => query && setOpen(true)}
+            />
+            {query && (
+              <button
+                type="button"
+                title="Clear search"
+                className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  setQuery("")
+                  setOpen(false)
+                }}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+            {open && results.length > 0 && (
+              <div
+                ref={dropdownRef}
+                className="absolute top-full mt-1 w-full rounded-md border border-border bg-popover shadow-md z-50 max-h-72 overflow-y-auto"
+              >
+                {results.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className="w-full text-left px-3 py-2 hover:bg-muted flex flex-col gap-0.5"
+                    onMouseDown={() => handleNavigate(r.id)}
+                  >
+                    <span className="text-sm">{r.label}</span>
+                    <span className="text-xs text-muted-foreground">{r.group}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <Button variant="ghost" size="icon" className="md:hidden">
             <Search className="h-5 w-5" />
-          </Button>
-          <Button variant="outline" size="sm">
-            Sign In
           </Button>
         </div>
       </div>
