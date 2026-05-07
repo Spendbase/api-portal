@@ -105,6 +105,7 @@ export function DocsSidebar() {
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
+                  aria-expanded={open}
                   onClick={() => toggle(section.title)}
                 >
                   {section.title}
