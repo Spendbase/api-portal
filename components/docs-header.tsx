@@ -34,9 +34,19 @@ const ALL_SECTIONS = [
   { label: "Get Transactions", id: "get-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Master Transactions", id: "get-master-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Add Note to Transaction", id: "add-note-to-tx", group: "Transactions", page: "/docs/transactions" },
+  { label: "Internal Transfer", id: "internal-transfer", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card Created", id: "card-created", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card Blocked", id: "card-blocked", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card Terminated", id: "card-terminated", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card Authorization", id: "card-authorization", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card Settlement", id: "card-settlement", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card OTP", id: "card-otp", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card Decline", id: "card-decline", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card Reversal", id: "card-reversal", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card Refund", id: "card-refund", group: "Webhooks", page: "/docs/webhooks" },
 ]
 
-export function DocsHeader() {
+export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -79,7 +89,7 @@ export function DocsHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6">
-        <Button variant="ghost" size="icon" className="mr-2 lg:hidden">
+        <Button variant="ghost" size="icon" className="mr-2 lg:hidden" aria-label="Open navigation" onClick={onMenuClick}>
           <Menu className="h-5 w-5" />
         </Button>
         <div className="flex items-center gap-2">
@@ -107,16 +117,13 @@ export function DocsHeader() {
               placeholder="Search docs..."
               aria-label="Search documentation"
               className="w-full pl-8 pr-8"
+              style={{ scrollMarginTop: "-3.5rem" }}
               value={query}
               onChange={(e) => {
-                const scrollY = window.scrollY
                 setQuery(e.target.value)
                 setOpen(true)
-                requestAnimationFrame(() => window.scrollTo(0, scrollY))
               }}
               onFocus={() => {
-                const scrollY = window.scrollY
-                requestAnimationFrame(() => window.scrollTo(0, scrollY))
                 if (query) setOpen(true)
               }}
             />
