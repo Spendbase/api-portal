@@ -1037,20 +1037,31 @@ export function TransactionsContent() {
   )
 }
 
+function WebhookHeaders({ group, type }: { group: string; type: string }) {
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium text-muted-foreground">Headers</h3>
+      <div className="rounded-lg bg-muted px-4 py-3 font-mono text-xs space-y-1">
+        <div>X-Event-Group: <span className="text-primary">{group}</span></div>
+        <div>X-Event-Type: <span className="text-primary">{type}</span></div>
+      </div>
+    </div>
+  )
+}
+
 export function WebhooksContent() {
   return (
     <main className="flex-1 min-w-0 py-12 px-6 lg:px-12">
-      <div className="max-w-3xl">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold mb-3">Webhooks</h1>
-          <p className="text-muted-foreground text-lg leading-relaxed">
-            Spendbase sends webhook events to your endpoint as HTTP POST requests. Each event is identified by the
-            <code className="mx-1 px-1.5 py-0.5 rounded bg-muted font-mono text-sm">X-Event-Group</code> and
-            <code className="mx-1 px-1.5 py-0.5 rounded bg-muted font-mono text-sm">X-Event-Type</code> headers.
+      <div className="mx-auto max-w-3xl space-y-8">
+        <div className="space-y-8">
+          <h1 className="text-4xl font-bold tracking-tight">Webhooks</h1>
+          <p className="text-muted-foreground leading-relaxed">
+            To begin receiving webhook events, provide your publicly accessible HTTPS endpoint URL to the Spendbase
+            API team at <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">spendbase.api@spendbase.co</code>.
+            Each event is delivered as an HTTP POST and identified by the{" "}
+            <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">X-Event-Group</code> and{" "}
+            <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">X-Event-Type</code> headers.
           </p>
-        </div>
-
-        <div className="space-y-10">
 
           {/* Internal Transfer */}
           <div id="internal-transfer" className="space-y-4">
@@ -1058,26 +1069,17 @@ export function WebhooksContent() {
             <p className="text-muted-foreground leading-relaxed">
               Fired when an internal transfer between accounts is completed.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">ACCOUNT</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">INTERNAL_TRANSFER</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "accountId": "string",
-  "amount": 0,
-  "currency": "string",
-  "externalId": "string",
-  "sourceAccountId": "string",
-  "status": "string",
-  "timestamp": "string"
+            <WebhookHeaders group="bank" type="internal" />
+            <ResponseBlock status="Payload">{`{
+  state: 'Confirmed';
+  type: 'Debit' | 'Credit';
+  amount: number;
+  currencyISOCode: 'EUR' | 'GBP' | 'USD';
+  paymentType: 'P2P';
+  externalTransactionId: string;
+  senderName: string;
+  receiverName: string;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 
@@ -1089,25 +1091,17 @@ export function WebhooksContent() {
             <p className="text-muted-foreground leading-relaxed">
               Fired when a new virtual card is successfully created.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD_CREATED</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "cardId": "string",
-  "cardName": "string",
-  "cardStatus": "string",
-  "currency": "string",
-  "ledgerAccountId": "string",
-  "timestamp": "string"
+            <WebhookHeaders group="card" type="issue" />
+            <ResponseBlock status="Payload">{`{
+  cardName: string;
+  panLastFour: string;
+  expYear: number;
+  expMonth: number;
+  accountId: string;
+  holderId: string;
+  currencyISONum: string;
+  cardStatus: SpendbaseCardStatus;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 
@@ -1119,22 +1113,17 @@ export function WebhooksContent() {
             <p className="text-muted-foreground leading-relaxed">
               Fired when a card is locked or blocked.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD_BLOCKED</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "cardId": "string",
-  "reason": "string",
-  "timestamp": "string"
+            <WebhookHeaders group="card" type="block" />
+            <ResponseBlock status="Payload">{`{
+  cardName: string;
+  panLastFour: string;
+  expYear: number;
+  expMonth: number;
+  accountId: string;
+  holderId: string;
+  currencyISONum: string;
+  cardStatus: SpendbaseCardStatus;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 
@@ -1146,21 +1135,17 @@ export function WebhooksContent() {
             <p className="text-muted-foreground leading-relaxed">
               Fired when a card is permanently terminated.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD_TERMINATED</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "cardId": "string",
-  "timestamp": "string"
+            <WebhookHeaders group="card" type="terminate" />
+            <ResponseBlock status="Payload">{`{
+  cardName: string;
+  panLastFour: string;
+  expYear: number;
+  expMonth: number;
+  accountId: string;
+  holderId: string;
+  currencyISONum: string;
+  cardStatus: SpendbaseCardStatus;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 
@@ -1170,27 +1155,23 @@ export function WebhooksContent() {
           <div id="card-authorization" className="space-y-4">
             <h2 className="text-2xl font-semibold">Card Authorization</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Fired when a card payment is authorized. The transaction is pending settlement.
+              Fired when a card transaction is authorized. The transaction is pending settlement.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD_AUTHORIZATION</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "amount": 0,
-  "cardId": "string",
-  "currency": "string",
-  "merchantName": "string",
-  "timestamp": "string",
-  "transactionId": "string"
+            <WebhookHeaders group="card" type="authorization" />
+            <ResponseBlock status="Payload">{`{
+  panLastFour: string;
+  accountName: string;
+  externalTransactionId: string;
+  merchantName: string;
+  merchantCurrencyISOCode: string;
+  merchantAmount: number;
+  exchangeRate?: number;
+  cardName: string;
+  merchantLogoUrl?: string;
+  merchantCategory?: string;
+  merchantAddress?: string;
+  cardId: string;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 
@@ -1202,26 +1183,17 @@ export function WebhooksContent() {
             <p className="text-muted-foreground leading-relaxed">
               Fired when a previously authorized card transaction is settled.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD_SETTLEMENT</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "amount": 0,
-  "cardId": "string",
-  "currency": "string",
-  "merchantName": "string",
-  "settledAt": "string",
-  "timestamp": "string",
-  "transactionId": "string"
+            <WebhookHeaders group="card" type="settlement" />
+            <ResponseBlock status="Payload">{`{
+  settlementCurrencyIson: string;
+  transactionAmount: number;
+  merchantName: string;
+  mccCode: string;
+  amount: number;
+  cardId: string;
+  panLastFour: string;
+  transactionId: string;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 
@@ -1231,25 +1203,18 @@ export function WebhooksContent() {
           <div id="card-otp" className="space-y-4">
             <h2 className="text-2xl font-semibold">Card OTP</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Fired when a one-time password is generated for a card transaction (e.g. 3DS authentication).
+              Fired when a one-time password is generated for 3DS transaction authorization.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD_OTP</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "cardId": "string",
-  "otp": "string",
-  "timestamp": "string",
-  "transactionId": "string"
+            <WebhookHeaders group="card" type="otp" />
+            <ResponseBlock status="Payload">{`{
+  amount: number;
+  userId: string;
+  validationValue: string;
+  authRequestId: number;
+  requestExpiresAt: number;
+  cardId: number;
+  transactionId: string;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 
@@ -1261,26 +1226,16 @@ export function WebhooksContent() {
             <p className="text-muted-foreground leading-relaxed">
               Fired when a card transaction is declined.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD_DECLINE</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "amount": 0,
-  "cardId": "string",
-  "currency": "string",
-  "declineReason": "string",
-  "merchantName": "string",
-  "timestamp": "string",
-  "transactionId": "string"
+            <WebhookHeaders group="card" type="decline" />
+            <ResponseBlock status="Payload">{`{
+  rejectReason: string;
+  merchantName: string;
+  mccCode: string;
+  amount: number;
+  cardId: string;
+  panLastFour: string;
+  transactionId: string;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 
@@ -1292,25 +1247,17 @@ export function WebhooksContent() {
             <p className="text-muted-foreground leading-relaxed">
               Fired when an authorized card transaction is reversed before settlement.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD_REVERSAL</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "amount": 0,
-  "cardId": "string",
-  "currency": "string",
-  "originalTransactionId": "string",
-  "timestamp": "string",
-  "transactionId": "string"
+            <WebhookHeaders group="card" type="reversal" />
+            <ResponseBlock status="Payload">{`{
+  txType: string;
+  currencyISONum: string;
+  amount: number;
+  merchantName: string;
+  mccCode: string;
+  cardId: string;
+  panLastFour: string;
+  transactionId: string;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 
@@ -1322,26 +1269,17 @@ export function WebhooksContent() {
             <p className="text-muted-foreground leading-relaxed">
               Fired when a settled card transaction is refunded.
             </p>
-            <div className="space-y-2">
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Group</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD</code>
-              </div>
-              <div className="rounded-lg border border-border p-3 bg-background flex items-center gap-3">
-                <code className="text-xs font-mono text-muted-foreground">X-Event-Type</code>
-                <span className="text-xs text-muted-foreground">→</span>
-                <code className="text-xs font-mono text-primary">CARD_REFUND</code>
-              </div>
-            </div>
-            <ResponseBlock>{`{
-  "amount": 0,
-  "cardId": "string",
-  "currency": "string",
-  "originalTransactionId": "string",
-  "refundedAt": "string",
-  "timestamp": "string",
-  "transactionId": "string"
+            <WebhookHeaders group="card" type="refund" />
+            <ResponseBlock status="Payload">{`{
+  txType: string;
+  currencyISONum: string;
+  amount: number;
+  merchantName: string;
+  mccCode: string;
+  cardId: string;
+  panLastFour: string;
+  transactionId: string;
+  timestamp: string;
 }`}</ResponseBlock>
           </div>
 

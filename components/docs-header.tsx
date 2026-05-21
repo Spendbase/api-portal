@@ -117,7 +117,6 @@ export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
               placeholder="Search docs..."
               aria-label="Search documentation"
               className="w-full pl-8 pr-8"
-              style={{ scrollMarginTop: "-3.5rem" }}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value)

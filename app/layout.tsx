@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="scroll-pt-14">
+    <html lang="en">
       <body className={`font-sans antialiased`}>
         {children}
         <Analytics />

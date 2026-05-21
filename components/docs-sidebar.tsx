@@ -142,9 +142,7 @@ function SidebarNav({
                               : "text-muted-foreground hover:text-foreground hover:bg-muted"
                           }`}
                         >
-                          {itemActive && (
-                            <span className="mr-2 h-1 w-1 rounded-full bg-primary shrink-0" />
-                          )}
+                          <span className={`mr-2 h-1.5 w-1.5 rounded-full shrink-0 ${itemActive ? "bg-primary" : "invisible"}`} />
                           {item.label}
                         </Link>
                       </li>
