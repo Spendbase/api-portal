@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { ChevronDown, ChevronRight, X } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
@@ -79,13 +79,11 @@ const sections = [
 
 function SidebarNav({
   pathname,
-  hash,
   expanded,
   toggle,
   onLinkClick,
 }: {
   pathname: string
-  hash: string
   expanded: Record<string, boolean>
   toggle: (title: string) => void
   onLinkClick?: () => void
@@ -130,7 +128,6 @@ function SidebarNav({
               {open && (
                 <ul className="mt-1 mb-2">
                   {section.items.map((item) => {
-                    const itemActive = active && hash === `#${item.id}`
                     return (
                       <li key={item.id}>
                         <Link
@@ -142,7 +139,6 @@ function SidebarNav({
                               : "text-muted-foreground hover:text-foreground hover:bg-muted"
                           }`}
                         >
-                          <span className={`mr-2 h-1.5 w-1.5 rounded-full shrink-0 ${itemActive ? "bg-primary" : "invisible"}`} />
                           {item.label}
                         </Link>
                       </li>
@@ -163,14 +159,6 @@ export function DocsSidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onC
   const [expanded, setExpanded] = useState<Record<string, boolean>>(
     Object.fromEntries(sections.map((s) => [s.title, true]))
   )
-  const [hash, setHash] = useState("")
-
-  useEffect(() => {
-    setHash(window.location.hash)
-    const onHashChange = () => setHash(window.location.hash)
-    window.addEventListener("hashchange", onHashChange)
-    return () => window.removeEventListener("hashchange", onHashChange)
-  }, [])
 
   const toggle = (title: string) =>
     setExpanded((prev) => ({ ...prev, [title]: !prev[title] }))
@@ -182,8 +170,7 @@ export function DocsSidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onC
         <ScrollArea className="h-full">
           <SidebarNav
             pathname={pathname}
-            hash={hash}
-            expanded={expanded}
+                        expanded={expanded}
             toggle={toggle}
           />
         </ScrollArea>
@@ -211,15 +198,14 @@ export function DocsSidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onC
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
               <SidebarNav
                 pathname={pathname}
-                hash={hash}
-                expanded={expanded}
+                                expanded={expanded}
                 toggle={toggle}
                 onLinkClick={onClose}
               />
-            </ScrollArea>
+            </div>
           </aside>
         </div>
       )}
