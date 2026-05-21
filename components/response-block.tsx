@@ -16,7 +16,7 @@ export function ResponseBlock({ status, children }: { status?: string; children:
     <div className="mt-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          {status ?? "200 OK"} Response
+          {status ?? "200 OK Response"}
         </span>
         <button
           type="button"

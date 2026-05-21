@@ -122,4 +122,8 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Section anchors offset by sticky header height so they scroll into view below it */
+  main [id] {
+    scroll-margin-top: 3.5rem;
+  }
 }

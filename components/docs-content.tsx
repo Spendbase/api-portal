@@ -1036,3 +1036,255 @@ export function TransactionsContent() {
     </main>
   )
 }
+
+function WebhookHeaders({ group, type }: { group: string; type: string }) {
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium text-muted-foreground">Headers</h3>
+      <div className="rounded-lg bg-muted px-4 py-3 font-mono text-xs space-y-1">
+        <div>X-Event-Group: <span className="text-primary">{group}</span></div>
+        <div>X-Event-Type: <span className="text-primary">{type}</span></div>
+      </div>
+    </div>
+  )
+}
+
+export function WebhooksContent() {
+  return (
+    <main className="flex-1 min-w-0 py-12 px-6 lg:px-12">
+      <div className="mx-auto max-w-3xl space-y-8">
+        <div className="space-y-8">
+          <h1 className="text-4xl font-bold tracking-tight">Webhooks</h1>
+          <p className="text-muted-foreground leading-relaxed">
+            To begin receiving webhook events, provide your publicly accessible HTTPS endpoint URL to the Spendbase
+            API team at <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">spendbase.api@spendbase.co</code>.
+            Each event is delivered as an HTTP POST and identified by the{" "}
+            <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">X-Event-Group</code> and{" "}
+            <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">X-Event-Type</code> headers.
+          </p>
+
+          {/* Internal Transfer */}
+          <div id="internal-transfer" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Internal Transfer</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when an internal transfer between accounts is completed.
+            </p>
+            <WebhookHeaders group="bank" type="internal" />
+            <ResponseBlock status="Payload">{`{
+  state: 'Confirmed';
+  type: 'Debit' | 'Credit';
+  amount: number;
+  currencyISOCode: 'EUR' | 'GBP' | 'USD';
+  paymentType: 'P2P';
+  externalTransactionId: string;
+  senderName: string;
+  receiverName: string;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Card Created */}
+          <div id="card-created" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card Created</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when a new virtual card is successfully created.
+            </p>
+            <WebhookHeaders group="card" type="issue" />
+            <ResponseBlock status="Payload">{`{
+  cardName: string;
+  panLastFour: string;
+  expYear: number;
+  expMonth: number;
+  accountId: string;
+  holderId: string;
+  currencyISONum: string;
+  cardStatus: SpendbaseCardStatus;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Card Blocked */}
+          <div id="card-blocked" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card Blocked</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when a card is locked or blocked.
+            </p>
+            <WebhookHeaders group="card" type="block" />
+            <ResponseBlock status="Payload">{`{
+  cardName: string;
+  panLastFour: string;
+  expYear: number;
+  expMonth: number;
+  accountId: string;
+  holderId: string;
+  currencyISONum: string;
+  cardStatus: SpendbaseCardStatus;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Card Terminated */}
+          <div id="card-terminated" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card Terminated</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when a card is permanently terminated.
+            </p>
+            <WebhookHeaders group="card" type="terminate" />
+            <ResponseBlock status="Payload">{`{
+  cardName: string;
+  panLastFour: string;
+  expYear: number;
+  expMonth: number;
+  accountId: string;
+  holderId: string;
+  currencyISONum: string;
+  cardStatus: SpendbaseCardStatus;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Card Authorization */}
+          <div id="card-authorization" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card Authorization</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when a card transaction is authorized. The transaction is pending settlement.
+            </p>
+            <WebhookHeaders group="card" type="authorization" />
+            <ResponseBlock status="Payload">{`{
+  panLastFour: string;
+  accountName: string;
+  externalTransactionId: string;
+  merchantName: string;
+  merchantCurrencyISOCode: string;
+  merchantAmount: number;
+  exchangeRate?: number;
+  cardName: string;
+  merchantLogoUrl?: string;
+  merchantCategory?: string;
+  merchantAddress?: string;
+  cardId: string;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Card Settlement */}
+          <div id="card-settlement" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card Settlement</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when a previously authorized card transaction is settled.
+            </p>
+            <WebhookHeaders group="card" type="settlement" />
+            <ResponseBlock status="Payload">{`{
+  settlementCurrencyIson: string;
+  transactionAmount: number;
+  merchantName: string;
+  mccCode: string;
+  amount: number;
+  cardId: string;
+  panLastFour: string;
+  transactionId: string;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Card OTP */}
+          <div id="card-otp" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card OTP</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when a one-time password is generated for 3DS transaction authorization.
+            </p>
+            <WebhookHeaders group="card" type="otp" />
+            <ResponseBlock status="Payload">{`{
+  amount: number;
+  userId: string;
+  validationValue: string;
+  authRequestId: number;
+  requestExpiresAt: number;
+  cardId: number;
+  transactionId: string;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Card Decline */}
+          <div id="card-decline" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card Decline</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when a card transaction is declined.
+            </p>
+            <WebhookHeaders group="card" type="decline" />
+            <ResponseBlock status="Payload">{`{
+  rejectReason: string;
+  merchantName: string;
+  mccCode: string;
+  amount: number;
+  cardId: string;
+  panLastFour: string;
+  transactionId: string;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Card Reversal */}
+          <div id="card-reversal" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card Reversal</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when an authorized card transaction is reversed before settlement.
+            </p>
+            <WebhookHeaders group="card" type="reversal" />
+            <ResponseBlock status="Payload">{`{
+  txType: string;
+  currencyISONum: string;
+  amount: number;
+  merchantName: string;
+  mccCode: string;
+  cardId: string;
+  panLastFour: string;
+  transactionId: string;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Card Refund */}
+          <div id="card-refund" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card Refund</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when a settled card transaction is refunded.
+            </p>
+            <WebhookHeaders group="card" type="refund" />
+            <ResponseBlock status="Payload">{`{
+  txType: string;
+  currencyISONum: string;
+  amount: number;
+  merchantName: string;
+  mccCode: string;
+  cardId: string;
+  panLastFour: string;
+  transactionId: string;
+  timestamp: string;
+}`}</ResponseBlock>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  )
+}

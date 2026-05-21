@@ -5,7 +5,7 @@ import { Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-type Section = "getting-started" | "accounts" | "cards" | "transactions"
+type Section = "getting-started" | "accounts" | "cards" | "transactions" | "webhooks"
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
