@@ -275,8 +275,8 @@ export function CodePanel({ section }: { section: Section }) {
           <div className="space-y-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Environment</span>
             <div className="space-y-2">
-              <EnvRow label="Development" value="https://cards-integration-api.dev.spendbase.co" copyable />
-              <EnvRow label="Production" value="https://cards-integration-api.prod.spendbase.co" copyable />
+              <EnvRow label="Development" value="https://cards-integration-api.dev.spendbase.co/cards-adapter/v1/public/" copyable />
+              <EnvRow label="Production" value="https://cards-integration-api.prod.spendbase.co/cards-adapter/v1/public/" copyable />
               <EnvRow label="Authentication" value="External-Token + TLS Certificates" />
             </div>
           </div>
