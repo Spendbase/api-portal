@@ -75,6 +75,11 @@ const sections = [
       { label: "Card Refund", id: "card-refund" },
     ],
   },
+  {
+    title: "Versioning",
+    path: "/docs/versioning",
+    items: [{ label: "Release Notes", id: "release-notes" }],
+  },
 ]
 
 function SidebarNav({
