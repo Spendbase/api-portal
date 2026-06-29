@@ -51,7 +51,7 @@ export default function VersioningPage() {
                   previous page
                 </li>
                 <li>
-                  <code className="bg-muted px-1 py-0.5 rounded">limit</code> (string): maximum number of items
+                  <code className="bg-muted px-1 py-0.5 rounded">limit</code> (integer): maximum number of items
                   to return
                 </li>
               </ul>

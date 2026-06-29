@@ -130,7 +130,7 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   -H "Content-Type: application/json" \\
   -d '{"accountId": "$id",
        "cardName": "AdapterTestCardEUR2",
-       "email": "example@spendbase.co"}' \\
+       "spendbaseUserId": "$SPENDBASE_USER_ID"}' \\
   $BASE_URL/cards/card`,
   },
   {
@@ -145,6 +145,9 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
     section: "cards",
     code: `curl --cert client.crt --key client.key \\
   -H "External-Token: $EXTERNAL_TOKEN" \\
+  -G \\
+  -d "cursor=$CURSOR" \\
+  -d "limit=20" \\
   $BASE_URL/cards/cards`,
   },
   {
@@ -152,6 +155,9 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
     section: "cards",
     code: `curl --cert client.crt --key client.key \\
   -H "External-Token: $EXTERNAL_TOKEN" \\
+  -G \\
+  -d "cursor=$CURSOR" \\
+  -d "limit=20" \\
   $BASE_URL/cards/account-cards/$LEDGER_ACCOUNT_ID`,
   },
   {
@@ -226,8 +232,8 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
     code: `curl --cert client.crt --key client.key \\
   -H "External-Token: $EXTERNAL_TOKEN" \\
   -G \\
-  -d "from=1753864397" \\
-  -d "to=1754042551" \\
+  -d "cursor=$CURSOR" \\
+  -d "limit=20" \\
   $BASE_URL/transactions/card-transactions/$LEDGER_ID`,
   },
   {
@@ -236,8 +242,8 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
     code: `curl --cert client.crt --key client.key \\
   -H "External-Token: $EXTERNAL_TOKEN" \\
   -G \\
-  -d "from=1753864397" \\
-  -d "to=1754042551" \\
+  -d "cursor=$CURSOR" \\
+  -d "limit=20" \\
   $BASE_URL/transactions/transactions/$LEDGER_ID`,
   },
   {

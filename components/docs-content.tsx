@@ -157,7 +157,9 @@ const TRANSACTION_OBJECT = `{
   "sourceType": "Undefined",
   "state": "Pending",
   "type": "string",
-  "updatedAt": 0
+  "updatedAt": 0,
+  "isReversed": "string",
+  "originalTransactionId": "string"
 }`
 
 const LEDGER_ACCOUNT_OBJECT = `{
@@ -508,7 +510,8 @@ export function AccountsContent() {
             </div>
             <h2 className="text-2xl font-semibold">Transfer money between accounts</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Ledger IDs can be received from the ledger accounts route. Responds with a success message if the
+              Ledger IDs can be received from the ledger accounts route. The request is validated before processing:
+              currency and available balance on the source account are checked. Responds with a success message if the
               money was transferred.
             </p>
             <div className="space-y-4">
@@ -517,7 +520,7 @@ export function AccountsContent() {
                 <Param name="amount" type="float" required>Transfer amount</Param>
                 <Param name="accountId" type="string" required>Transfer to ledger ID</Param>
                 <Param name="sourceAccountId" type="string" required>Transfer from ledger ID</Param>
-                <Param name="currencyISONum" type="string" required>Currency special numeric code (e.g. 978 for EUR)</Param>
+                <Param name="currencyISONum" type="string" required>ISO 4217 numeric currency code (e.g. 978 for EUR)</Param>
               </div>
             </div>
             <ResponseBlock>{`{
@@ -526,6 +529,15 @@ export function AccountsContent() {
     "status": "string"
   }
 }`}</ResponseBlock>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="text-sm font-medium">400 Bad Request — pre-flight validation errors</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li><code className="bg-muted px-1 py-0.5 rounded">unknown currency</code> — <code className="bg-muted px-1 py-0.5 rounded">currencyISONum</code> is not a recognized ISO 4217 currency</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">account with requested currency not found</code> — no account matches the requested currency</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">insufficient funds</code> — source account balance is below the requested amount</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">account not found</code> — source account could not be located</li>
+              </ul>
+            </div>
           </div>
 
           <Separator />
@@ -638,7 +650,8 @@ export function CardsContent() {
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
                 <Param name="accountId" type="string" required>Card will be created on the account with the given ID</Param>
-                <Param name="email" type="string" required>Cardholder email</Param>
+                <Param name="spendbaseUserId" type="string" required>Preferred cardholder identifier. Use this for all new requests.</Param>
+                <Param name="email" type="string">Cardholder email — deprecated. Still accepted as a legacy fallback, but new integrations should send <code className="bg-muted px-1 py-0.5 rounded">spendbaseUserId</code> instead.</Param>
                 <Param name="cardName" type="string" required>Custom name for card</Param>
                 <Param name="expirationDate" type="string">Custom expiration date for the card</Param>
               </div>
@@ -678,6 +691,13 @@ export function CardsContent() {
             <p className="text-muted-foreground leading-relaxed">
               Returns a list of card objects with IDs, names, accounts, currencies info, etc.
             </p>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Query Parameters</h3>
+              <div className="space-y-2">
+                <Param name="cursor" type="string">Cursor returned by the previous page, for cursor-based pagination</Param>
+                <Param name="limit" type="integer">Maximum number of items to return</Param>
+              </div>
+            </div>
             <ResponseBlock>{`{
   "payload": {
     "cards": [${CARD_OBJECT.split("\n").map(l => "      " + l).join("\n").trimStart()}]
@@ -701,6 +721,11 @@ export function CardsContent() {
               <h3 className="text-lg font-semibold">Path Parameters</h3>
               <div className="space-y-2">
                 <Param name="ledgerAccountId" type="string" required>Ledger ID of the account</Param>
+              </div>
+              <h3 className="text-lg font-semibold">Query Parameters</h3>
+              <div className="space-y-2">
+                <Param name="cursor" type="string">Cursor returned by the previous page, for cursor-based pagination</Param>
+                <Param name="limit" type="integer">Maximum number of items to return</Param>
               </div>
             </div>
             <ResponseBlock>{`{
@@ -941,9 +966,11 @@ export function TransactionsContent() {
               </div>
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
-                <Param name="from" type="integer (unix timestamp)">Start timestamp</Param>
-                <Param name="to" type="integer (unix timestamp)">End timestamp</Param>
-                <Param name="accountName" type="string">Filter by account name</Param>
+                <Param name="from" type="integer (unix timestamp)">Start timestamp — optional</Param>
+                <Param name="to" type="integer (unix timestamp)">End timestamp — optional</Param>
+                <Param name="accountName" type="string">Filter by account name — optional</Param>
+                <Param name="cursor" type="string">Cursor returned by the previous page, for cursor-based pagination</Param>
+                <Param name="limit" type="integer">Maximum number of items to return</Param>
               </div>
             </div>
             <ResponseBlock>{`{
@@ -970,8 +997,10 @@ export function TransactionsContent() {
               </div>
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
-                <Param name="from" type="integer (unix timestamp)">Start timestamp</Param>
-                <Param name="to" type="integer (unix timestamp)">End timestamp</Param>
+                <Param name="from" type="integer (unix timestamp)">Start timestamp — optional</Param>
+                <Param name="to" type="integer (unix timestamp)">End timestamp — optional</Param>
+                <Param name="cursor" type="string">Cursor returned by the previous page, for cursor-based pagination</Param>
+                <Param name="limit" type="integer">Maximum number of items to return</Param>
               </div>
             </div>
             <ResponseBlock>{`{
@@ -997,6 +1026,11 @@ export function TransactionsContent() {
               <h3 className="text-lg font-semibold">Path Parameters</h3>
               <div className="space-y-2">
                 <Param name="ledgerAccountId" type="string" required>Ledger ID of the master account</Param>
+              </div>
+              <h3 className="text-lg font-semibold">Query Parameters</h3>
+              <div className="space-y-2">
+                <Param name="from" type="integer (unix timestamp)">Start timestamp — optional</Param>
+                <Param name="to" type="integer (unix timestamp)">End timestamp — optional</Param>
               </div>
             </div>
             <ResponseBlock>{`{
