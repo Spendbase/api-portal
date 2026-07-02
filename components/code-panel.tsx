@@ -177,28 +177,28 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Lock Card",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X POST \\
+    code: `curl --cert client.crt --key client.key -X PUT \\
   -H "External-Token: $EXTERNAL_TOKEN" \\
   $BASE_URL/cards/lock-card/$CARD_ID`,
   },
   {
     title: "Unlock Card",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X POST \\
+    code: `curl --cert client.crt --key client.key -X PUT \\
   -H "External-Token: $EXTERNAL_TOKEN" \\
   $BASE_URL/cards/unlock-card/$CARD_ID`,
   },
   {
     title: "Terminate Card",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X POST \\
+    code: `curl --cert client.crt --key client.key -X PUT \\
   -H "External-Token: $EXTERNAL_TOKEN" \\
   $BASE_URL/cards/terminate-card/$CARD_ID`,
   },
   {
     title: "Set Card Limit",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X POST \\
+    code: `curl --cert client.crt --key client.key -X PUT \\
   -H "External-Token: $EXTERNAL_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"amount": 1000, "type": "DAILY"}' \\

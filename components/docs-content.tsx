@@ -845,7 +845,7 @@ export function CardsContent() {
           {/* Set limit */}
           <div id="set-limit" className="space-y-4">
             <div className="flex items-center gap-3">
-              <PostBadge />
+              <PutBadge />
               <code className="text-sm font-mono">/cards/set-virtual-card-limit/:id</code>
             </div>
             <h2 className="text-2xl font-semibold">Set limit</h2>
