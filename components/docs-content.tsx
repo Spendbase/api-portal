@@ -1189,23 +1189,26 @@ export function WebhooksContent() {
           <div id="card-authorization" className="space-y-4">
             <h2 className="text-2xl font-semibold">Card Authorization</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Fired when a card transaction is authorized. The transaction is pending settlement.
+              Fired when a card transaction is authorized (normal or incremental). The transaction is pending settlement.
             </p>
             <WebhookHeaders group="card" type="authorization" />
             <ResponseBlock status="Payload">{`{
+  tx_type: 'PURCHASE';             // transaction type
+  lifecyclePhase: 'AUTHORIZATION'; // authorization stage
+  transactionId: string;
+  cardId: string;
   panLastFour: string;
   accountName: string;
-  externalTransactionId: string;
   merchantName: string;
+  merchantAmount: string;           // decimal string
   merchantCurrencyISOCode: string;
-  merchantAmount: number;
-  exchangeRate?: number;
+  billingAmount: string;            // decimal string
+  billingCurrencyIson: string;      // ISO 4217 numeric
+  exchangeRate: string;             // decimal string
   cardName: string;
-  merchantLogoUrl?: string;
-  merchantCategory?: string;
-  merchantAddress?: string;
-  cardId: string;
-  timestamp: string;
+  merchantCategory: string | null;  // optional
+  mccCode: string;
+  timestamp: string;                // UTC RFC 3339
 }`}</ResponseBlock>
           </div>
 
@@ -1215,19 +1218,26 @@ export function WebhooksContent() {
           <div id="card-settlement" className="space-y-4">
             <h2 className="text-2xl font-semibold">Card Settlement</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Fired when a previously authorized card transaction is settled.
+              Fired when a non-refund purchase is settled. Refund settlements are delivered as a Refund event instead.
             </p>
             <WebhookHeaders group="card" type="settlement" />
             <ResponseBlock status="Payload">{`{
-  settlementCurrencyIson: string;
-  transactionAmount: number;
+  tx_type: 'PURCHASE';             // transaction type
+  lifecyclePhase: 'SETTLEMENT';    // settlement stage
+  merchantAmount: string;           // decimal string
+  merchantCurrencyISOCode: string;  // ISO 4217 numeric
+  billingAmount: string;            // decimal string
+  billingCurrencyIson: string;      // ISO 4217 numeric
+  exchangeRate: string;             // decimal string
+  settlementCurrencyIson: string;   // ISO 4217 numeric
+  transactionAmount: string;        // decimal string; may be negative
   merchantName: string;
   mccCode: string;
-  amount: number;
   cardId: string;
+  cardName: string;
   panLastFour: string;
   transactionId: string;
-  timestamp: string;
+  timestamp: string;                // UTC RFC 3339
 }`}</ResponseBlock>
           </div>
 
@@ -1237,18 +1247,22 @@ export function WebhooksContent() {
           <div id="card-otp" className="space-y-4">
             <h2 className="text-2xl font-semibold">Card OTP</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Fired when a one-time password is generated for 3DS transaction authorization.
+              Fired when a one-time password is generated for a 3DS holder authentication challenge. Includes transaction context when available from the 3DS directory server.
             </p>
             <WebhookHeaders group="card" type="otp" />
             <ResponseBlock status="Payload">{`{
-  amount: number;
-  userId: string;
-  validationValue: string;
-  authRequestId: number;
-  requestExpiresAt: number;
-  cardId: number;
-  transactionId: string;
-  timestamp: string;
+  auth_request_id: number;
+  auth_method: number;          // 1=OTP, 2=Background, 3=SMS, 4=Email
+  validation_value: string;     // sensitive
+  card_id: string;
+  card_name: string;
+  request_expires_at: number;   // Unix timestamp (seconds)
+  amount: string;               // decimal string
+  currencyIson?: string;        // ISO 4217 numeric; optional
+  merchant_name?: string;       // optional
+  user_id: string;
+  transaction_id: string;
+  timestamp: string;            // UTC RFC 3339
 }`}</ResponseBlock>
           </div>
 
@@ -1262,14 +1276,19 @@ export function WebhooksContent() {
             </p>
             <WebhookHeaders group="card" type="decline" />
             <ResponseBlock status="Payload">{`{
+  tx_type: 'DECLINE';              // transaction type
+  lifecyclePhase: 'DECLINE';       // decline stage
   rejectReason: string;
   merchantName: string;
   mccCode: string;
-  amount: number;
+  amount: string;               // decimal string; billing currency
+  merchantAmount: string;       // decimal string; merchant currency
+  merchantCurrencyISOCode: string; // ISO 4217 numeric
   cardId: string;
+  cardName: string;
   panLastFour: string;
   transactionId: string;
-  timestamp: string;
+  timestamp: string;            // UTC RFC 3339
 }`}</ResponseBlock>
           </div>
 
@@ -1279,19 +1298,23 @@ export function WebhooksContent() {
           <div id="card-reversal" className="space-y-4">
             <h2 className="text-2xl font-semibold">Card Reversal</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Fired when an authorized card transaction is reversed before settlement.
+              Fired when an authorized card transaction is reversed (R0 or R2) before settlement.
             </p>
             <WebhookHeaders group="card" type="reversal" />
             <ResponseBlock status="Payload">{`{
-  txType: string;
-  currencyISONum: string;
-  amount: number;
+  tx_type: 'REVERSAL';             // transaction type
+  lifecyclePhase: 'AUTHORIZATION'; // authorization stage
+  billingCurrencyIson: string;      // ISO 4217 numeric
   merchantName: string;
   mccCode: string;
+  billingAmount: string;            // decimal string
+  merchantAmount: string;           // decimal string
+  merchantCurrencyISOCode: string;  // ISO 4217 numeric
   cardId: string;
+  cardName: string;
   panLastFour: string;
   transactionId: string;
-  timestamp: string;
+  timestamp: string;                // UTC RFC 3339
 }`}</ResponseBlock>
           </div>
 
@@ -1301,19 +1324,23 @@ export function WebhooksContent() {
           <div id="card-refund" className="space-y-4">
             <h2 className="text-2xl font-semibold">Card Refund</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Fired when a settled card transaction is refunded.
+              Fired when a card transaction is refunded. May fire twice for the same transaction: once at authorization time and once at settlement. Use <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">lifecyclePhase</code> to distinguish them.
             </p>
             <WebhookHeaders group="card" type="refund" />
             <ResponseBlock status="Payload">{`{
-  txType: string;
-  currencyISONum: string;
-  amount: number;
+  tx_type: 'REFUND';                             // transaction type
+  lifecyclePhase: 'AUTHORIZATION' | 'SETTLEMENT'; // refund stage
+  billingCurrencyIson: string;      // ISO 4217 numeric
   merchantName: string;
   mccCode: string;
+  billingAmount: string;            // decimal string
+  merchantAmount: string;           // decimal string
+  merchantCurrencyISOCode: string;  // ISO 4217 numeric
   cardId: string;
+  cardName: string;
   panLastFour: string;
   transactionId: string;
-  timestamp: string;
+  timestamp: string;                // UTC RFC 3339
 }`}</ResponseBlock>
           </div>
 
