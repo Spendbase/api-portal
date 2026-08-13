@@ -44,6 +44,9 @@ const ALL_SECTIONS = [
   { label: "Card Decline", id: "card-decline", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Reversal", id: "card-reversal", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Refund", id: "card-refund", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Release Notes", id: "release-notes", group: "Versioning", page: "/docs/versioning" },
+  { label: "2026-08-13", id: "2026-08-13", group: "Versioning", page: "/docs/versioning" },
+  { label: "2026-06-25", id: "2026-06-25", group: "Versioning", page: "/docs/versioning" },
 ]
 
 export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {

@@ -78,7 +78,11 @@ const sections = [
   {
     title: "Versioning",
     path: "/docs/versioning",
-    items: [{ label: "Release Notes", id: "release-notes" }],
+    items: [
+      { label: "Release Notes", id: "release-notes" },
+      { label: "2026-08-13", id: "2026-08-13" },
+      { label: "2026-06-25", id: "2026-06-25" },
+    ],
   },
 ]
 
