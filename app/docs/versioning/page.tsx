@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Separator } from "@/components/ui/separator"
 
 export const metadata: Metadata = {
   title: "Versioning — Spendbase API",
@@ -10,16 +11,71 @@ export default function VersioningPage() {
       <div className="mx-auto max-w-3xl space-y-8">
         <div id="release-notes" className="space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">Cards API - Changelog</h1>
-          <p className="text-muted-foreground">Version date: 2026-06-25</p>
-          <p className="text-muted-foreground leading-relaxed">
-            This release adds cursor-based pagination to listing endpoints, reversal linkage on transaction
-            details, pre-flight validation on fund transfers, and a new preferred identifier for card issuance.
-            All changes are backwards compatible - existing integrations continue to work without modification.
-          </p>
         </div>
 
+        <div id="2026-08-13" />
+        <section id="webhook-payload-updates" className="space-y-4">
+          <h2 className="text-2xl font-semibold">Webhook payloads - updated fields</h2>
+          <p className="text-muted-foreground">Version date: 2026-08-13</p>
+          <p className="text-muted-foreground leading-relaxed">
+            All card transaction webhook payloads have been updated to reflect the current contract. The changes
+            affect Authorization, Settlement, Decline, Reversal, Refund, and OTP events.
+          </p>
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Authorization</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>Added <code className="bg-muted px-1 py-0.5 rounded">tx_type</code>, <code className="bg-muted px-1 py-0.5 rounded">lifecyclePhase</code>, <code className="bg-muted px-1 py-0.5 rounded">billingAmount</code>, <code className="bg-muted px-1 py-0.5 rounded">billingCurrencyIson</code>, <code className="bg-muted px-1 py-0.5 rounded">cardName</code>, <code className="bg-muted px-1 py-0.5 rounded">panLastFour</code>, <code className="bg-muted px-1 py-0.5 rounded">mccCode</code></li>
+                <li>Removed <code className="bg-muted px-1 py-0.5 rounded">merchantLogoUrl</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantAddress</code></li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Settlement</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>Added <code className="bg-muted px-1 py-0.5 rounded">tx_type</code>, <code className="bg-muted px-1 py-0.5 rounded">lifecyclePhase</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantAmount</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantCurrencyISOCode</code>, <code className="bg-muted px-1 py-0.5 rounded">billingAmount</code>, <code className="bg-muted px-1 py-0.5 rounded">billingCurrencyIson</code>, <code className="bg-muted px-1 py-0.5 rounded">exchangeRate</code>, <code className="bg-muted px-1 py-0.5 rounded">cardName</code></li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Decline</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>Added <code className="bg-muted px-1 py-0.5 rounded">tx_type</code>, <code className="bg-muted px-1 py-0.5 rounded">lifecyclePhase</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantAmount</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantCurrencyISOCode</code>, <code className="bg-muted px-1 py-0.5 rounded">cardName</code></li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Reversal</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>Added <code className="bg-muted px-1 py-0.5 rounded">tx_type</code>, <code className="bg-muted px-1 py-0.5 rounded">lifecyclePhase</code>, <code className="bg-muted px-1 py-0.5 rounded">billingAmount</code>, <code className="bg-muted px-1 py-0.5 rounded">billingCurrencyIson</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantAmount</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantCurrencyISOCode</code>, <code className="bg-muted px-1 py-0.5 rounded">cardName</code></li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Refund</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>Added <code className="bg-muted px-1 py-0.5 rounded">tx_type</code>, <code className="bg-muted px-1 py-0.5 rounded">lifecyclePhase</code> (<code className="bg-muted px-1 py-0.5 rounded">AUTHORIZATION</code> or <code className="bg-muted px-1 py-0.5 rounded">SETTLEMENT</code>), <code className="bg-muted px-1 py-0.5 rounded">billingAmount</code>, <code className="bg-muted px-1 py-0.5 rounded">billingCurrencyIson</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantCurrencyISOCode</code>, <code className="bg-muted px-1 py-0.5 rounded">cardName</code></li>
+                <li>Event may now fire twice per transaction; use <code className="bg-muted px-1 py-0.5 rounded">lifecyclePhase</code> to distinguish authorization from settlement refunds</li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">OTP</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>Added <code className="bg-muted px-1 py-0.5 rounded">auth_method</code>, <code className="bg-muted px-1 py-0.5 rounded">currencyIson</code> (optional), <code className="bg-muted px-1 py-0.5 rounded">merchant_name</code> (optional)</li>
+              </ul>
+            </div>
+          </div>
+          <section id="webhook-compatibility" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Compatibility</h2>
+            <p className="text-muted-foreground">All changes in this release are backwards compatible:</p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2">
+              <li>New fields are additive.</li>
+            </ul>
+          </section>
+        </section>
+
+        <Separator />
+
+        <div id="2026-06-25" />
         <section id="card-issuance-new-spendbaseuserid-field" className="space-y-4">
           <h2 className="text-2xl font-semibold">Card issuance - new spendbaseUserId field</h2>
+          <p className="text-muted-foreground">Version date: 2026-06-25</p>
           <p className="text-sm text-muted-foreground">Endpoint: POST /cards-adapter/v1/public/cards/card</p>
           <ul className="list-disc list-inside space-y-2 text-muted-foreground leading-relaxed">
             <li>
