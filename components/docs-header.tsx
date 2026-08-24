@@ -30,6 +30,7 @@ const ALL_SECTIONS = [
   { label: "Set Limit", id: "set-limit", group: "Cards", page: "/docs/cards" },
   { label: "Add Cardholder", id: "add-cardholder", group: "Cards", page: "/docs/cards" },
   { label: "Get Cardholder", id: "get-cardholder", group: "Cards", page: "/docs/cards" },
+  { label: "Get Team Cardholders", id: "get-team-cardholders", group: "Cards", page: "/docs/cards" },
   { label: "Get Card Transactions", id: "get-card-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Transactions", id: "get-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Master Transactions", id: "get-master-transactions", group: "Transactions", page: "/docs/transactions" },
