@@ -35,6 +35,7 @@ const ALL_SECTIONS = [
   { label: "Get Transactions", id: "get-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Master Transactions", id: "get-master-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Add Note to Transaction", id: "add-note-to-tx", group: "Transactions", page: "/docs/transactions" },
+  { label: "Verifying Signatures", id: "verify-signature", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Internal Transfer", id: "internal-transfer", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Created", id: "card-created", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Blocked", id: "card-blocked", group: "Webhooks", page: "/docs/webhooks" },

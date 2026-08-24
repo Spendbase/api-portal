@@ -64,6 +64,7 @@ const sections = [
     title: "Webhooks",
     path: "/docs/webhooks",
     items: [
+      { label: "Verifying Signatures", id: "verify-signature" },
       { label: "Internal Transfer", id: "internal-transfer" },
       { label: "Card Created", id: "card-created" },
       { label: "Card Blocked", id: "card-blocked" },
