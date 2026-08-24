@@ -936,6 +936,52 @@ export function CardsContent() {
   "status": "Approved"
 }`}</ResponseBlock>
           </div>
+
+          <Separator />
+
+          {/* Get team cardholders */}
+          <div id="get-team-cardholders" className="space-y-4">
+            <div className="flex items-center gap-3">
+              <GetBadge />
+              <code className="text-sm font-mono">/cards-adapter/v1/public/cards/cardholders</code>
+            </div>
+            <h2 className="text-2xl font-semibold">Get team cardholders</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Returns all cardholders belonging to the team. Team is resolved from the{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">External-Token</code>. No path or query parameters.
+            </p>
+            <ResponseBlock>{`[
+  {
+    "id": "string",
+    "user_id": "string",
+    "team_id": "string",
+    "first_name": "string",
+    "middle_name": "string",
+    "last_name": "string",
+    "title": "string",
+    "email": "string",
+    "mobile": "string",
+    "date_of_birth": "string",
+    "address_line_1": "string",
+    "address_line_2": "string",
+    "city": "string",
+    "region": "string",
+    "state": "string",
+    "country": "string",
+    "post_code": "string",
+    "provider_registered": true,
+    "status": "approved"
+  }
+]`}</ResponseBlock>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="text-sm font-medium">status enum</p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {["unspecified", "not_verified", "pending_verification", "documents_needed", "verification_failed", "approved", "rejected"].map((s) => (
+                  <code key={s} className="bg-muted px-2 py-0.5 rounded text-xs font-mono">{s}</code>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>

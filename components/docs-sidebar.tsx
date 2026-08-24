@@ -47,6 +47,7 @@ const sections = [
       { label: "Set Limit", id: "set-limit" },
       { label: "Add Cardholder", id: "add-cardholder" },
       { label: "Get Cardholder", id: "get-cardholder" },
+      { label: "Get Team Cardholders", id: "get-team-cardholders" },
     ],
   },
   {
