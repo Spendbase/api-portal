@@ -37,14 +37,23 @@ function CurlBlock({ title, code }: { title: string; code: string }) {
   )
 }
 
-function EnvRow({ label, value, copyable }: { label: string; value: string; copyable?: boolean }) {
+function EnvRow({ label, value, copyable, sub }: { label: string; value: string; copyable?: boolean; sub?: { label: string; value: string } }) {
   return (
-    <div className="rounded-lg border border-border p-3 bg-background">
+    <div className="rounded-lg border border-border p-3 bg-background space-y-2">
       <div className="flex items-center justify-between gap-2">
         <div className="text-sm font-medium">{label}</div>
         {copyable && <CopyButton text={value} />}
       </div>
       <code className="text-xs text-muted-foreground font-mono break-all">{value}</code>
+      {sub && (
+        <div className="mt-1 pt-3 border-t-2 border-border">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-foreground">{sub.label}</span>
+            <CopyButton text={sub.value} />
+          </div>
+          <code className="text-xs text-muted-foreground font-mono break-all">{sub.value}</code>
+        </div>
+      )}
     </div>
   )
 }
@@ -281,9 +290,29 @@ export function CodePanel({ section }: { section: Section }) {
           <div className="space-y-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Environment</span>
             <div className="space-y-2">
-              <EnvRow label="Development" value="https://cards-integration-api.dev.spendbase.co/cards-adapter/v1/public/" copyable />
-              <EnvRow label="Production" value="https://cards-integration-api.prod.spendbase.co/cards-adapter/v1/public/" copyable />
-              <EnvRow label="Authentication" value="External-Token + TLS Certificates" />
+              {section === "webhooks" ? (
+                <>
+                  <EnvRow
+                    label="Development"
+                    value="https://cards-integration-api.dev.spendbase.co/cards-adapter/v1/public/"
+                    copyable
+                    sub={{ label: "Webhook Public Key", value: "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUE2WVk3Y09RQjFzV1pYeGI2azk3dgpiallmQTkvaDRWZjUxYTR6OUJFcGZVRWZncjBGVGZ2eSt0WjY3U2dLbVI5WTVnR2VJK1VvSzFXWndjU3Y5SmpXCmR4cy9yMVRYaWRJT21aN3MySnFLK1F4WldoN2pQZDcvaUNNK3NLZ1lCaWE3UTFhYzQ0YXFodW5vUitTR2g1ZHEKaldMdkZQNmNtR1lnUmpaYTRoWXJZWlhyU3o3SWtNcngwbC9UdzFhOGtMd0xqcXd5UCtDQmFMUHZDU082SkpJcQpWMWVJd2xrNmZDRGI2OEZXZzZxNXNCVDRWT0xBaVpXSG5nUnZmQmg3QXQ1UDZqeTdpN2R1UWVwV0FqaUx3enBxCkFuZEZINGZuRmxUQ1ZFcEs5YmxMdlJCV1IxU0N4bU5tWmhoeDBKdVMycHRmT2k5NGQ4VTdFdFFVc3Z3Q28wZkEKcXdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==" }}
+                  />
+                  <EnvRow
+                    label="Production"
+                    value="https://cards-integration-api.prod.spendbase.co/cards-adapter/v1/public/"
+                    copyable
+                    sub={{ label: "Webhook Public Key", value: "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFrUTJudm1zVDV4SllHQVhHYVhLSwp1bDJTTHF5aWZ0azRoMG11aUZCSWloTXFINFFNdU5GbjVHSGR2dFlWU0h4QXF1SjFSaWVjMlVQWlovWnRMUGFXCndWMWhyV3E5SElNeEZVb1NPMVYxVERGYVdhcFFETXVlQjA3ci9oTXhSVkhzWWcyV0JJMm9XaDlMMWZhbS9WU1IKNjYrc2RPNndQL1NzajJEZ3l0cXpUVFlQU3NWeDV4M0tzN0tjTFRuQlhMWEZXbU9SZmNHcU40RnZpWXRiUit1cwpVWHZ5SkFtT1A3TXN5cU56KzNBOWg3L0hsbEsxeWhJdGhpMWRGSjI3TUc2aXRnL1U1aG1vVE1Rb1BqUWU3KzkrCi9rNzhDQjBESGJ4dmQwS2sxOTVCcTI1RWx6VTRYeFN4bW1aeXh4UU9VdUpOR1pMaGFmdzV4T3BYbFljUFlXM1EKK3dJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==" }}
+                  />
+                  <EnvRow label="Authentication" value="External-Token + TLS Certificates" />
+                </>
+              ) : (
+                <>
+                  <EnvRow label="Development" value="https://cards-integration-api.dev.spendbase.co/cards-adapter/v1/public/" copyable />
+                  <EnvRow label="Production" value="https://cards-integration-api.prod.spendbase.co/cards-adapter/v1/public/" copyable />
+                  <EnvRow label="Authentication" value="External-Token + TLS Certificates" />
+                </>
+              )}
             </div>
           </div>
         </div>

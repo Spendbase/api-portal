@@ -1143,6 +1143,149 @@ export function WebhooksContent() {
             <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">X-Event-Type</code> headers.
           </p>
 
+          {/* Verifying Signatures */}
+          <div id="verify-signature" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Verifying Signatures</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Every webhook POST carries an{" "}
+              <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">X-Webhook-Signature</code>{" "}
+              header — a <strong>base64-encoded RS256 signature</strong> (RSA PKCS#1 v1.5 + SHA-256) over the raw JSON body.
+              Verify it to confirm the request is authentic and was not tampered with in transit.
+            </p>
+
+            <h3 className="text-lg font-semibold">How it works</h3>
+            <ol className="list-decimal list-inside space-y-1 text-muted-foreground text-sm leading-relaxed">
+              <li>We build the JSON payload and compute its SHA-256 hash.</li>
+              <li>We sign that hash with our private RSA key (PKCS#1 v1.5).</li>
+              <li>We base64-encode the signature and attach it as <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-xs">X-Webhook-Signature</code>.</li>
+              <li>You receive the request, hash the <strong>raw body bytes</strong>, and verify the signature against our public key.</li>
+            </ol>
+
+            <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+              <strong>Important:</strong> Never unmarshal and re-marshal the JSON before verifying. JSON serialization is
+              non-deterministic — field order and whitespace may change, producing a different hash and a failed
+              verification. Always verify against the <strong>exact raw bytes</strong> received on the wire.
+            </div>
+
+            <h3 className="text-lg font-semibold">Step-by-step</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium mb-1">1 — Read the raw body before any parsing</p>
+                <ResponseBlock status="Go">{`body, err := io.ReadAll(r.Body)
+// keep body as []byte — do not unmarshal`}</ResponseBlock>
+                <ResponseBlock status="Python">{`body = request.get_data()          # Flask
+body = await request.body()        # FastAPI / Starlette`}</ResponseBlock>
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-1">2 — Read the signature header</p>
+                <ResponseBlock status="Go">{`sigB64 := r.Header.Get("X-Webhook-Signature")`}</ResponseBlock>
+                <ResponseBlock status="Python">{`sig_b64 = request.headers.get("X-Webhook-Signature")`}</ResponseBlock>
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-1">3 — Base64-decode the signature (standard RFC 4648, not URL-safe)</p>
+                <ResponseBlock status="Go">{`sigBytes, err := base64.StdEncoding.DecodeString(sigB64)
+// 256 bytes for a 2048-bit RSA key`}</ResponseBlock>
+                <ResponseBlock status="Python">{`sig_bytes = base64.b64decode(sig_b64)  # 256 bytes`}</ResponseBlock>
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-1">4 — SHA-256 hash the body</p>
+                <ResponseBlock status="Go">{`hash := sha256.Sum256(body)  // [32]byte`}</ResponseBlock>
+                <ResponseBlock status="Python">{`body_hash = hashlib.sha256(body).digest()  # 32 bytes`}</ResponseBlock>
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-1">5 — Verify RSA PKCS#1 v1.5</p>
+                <ResponseBlock status="Go">{`err := rsa.VerifyPKCS1v15(pubKey, crypto.SHA256, hash[:], sigBytes)
+// nil → valid; non-nil → invalid`}</ResponseBlock>
+                <ResponseBlock status="Python">{`public_key.verify(
+    sig_bytes,
+    body,               # raw bytes, not the hash
+    padding.PKCS1v15(),
+    hashes.SHA256(),
+)
+# no exception → valid; InvalidSignature → invalid`}</ResponseBlock>
+              </div>
+            </div>
+
+            <h3 className="text-lg font-semibold">Complete example (Go)</h3>
+            <ResponseBlock status="Go">{`import (
+    "crypto"
+    "crypto/rsa"
+    "crypto/sha256"
+    "crypto/x509"
+    "encoding/base64"
+    "encoding/pem"
+    "fmt"
+    "io"
+    "net/http"
+)
+
+func VerifyWebhookSignature(r *http.Request, publicKeyPEM []byte) error {
+    body, err := io.ReadAll(r.Body)
+    if err != nil {
+        return err
+    }
+    sigB64 := r.Header.Get("X-Webhook-Signature")
+    if sigB64 == "" {
+        return fmt.Errorf("missing X-Webhook-Signature header")
+    }
+    sigBytes, err := base64.StdEncoding.DecodeString(sigB64)
+    if err != nil {
+        return fmt.Errorf("decode signature: %w", err)
+    }
+    hash := sha256.Sum256(body)
+    block, _ := pem.Decode(publicKeyPEM)
+    if block == nil {
+        return fmt.Errorf("no PEM block found")
+    }
+    pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+    if err != nil {
+        return fmt.Errorf("parse public key: %w", err)
+    }
+    rsaPub, ok := pub.(*rsa.PublicKey)
+    if !ok {
+        return fmt.Errorf("not an RSA public key")
+    }
+    return rsa.VerifyPKCS1v15(rsaPub, crypto.SHA256, hash[:], sigBytes)
+}`}</ResponseBlock>
+
+            <h3 className="text-lg font-semibold">Complete example (Python)</h3>
+            <ResponseBlock status="Python">{`import base64
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from cryptography.exceptions import InvalidSignature
+
+# Load once at startup — parsing RSA keys is expensive
+PUBLIC_KEY = load_pem_public_key(open("webhook_public_key.pem", "rb").read())
+
+def verify_webhook_signature(request) -> bool:
+    body = request.get_data()                              # Flask; use await request.body() for FastAPI
+    sig_b64 = request.headers.get("X-Webhook-Signature")
+    if not sig_b64:
+        return False
+    try:
+        sig_bytes = base64.b64decode(sig_b64)
+    except Exception:
+        return False
+    try:
+        PUBLIC_KEY.verify(sig_bytes, body, padding.PKCS1v15(), hashes.SHA256())
+        return True
+    except InvalidSignature:
+        return False
+
+# In your endpoint:
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    if not verify_webhook_signature(request):
+        return "invalid signature", 401
+    data = request.get_json()
+    # process...
+    return "ok", 200`}</ResponseBlock>
+
+          </div>
+
+          <Separator />
+
           {/* Internal Transfer */}
           <div id="internal-transfer" className="space-y-4">
             <h2 className="text-2xl font-semibold">Internal Transfer</h2>
