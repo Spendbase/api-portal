@@ -32,6 +32,14 @@ function PatchBadge() {
   )
 }
 
+function ScopeBadge({ scope }: { scope: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-mono text-violet-700 dark:text-violet-300">
+      <span className="opacity-70">scope:</span> {scope}
+    </span>
+  )
+}
+
 function Param({
   name,
   type,
@@ -188,7 +196,7 @@ export function GettingStartedContent() {
           <h1 className="text-4xl font-bold tracking-tight text-balance">Spendbase Integration API</h1>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
             Connect your applications to Spendbase for managing accounts, virtual cards, and transactions
-            programmatically with secure TLS certificate authentication.
+            programmatically with API key + Ed25519 signature authentication and TLS certificate authentication.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
@@ -199,14 +207,6 @@ export function GettingStartedContent() {
               <span className="text-sm text-muted-foreground">Base URL:</span>
               <code className="text-sm font-mono">cards-integration-api.dev.spendbase.co</code>
             </div>
-          </div>
-          <div className="mt-4 p-3 rounded-lg border border-border bg-card">
-            <p className="text-sm text-muted-foreground">
-              Swagger:{" "}
-              <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                api.dev.spendbase.co/cards-adapter/v1/public/swagger/index.html
-              </code>
-            </p>
           </div>
         </div>
 
@@ -290,11 +290,34 @@ export function GettingStartedContent() {
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold mb-3">3. External Token</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              An external token is required for API authentication. We will provide the external token in reply to
-              the email.
+            <h3 className="text-xl font-semibold mb-3">3. Create an API Key</h3>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              API keys are used to authenticate all requests. To create one:
             </p>
+            <ol className="space-y-2 text-muted-foreground">
+              <li className="flex gap-2">
+                <span className="font-semibold text-foreground shrink-0">1.</span>
+                Log in to{" "}
+                <code className="text-xs bg-muted px-1 py-0.5 rounded">app.spendbase.co</code>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-foreground shrink-0">2.</span>
+                Navigate to <strong>Money</strong> → <strong>Settings</strong> → <strong>API Keys</strong>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-foreground shrink-0">3.</span>
+                Click <strong>Create API Key</strong>, choose scopes, and save your key
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-foreground shrink-0">4.</span>
+                Generate an Ed25519 key pair and register the public key with the API key
+              </li>
+            </ol>
+            <div className="mt-4 p-3 rounded-lg border border-amber-500/20 bg-amber-500/10">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                The API key secret is shown only once at creation. Store it securely — it cannot be retrieved again.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -306,16 +329,33 @@ export function GettingStartedContent() {
 
           <div>
             <h3 className="text-xl font-semibold mb-3">Authentication</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              All requests should include the{" "}
-              <code className="bg-muted px-1 py-0.5 rounded">External-Token</code> header for authentication and{" "}
-              <code className="bg-muted px-1 py-0.5 rounded">Content-Type: application/json</code> if a body is
-              provided.
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              Every request must be signed with your Ed25519 private key. Include these headers:
             </p>
-            <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
-              <p className="text-sm font-medium mb-2">Authentication Header</p>
-              <code className="text-sm font-mono text-primary">External-Token: your_token_here</code>
+            <div className="p-4 bg-muted rounded-lg border border-border space-y-1.5">
+              <div><code className="text-sm font-mono text-primary">X-Api-Key</code><span className="text-sm text-muted-foreground ml-2">— your issued API key, e.g. <code className="bg-background px-1 rounded">api_&lt;hex&gt;</code></span></div>
+              <div><code className="text-sm font-mono text-primary">X-Signature</code><span className="text-sm text-muted-foreground ml-2">— base64-encoded Ed25519 signature over the canonical string</span></div>
+              <div><code className="text-sm font-mono text-primary">X-Timestamp</code><span className="text-sm text-muted-foreground ml-2">— Unix timestamp in milliseconds</span></div>
+              <div><code className="text-sm font-mono text-primary">X-Nonce</code><span className="text-sm text-muted-foreground ml-2">— unique value per request (e.g. UUID v4). Reusing returns <code className="bg-background px-1 rounded text-xs">401</code></span></div>
+              <div><code className="text-sm font-mono text-primary">Content-Type: application/json</code><span className="text-sm text-muted-foreground ml-2">— required when request has a body</span></div>
             </div>
+
+            <h4 className="text-base font-semibold mt-5 mb-2">String to Sign</h4>
+            <p className="text-sm text-muted-foreground mb-2">Build the exact string then sign it with Ed25519:</p>
+            <div className="p-4 bg-muted rounded-lg border border-border font-mono text-xs leading-relaxed">
+              HTTP_METHOD + &quot;\n&quot; +<br/>
+              REQUEST_PATH + &quot;\n&quot; +<br/>
+              CANONICAL_QUERY_STRING + &quot;\n&quot; +<br/>
+              SHA256_HEX(BODY) + &quot;\n&quot; +<br/>
+              X_TIMESTAMP + &quot;\n&quot; +<br/>
+              X_NONCE
+            </div>
+            <ul className="mt-3 text-sm text-muted-foreground list-disc list-inside space-y-1">
+              <li><code className="bg-muted px-1 py-0.5 rounded">HTTP_METHOD</code>: uppercase, e.g. <code className="bg-muted px-1 py-0.5 rounded">GET</code>, <code className="bg-muted px-1 py-0.5 rounded">POST</code></li>
+              <li><code className="bg-muted px-1 py-0.5 rounded">REQUEST_PATH</code>: full path including base, e.g. <code className="bg-muted px-1 py-0.5 rounded">/cards-adapter/v1/public/accounts/bank-accounts</code></li>
+              <li><code className="bg-muted px-1 py-0.5 rounded">CANONICAL_QUERY_STRING</code>: keys sorted lexicographically, values URL-escaped, joined as <code className="bg-muted px-1 py-0.5 rounded">key=value&amp;key=value</code>. Empty when no query.</li>
+              <li><code className="bg-muted px-1 py-0.5 rounded">SHA256_HEX(BODY)</code>: hex-encoded SHA-256 of raw body bytes. Empty body: <code className="bg-muted px-1 py-0.5 rounded text-xs">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</code></li>
+            </ul>
           </div>
 
           <div>
@@ -337,14 +377,133 @@ export function GettingStartedContent() {
             <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
-                Keep your certificates and tokens secure
+                Keep your credentials secure
               </p>
               <p className="mt-1 text-sm text-orange-800 dark:text-orange-200">
-                Do not share your private key (client.key) or external token in publicly accessible areas such as
+                Do not share your private key (<code className="bg-orange-100 dark:bg-orange-900/50 px-1 rounded">client.key</code>), Ed25519 private key, or API key in publicly accessible areas such as
                 GitHub, client-side code, or any other public spaces.
               </p>
             </div>
           </div>
+        </div>
+
+        <Separator />
+
+        {/* Go signing example */}
+        <div id="go-signing-example" className="space-y-6">
+          <h2 className="text-3xl font-bold mb-4">Go Signing Example</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            Full working example that builds the canonical string, signs it with Ed25519, and sends a signed request.
+            This mirrors{" "}
+            <code className="bg-muted px-1 py-0.5 rounded text-xs">integration/apikeys/helpers_test.go</code>.
+          </p>
+          <ResponseBlock status="Go">{`package main
+
+import (
+    "bytes"
+    "crypto/ed25519"
+    "crypto/rand"
+    "crypto/sha256"
+    "encoding/base64"
+    "encoding/hex"
+    "fmt"
+    "io"
+    "net/http"
+    "net/url"
+    "sort"
+    "strconv"
+    "strings"
+    "time"
+
+    "github.com/google/uuid"
+)
+
+func buildStringToSign(method, path, rawQuery string, body []byte, timestamp, nonce string) string {
+    values, _ := url.ParseQuery(rawQuery)
+    keys := make([]string, 0, len(values))
+    for k := range values {
+        keys = append(keys, k)
+    }
+    sort.Strings(keys)
+
+    parts := make([]string, 0, len(values))
+    for _, k := range keys {
+        vals := values[k]
+        sort.Strings(vals)
+        for _, v := range vals {
+            parts = append(parts, url.QueryEscape(k)+"="+url.QueryEscape(v))
+        }
+    }
+
+    h := sha256.Sum256(body)
+    return fmt.Sprintf("%s\\n%s\\n%s\\n%s\\n%s\\n%s",
+        method,
+        path,
+        strings.Join(parts, "&"),
+        hex.EncodeToString(h[:]),
+        timestamp,
+        nonce,
+    )
+}
+
+func signedRequest(baseURL, apiKey string, privateKey ed25519.PrivateKey, method, routePath string, body []byte) (*http.Request, error) {
+    base, err := url.Parse(baseURL)
+    if err != nil {
+        return nil, err
+    }
+
+    pathOnly, rawQuery, _ := strings.Cut(routePath, "?")
+    signPath := strings.TrimRight(base.Path, "/") + pathOnly
+    timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
+    nonce := uuid.NewString()
+
+    sts := buildStringToSign(method, signPath, rawQuery, body, timestamp, nonce)
+    signature := base64.StdEncoding.EncodeToString(ed25519.Sign(privateKey, []byte(sts)))
+
+    var r io.Reader
+    if body != nil {
+        r = bytes.NewReader(body)
+    }
+    req, err := http.NewRequest(method, strings.TrimRight(baseURL, "/")+routePath, r)
+    if err != nil {
+        return nil, err
+    }
+    if body != nil {
+        req.Header.Set("Content-Type", "application/json")
+    }
+    req.Header.Set("X-Api-Key", apiKey)
+    req.Header.Set("X-Signature", signature)
+    req.Header.Set("X-Timestamp", timestamp)
+    req.Header.Set("X-Nonce", nonce)
+    return req, nil
+}
+
+func example() error {
+    publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+    if err != nil {
+        return err
+    }
+    _ = publicKey // register this public key when creating your API key
+
+    req, err := signedRequest(
+        "https://gw.dev.spendbase.co/cards-adapter/v1",
+        "api_<hex>",
+        privateKey,
+        "GET",
+        "/public/accounts/bank-accounts",
+        nil,
+    )
+    if err != nil {
+        return err
+    }
+
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+    return nil
+}`}</ResponseBlock>
         </div>
       </div>
     </main>
@@ -360,10 +519,11 @@ export function AccountsContent() {
 
           {/* Get accounts by currency */}
           <div id="get-accounts-by-currency" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/accounts/accounts/:currency</code>
             </div>
+            <ScopeBadge scope="accountsRead" />
             <h2 className="text-2xl font-semibold">Get a list of all accounts</h2>
             <p className="text-muted-foreground leading-relaxed">
               Currency (EUR, USD…) as path param. The response includes sub-accounts and the master-account in
@@ -400,10 +560,11 @@ export function AccountsContent() {
 
           {/* Get bank accounts */}
           <div id="get-bank-accounts" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/accounts/bank-accounts</code>
             </div>
+            <ScopeBadge scope="accountsRead" />
             <h2 className="text-2xl font-semibold">Get a list of bank accounts</h2>
             <p className="text-muted-foreground leading-relaxed">
               The response includes bank accounts list for specific currencies with ledger IDs and balances.
@@ -434,10 +595,11 @@ export function AccountsContent() {
 
           {/* Create account */}
           <div id="create-account" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PostBadge />
               <code className="text-sm font-mono">/accounts/account</code>
             </div>
+            <ScopeBadge scope="accountsWrite" />
             <h2 className="text-2xl font-semibold">Create account</h2>
             <p className="text-muted-foreground leading-relaxed">
               Responds with the new account name, ID and ledger ID if creation succeeded.
@@ -462,10 +624,11 @@ export function AccountsContent() {
 
           {/* Get ledger accounts */}
           <div id="get-ledger-accounts" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/accounts/ledger-account/:ledgerId</code>
             </div>
+            <ScopeBadge scope="accountsRead" />
             <h2 className="text-2xl font-semibold">Get a list of ledger accounts</h2>
             <p className="text-muted-foreground leading-relaxed">
               Ledger bank account ID from list of bank accounts as{" "}
@@ -484,10 +647,11 @@ export function AccountsContent() {
 
           {/* Get account by ID */}
           <div id="get-account-by-id" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/accounts/ledger-account/:ledgerId/:id</code>
             </div>
+            <ScopeBadge scope="accountsRead" />
             <h2 className="text-2xl font-semibold">Get account by ID</h2>
             <p className="text-muted-foreground leading-relaxed">Request specific account details by ID.</p>
             <div className="space-y-4">
@@ -504,10 +668,11 @@ export function AccountsContent() {
 
           {/* Transfer money */}
           <div id="transfer-money" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PostBadge />
               <code className="text-sm font-mono">/accounts/accounts-transfer</code>
             </div>
+            <ScopeBadge scope="internalTransfersWrite" />
             <h2 className="text-2xl font-semibold">Transfer money between accounts</h2>
             <p className="text-muted-foreground leading-relaxed">
               Ledger IDs can be received from the ledger accounts route. The request is validated before processing:
@@ -544,10 +709,11 @@ export function AccountsContent() {
 
           {/* Transfer with note */}
           <div id="transfer-with-note" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PostBadge />
               <code className="text-sm font-mono">/accounts/accounts-transfer-note</code>
             </div>
+            <ScopeBadge scope="internalTransfersWrite" />
             <h2 className="text-2xl font-semibold">Transfer with note</h2>
             <p className="text-muted-foreground leading-relaxed">
               Same as transfer money but attaches a note to the transaction.
@@ -573,10 +739,11 @@ export function AccountsContent() {
 
           {/* Rename account */}
           <div id="rename-account" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PatchBadge />
               <code className="text-sm font-mono">/accounts/rename-account/:id</code>
             </div>
+            <ScopeBadge scope="accountsWrite" />
             <h2 className="text-2xl font-semibold">Rename account</h2>
             <p className="text-muted-foreground leading-relaxed">
               Responds with the account ID and new name.
@@ -638,10 +805,11 @@ export function CardsContent() {
 
           {/* Create card */}
           <div id="create-card" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PostBadge />
               <code className="text-sm font-mono">/cards/card</code>
             </div>
+            <ScopeBadge scope="cardsWrite" />
             <h2 className="text-2xl font-semibold">Create card</h2>
             <p className="text-muted-foreground leading-relaxed">
               Responds with a success message if the card was created.
@@ -666,10 +834,11 @@ export function CardsContent() {
 
           {/* Get card */}
           <div id="get-card" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/cards/card/:id</code>
             </div>
+            <ScopeBadge scope="cardsRead" />
             <h2 className="text-2xl font-semibold">Get card</h2>
             <p className="text-muted-foreground leading-relaxed">
               Returns card object with name, ID, currency, account info, etc.
@@ -683,10 +852,11 @@ export function CardsContent() {
 
           {/* Get all cards */}
           <div id="get-all-cards" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/cards/cards</code>
             </div>
+            <ScopeBadge scope="cardsRead" />
             <h2 className="text-2xl font-semibold">Get all cards</h2>
             <p className="text-muted-foreground leading-relaxed">
               Returns a list of card objects with IDs, names, accounts, currencies info, etc.
@@ -709,10 +879,11 @@ export function CardsContent() {
 
           {/* Get account cards */}
           <div id="get-account-cards" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/cards/account-cards/:ledgerAccountId</code>
             </div>
+            <ScopeBadge scope="cardsRead" />
             <h2 className="text-2xl font-semibold">Get account cards</h2>
             <p className="text-muted-foreground leading-relaxed">
               Returns a list of cards related to the account with the given ledger ID.
@@ -739,10 +910,11 @@ export function CardsContent() {
 
           {/* Get card details */}
           <div id="get-card-details" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/cards/card-details/:id</code>
             </div>
+            <ScopeBadge scope="cardDetailsRead" />
             <h2 className="text-2xl font-semibold">Get card details</h2>
             <p className="text-muted-foreground leading-relaxed">
               Returns card financial details including full card number, CVV and billing address.{" "}
@@ -771,10 +943,11 @@ export function CardsContent() {
 
           {/* Get card frame */}
           <div id="get-card-frame" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/cards/card-frame/:id</code>
             </div>
+            <ScopeBadge scope="cardDetailsRead" />
             <h2 className="text-2xl font-semibold">Get card frame</h2>
             <p className="text-muted-foreground leading-relaxed">
               Returns a one-time URL with card details and its expiration timestamp. Use the URL to display card
@@ -790,10 +963,11 @@ export function CardsContent() {
 
           {/* Lock card */}
           <div id="lock-card" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PutBadge />
               <code className="text-sm font-mono">/cards/lock-virtual-card/:id</code>
             </div>
+            <ScopeBadge scope="cardsWrite" />
             <h2 className="text-2xl font-semibold">Lock card</h2>
             <p className="text-muted-foreground leading-relaxed">
               No required body. Responds with a success message if the card status was changed.
@@ -808,10 +982,11 @@ export function CardsContent() {
 
           {/* Unlock card */}
           <div id="unlock-card" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PutBadge />
               <code className="text-sm font-mono">/cards/unlock-virtual-card/:id</code>
             </div>
+            <ScopeBadge scope="cardsWrite" />
             <h2 className="text-2xl font-semibold">Unlock card</h2>
             <p className="text-muted-foreground leading-relaxed">
               No required body. Responds with a success message if the card status was changed.
@@ -826,10 +1001,11 @@ export function CardsContent() {
 
           {/* Terminate card */}
           <div id="terminate-card" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PutBadge />
               <code className="text-sm font-mono">/cards/terminate-virtual-card/:id</code>
             </div>
+            <ScopeBadge scope="cardsWrite" />
             <h2 className="text-2xl font-semibold">Terminate card</h2>
             <p className="text-muted-foreground leading-relaxed">
               No required body. Permanently closes the card — this action cannot be undone.
@@ -844,10 +1020,11 @@ export function CardsContent() {
 
           {/* Set limit */}
           <div id="set-limit" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PutBadge />
               <code className="text-sm font-mono">/cards/set-virtual-card-limit/:id</code>
             </div>
+            <ScopeBadge scope="cardsWrite" />
             <h2 className="text-2xl font-semibold">Set limit</h2>
             <p className="text-muted-foreground leading-relaxed">
               Responds with a success message if the card limit update was requested successfully.
@@ -876,10 +1053,11 @@ export function CardsContent() {
 
           {/* Add cardholder */}
           <div id="add-cardholder" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PostBadge />
               <code className="text-sm font-mono">/cards/add-cardholder</code>
             </div>
+            <ScopeBadge scope="cardholdersWrite" />
             <h2 className="text-2xl font-semibold">Add cardholder</h2>
             <p className="text-muted-foreground leading-relaxed">
               Creates and validates a new cardholder. The cardholder must be verified before a card can be
@@ -917,10 +1095,11 @@ export function CardsContent() {
 
           {/* Get cardholder */}
           <div id="get-cardholder" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/cards/get-cardholder/:id</code>
             </div>
+            <ScopeBadge scope="cardholdersRead" />
             <h2 className="text-2xl font-semibold">Get cardholder</h2>
             <p className="text-muted-foreground leading-relaxed">
               Responds with cardholder information.
@@ -941,14 +1120,14 @@ export function CardsContent() {
 
           {/* Get team cardholders */}
           <div id="get-team-cardholders" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/cards-adapter/v1/public/cards/cardholders</code>
             </div>
+            <ScopeBadge scope="cardholdersRead" />
             <h2 className="text-2xl font-semibold">Get team cardholders</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns all cardholders belonging to the team. Team is resolved from the{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">External-Token</code>. No path or query parameters.
+              Returns all cardholders belonging to the team. Team is resolved from the authenticated API key. No path or query parameters.
             </p>
             <ResponseBlock>{`[
   {
@@ -997,10 +1176,11 @@ export function TransactionsContent() {
 
           {/* Get card transactions */}
           <div id="get-card-transactions" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/transactions/card-transactions/:ledgerAccountId</code>
             </div>
+            <ScopeBadge scope="transactionsRead" />
             <h2 className="text-2xl font-semibold">Get card transactions</h2>
             <p className="text-muted-foreground leading-relaxed">
               Returns card transactions list with tx IDs, card IDs, names, amounts, etc.
@@ -1028,10 +1208,11 @@ export function TransactionsContent() {
 
           {/* Get transactions */}
           <div id="get-transactions" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/transactions/transactions/:ledgerAccountId</code>
             </div>
+            <ScopeBadge scope="transactionsRead" />
             <h2 className="text-2xl font-semibold">Get transactions by account</h2>
             <p className="text-muted-foreground leading-relaxed">
               Returns transactions list for the specified account.
@@ -1060,10 +1241,11 @@ export function TransactionsContent() {
 
           {/* Get master transactions */}
           <div id="get-master-transactions" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
               <code className="text-sm font-mono">/transactions/master-transactions/:ledgerAccountId</code>
             </div>
+            <ScopeBadge scope="transactionsRead" />
             <h2 className="text-2xl font-semibold">Get master account transactions</h2>
             <p className="text-muted-foreground leading-relaxed">
               Returns transactions list for the specified master account.
@@ -1090,10 +1272,11 @@ export function TransactionsContent() {
 
           {/* Add note */}
           <div id="add-note-to-tx" className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <PostBadge />
               <code className="text-sm font-mono">/transactions/note/:id</code>
             </div>
+            <ScopeBadge scope="transactionsWrite" />
             <h2 className="text-2xl font-semibold">Add note to transaction</h2>
             <p className="text-muted-foreground leading-relaxed">Attach a note message to a transaction.</p>
             <div className="space-y-4">
