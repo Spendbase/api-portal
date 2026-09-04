@@ -626,7 +626,7 @@ export function AccountsContent() {
           <div id="get-ledger-accounts" className="space-y-4">
             <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
-              <code className="text-sm font-mono">/accounts/ledger-account/:ledgerId</code>
+              <code className="text-sm font-mono">/accounts/ledger-accounts/:ledgerId</code>
             </div>
             <ScopeBadge scope="accountsRead" />
             <h2 className="text-2xl font-semibold">Get a list of ledger accounts</h2>
