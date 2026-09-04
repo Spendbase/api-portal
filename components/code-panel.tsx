@@ -63,45 +63,63 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
     title: "Get Accounts by Currency",
     section: "accounts",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   $BASE_URL/accounts/accounts/EUR`,
   },
   {
     title: "Get Bank Accounts",
     section: "accounts",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   $BASE_URL/accounts/bank-accounts`,
   },
   {
     title: "Create Account",
     section: "accounts",
-    code: `curl --cert client.crt --key client.key -X POST \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -H "Content-Type: application/json" \\
   -d '{"accountName": "ExampleName",
-       "LedgerBankAccountID": "$BANK_ID"}' \\
+       "ledgerBankAccountId": "$BANK_ID"}' \\
   $BASE_URL/accounts/account`,
   },
   {
     title: "Get Ledger Accounts",
     section: "accounts",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
-  $BASE_URL/accounts/ledger-account`,
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/accounts/ledger-accounts/$LEDGER_ID`,
   },
   {
     title: "Get Account by ID",
     section: "accounts",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   $BASE_URL/accounts/ledger-account/$LEDGER_ID/$ID`,
   },
   {
     title: "Transfer Money",
     section: "accounts",
-    code: `curl --cert client.crt --key client.key -X POST \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -H "Content-Type: application/json" \\
   -d '{"accountId": "$ACCOUNT_ID",
        "amount": 100,
@@ -112,8 +130,11 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Transfer with Note",
     section: "accounts",
-    code: `curl --cert client.crt --key client.key -X POST \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -H "Content-Type: application/json" \\
   -d '{"accountId": "$ACCOUNT_ID",
        "amount": 100,
@@ -125,8 +146,11 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Rename Account",
     section: "accounts",
-    code: `curl --cert client.crt --key client.key -X PATCH \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+    code: `curl -X PATCH --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -H "Content-Type: application/json" \\
   -d '{"name": "New Account Name"}' \\
   $BASE_URL/accounts/rename-account/$ACCOUNT_ID`,
@@ -134,11 +158,14 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Create Card",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X POST \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -H "Content-Type: application/json" \\
-  -d '{"accountId": "$id",
-       "cardName": "AdapterTestCardEUR2",
+  -d '{"accountId": "$ACCOUNT_ID",
+       "cardName": "Marketing Card",
        "spendbaseUserId": "$SPENDBASE_USER_ID"}' \\
   $BASE_URL/cards/card`,
   },
@@ -146,14 +173,20 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
     title: "Get Card",
     section: "cards",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   $BASE_URL/cards/card/$CARD_ID`,
   },
   {
     title: "Get All Cards",
     section: "cards",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -G \\
   -d "cursor=$CURSOR" \\
   -d "limit=20" \\
@@ -163,7 +196,10 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
     title: "Get Account Cards",
     section: "cards",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -G \\
   -d "cursor=$CURSOR" \\
   -d "limit=20" \\
@@ -172,43 +208,63 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Get Card Details",
     section: "cards",
-    code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+    code: `# Returns 403 for API key auth.
+# Use card-frame instead.
+curl --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   $BASE_URL/cards/card-details/$CARD_ID`,
   },
   {
     title: "Get Card Frame",
     section: "cards",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   $BASE_URL/cards/card-frame/$CARD_ID`,
   },
   {
     title: "Lock Card",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X PUT \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
-  $BASE_URL/cards/lock-card/$CARD_ID`,
+    code: `curl -X PUT --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/lock-virtual-card/$CARD_ID`,
   },
   {
     title: "Unlock Card",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X PUT \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
-  $BASE_URL/cards/unlock-card/$CARD_ID`,
+    code: `curl -X PUT --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/unlock-virtual-card/$CARD_ID`,
   },
   {
     title: "Terminate Card",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X PUT \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
-  $BASE_URL/cards/terminate-card/$CARD_ID`,
+    code: `curl -X PUT --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/terminate-virtual-card/$CARD_ID`,
   },
   {
     title: "Set Card Limit",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X PUT \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+    code: `curl -X PUT --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -H "Content-Type: application/json" \\
   -d '{"amount": 1000, "type": "DAILY"}' \\
   $BASE_URL/cards/set-virtual-card-limit/$CARD_ID`,
@@ -216,30 +272,46 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Add Cardholder",
     section: "cards",
-    code: `curl --cert client.crt --key client.key -X POST \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -H "Content-Type: application/json" \\
-  -d '{"firstName": "John",
-       "lastName": "Doe",
-       "middleName": "A",
-       "email": "john.doe@example.com",
-       "phoneNumber": "+1234567890",
-       "dob": "1990-01-15",
-       "address": "123 Main St, City, Country"}' \\
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe",
+    "middleName": "A",
+    "email": "john.doe@example.com",
+    "phoneNumber": "+1234567890",
+    "dob": "1990-01-15",
+    "address": {
+      "addressLine1": "1 Main St",
+      "city": "London",
+      "countryISOCode": "GB",
+      "postalCode": "SW1A 1AA"
+    }
+  }' \\
   $BASE_URL/cards/add-cardholder`,
   },
   {
     title: "Get Cardholder",
     section: "cards",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
-  $BASE_URL/cards/get-cardholder/$CARD_ID`,
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/get-cardholder/$CARDHOLDER_ID`,
   },
   {
     title: "Get Card Transactions",
     section: "transactions",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -G \\
   -d "cursor=$CURSOR" \\
   -d "limit=20" \\
@@ -249,7 +321,10 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
     title: "Get Transactions",
     section: "transactions",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -G \\
   -d "cursor=$CURSOR" \\
   -d "limit=20" \\
@@ -259,7 +334,10 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
     title: "Get Master Transactions",
     section: "transactions",
     code: `curl --cert client.crt --key client.key \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -G \\
   -d "from=1753864397" \\
   -d "to=1754042551" \\
@@ -268,8 +346,11 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Add Note to Transaction",
     section: "transactions",
-    code: `curl --cert client.crt --key client.key -X POST \\
-  -H "External-Token: $EXTERNAL_TOKEN" \\
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
   -H "Content-Type: application/json" \\
   -d '{"note": "test"}' \\
   $BASE_URL/transactions/note/$TRANSACTION_ID`,
@@ -304,13 +385,13 @@ export function CodePanel({ section }: { section: Section }) {
                     copyable
                     sub={{ label: "Webhook Public Key", value: "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFrUTJudm1zVDV4SllHQVhHYVhLSwp1bDJTTHF5aWZ0azRoMG11aUZCSWloTXFINFFNdU5GbjVHSGR2dFlWU0h4QXF1SjFSaWVjMlVQWlovWnRMUGFXCndWMWhyV3E5SElNeEZVb1NPMVYxVERGYVdhcFFETXVlQjA3ci9oTXhSVkhzWWcyV0JJMm9XaDlMMWZhbS9WU1IKNjYrc2RPNndQL1NzajJEZ3l0cXpUVFlQU3NWeDV4M0tzN0tjTFRuQlhMWEZXbU9SZmNHcU40RnZpWXRiUit1cwpVWHZ5SkFtT1A3TXN5cU56KzNBOWg3L0hsbEsxeWhJdGhpMWRGSjI3TUc2aXRnL1U1aG1vVE1Rb1BqUWU3KzkrCi9rNzhDQjBESGJ4dmQwS2sxOTVCcTI1RWx6VTRYeFN4bW1aeXh4UU9VdUpOR1pMaGFmdzV4T3BYbFljUFlXM1EKK3dJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==" }}
                   />
-                  <EnvRow label="Authentication" value="External-Token + TLS Certificates" />
+                  <EnvRow label="Authentication" value="X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce)" />
                 </>
               ) : (
                 <>
                   <EnvRow label="Development" value="https://cards-integration-api.dev.spendbase.co/cards-adapter/v1/public/" copyable />
                   <EnvRow label="Production" value="https://cards-integration-api.prod.spendbase.co/cards-adapter/v1/public/" copyable />
-                  <EnvRow label="Authentication" value="External-Token + TLS Certificates" />
+                  <EnvRow label="Authentication" value="X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce) + TLS Certificates" />
                 </>
               )}
             </div>

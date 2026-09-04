@@ -14,6 +14,7 @@ const sections = [
     items: [
       { label: "Basic Requirements", id: "basic-requirements" },
       { label: "Authentication & TLS", id: "authentication-tls" },
+      { label: "Go Signing Example", id: "go-signing-example" },
     ],
   },
   {
@@ -82,6 +83,7 @@ const sections = [
     path: "/docs/versioning",
     items: [
       { label: "Release Notes", id: "release-notes" },
+      { label: "2026-09-03", id: "2026-09-03" },
       { label: "2026-08-13", id: "2026-08-13" },
       { label: "2026-06-25", id: "2026-06-25" },
     ],
