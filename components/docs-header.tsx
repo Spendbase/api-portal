@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 const ALL_SECTIONS = [
   { label: "Basic Requirements", id: "basic-requirements", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Authentication & TLS", id: "authentication-tls", group: "Getting Started", page: "/docs/getting-started" },
+  { label: "Go Signing Example", id: "go-signing-example", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts", page: "/docs/accounts" },
   { label: "Get Bank Accounts", id: "get-bank-accounts", group: "Accounts", page: "/docs/accounts" },
   { label: "Create Account", id: "create-account", group: "Accounts", page: "/docs/accounts" },
@@ -47,6 +48,7 @@ const ALL_SECTIONS = [
   { label: "Card Reversal", id: "card-reversal", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Refund", id: "card-refund", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Release Notes", id: "release-notes", group: "Versioning", page: "/docs/versioning" },
+  { label: "2026-09-03", id: "2026-09-03", group: "Versioning", page: "/docs/versioning" },
   { label: "2026-08-13", id: "2026-08-13", group: "Versioning", page: "/docs/versioning" },
   { label: "2026-06-25", id: "2026-06-25", group: "Versioning", page: "/docs/versioning" },
 ]

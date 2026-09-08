@@ -13,6 +13,58 @@ export default function VersioningPage() {
           <h1 className="text-4xl font-bold tracking-tight">Cards API - Changelog</h1>
         </div>
 
+        <div id="2026-09-03" />
+        <section id="api-keys-authentication" className="space-y-4">
+          <h2 className="text-2xl font-semibold">API Key Authentication</h2>
+          <p className="text-muted-foreground">Version date: 2026-09-03</p>
+          <p className="text-muted-foreground leading-relaxed">
+            The API now supports API key authentication with Ed25519 request signing. This replaces the previous
+            External-Token header approach for new integrations.
+          </p>
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Creating an API Key</p>
+              <p className="text-sm text-muted-foreground">
+                Navigate to <strong>Money</strong> → <strong>Settings</strong> → <strong>API Keys</strong> in the
+                Spendbase dashboard to create and manage API keys.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">New Request Headers</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li><code className="bg-muted px-1 py-0.5 rounded">X-Api-Key</code>: issued API key</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">X-Signature</code>: base64-encoded Ed25519 signature over canonical string</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">X-Timestamp</code>: Unix timestamp in milliseconds</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">X-Nonce</code>: unique value per request (e.g. UUID v4)</li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Scopes</p>
+              <p className="text-sm text-muted-foreground mb-2">
+                API keys are restricted by scope. Assign only the scopes required for your integration:
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  "accountsRead", "accountsWrite", "internalTransfersWrite",
+                  "cardsRead", "cardsWrite", "cardDetailsRead",
+                  "transactionsRead", "transactionsWrite",
+                  "cardholdersRead", "cardholdersWrite",
+                ].map((s) => (
+                  <code key={s} className="bg-muted px-2 py-0.5 rounded text-xs font-mono">{s}</code>
+                ))}
+              </div>
+            </div>
+          </div>
+          <section className="space-y-2">
+            <h3 className="text-lg font-semibold">Compatibility</h3>
+            <p className="text-muted-foreground text-sm">
+              Legacy API token authentication remains supported for existing integrations. Ed25519 signing is required when using API key auth.
+              Requests missing required signing headers are rejected with <code className="bg-muted px-1 py-0.5 rounded">401</code>.
+            </p>
+          </section>
+        </section>
+
+        <Separator />
         <div id="2026-08-13" />
         <section id="webhook-payload-updates" className="space-y-4">
           <h2 className="text-2xl font-semibold">Webhook payloads - updated fields</h2>
