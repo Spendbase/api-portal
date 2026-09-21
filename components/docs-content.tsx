@@ -633,13 +633,12 @@ export function AccountsContent() {
             <p className="text-muted-foreground leading-relaxed">
               Ledger bank account ID from list of bank accounts as{" "}
               <code className="bg-muted px-1 py-0.5 rounded text-xs">ledgerId</code> path param.
-              Responds with the list of master and sub accounts with ledger IDs.
+              Responds with the bank account and its master and sub accounts with ledger IDs and card counts.
             </p>
             <ResponseBlock>{`{
-  "payload": {
-    "master_accounts": [${LEDGER_ACCOUNT_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}],
-    "sub_accounts": [${LEDGER_ACCOUNT_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}]
-  }
+  "bankAccount": ${LEDGER_ACCOUNT_OBJECT.split("\n").map(l => "  " + l).join("\n").trimStart()},
+  "master_accounts": [${LEDGER_ACCOUNT_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}],
+  "sub_accounts": [${LEDGER_ACCOUNT_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}]
 }`}</ResponseBlock>
           </div>
 
