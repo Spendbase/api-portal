@@ -76,6 +76,9 @@ const sections = [
       { label: "Card Decline", id: "card-decline" },
       { label: "Card Reversal", id: "card-reversal" },
       { label: "Card Refund", id: "card-refund" },
+      { label: "US Cards", id: "us-cards" },
+      { label: "Card Unblocked", id: "card-unblocked" },
+      { label: "Account Events", id: "account-events" },
     ],
   },
   {
@@ -83,6 +86,7 @@ const sections = [
     path: "/docs/versioning",
     items: [
       { label: "Release Notes", id: "release-notes" },
+      { label: "RELEASE_DATE (US card webhooks)", id: "us-card-webhooks" },
       { label: "2026-09-03", id: "2026-09-03" },
       { label: "2026-08-13", id: "2026-08-13" },
       { label: "2026-06-25", id: "2026-06-25" },

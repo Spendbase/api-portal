@@ -13,6 +13,53 @@ export default function VersioningPage() {
           <h1 className="text-4xl font-bold tracking-tight">Cards API - Changelog</h1>
         </div>
 
+        {/* ⚠️ RELEASE DATE PLACEHOLDER: set the id, the nav entries and the "Version date" line to the
+            agreed release date before merging. Merge on release day, not before. */}
+        <div id="us-card-webhooks" />
+        <section id="us-card-webhook-payloads" className="space-y-4">
+          <h2 className="text-2xl font-semibold">US card webhooks - documented payloads</h2>
+          <p className="text-muted-foreground">Version date: RELEASE_DATE</p>
+          <p className="text-muted-foreground leading-relaxed">
+            Webhook payloads for US cards now match the documented payloads, so US and EU card events share one
+            structure. Header values do not change. The header values shown in the reference are corrected to the
+            ones delivered: <code className="bg-muted px-1 py-0.5 rounded">Card</code> / <code className="bg-muted px-1 py-0.5 rounded">CardIssue</code>, 
+            <code className="bg-muted px-1 py-0.5 rounded">Card</code> / <code className="bg-muted px-1 py-0.5 rounded">Authorization</code>, and so on.
+          </p>
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Card Authorization, Settlement, Decline, Reversal, Refund (US cards)</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>Renamed <code className="bg-muted px-1 py-0.5 rounded">transaction_id</code>, <code className="bg-muted px-1 py-0.5 rounded">card_id</code>, <code className="bg-muted px-1 py-0.5 rounded">card_name</code>, <code className="bg-muted px-1 py-0.5 rounded">pan_last_four</code>, <code className="bg-muted px-1 py-0.5 rounded">merchant_name</code>, <code className="bg-muted px-1 py-0.5 rounded">reject_reason</code> to their camelCase forms</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">amount</code> → <code className="bg-muted px-1 py-0.5 rounded">billingAmount</code> (Decline keeps <code className="bg-muted px-1 py-0.5 rounded">amount</code>); <code className="bg-muted px-1 py-0.5 rounded">currency</code> → <code className="bg-muted px-1 py-0.5 rounded">billingCurrencyIson</code> (numeric)</li>
+                <li>Added <code className="bg-muted px-1 py-0.5 rounded">tx_type</code>, <code className="bg-muted px-1 py-0.5 rounded">lifecyclePhase</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantAmount</code>, <code className="bg-muted px-1 py-0.5 rounded">merchantCurrencyISOCode</code>, <code className="bg-muted px-1 py-0.5 rounded">exchangeRate</code>, <code className="bg-muted px-1 py-0.5 rounded">mccCode</code> and the per-event fields in the reference</li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Card Created, Blocked, Terminated (US cards)</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>Now the documented card payload: <code className="bg-muted px-1 py-0.5 rounded">expYear</code>, <code className="bg-muted px-1 py-0.5 rounded">expMonth</code>, <code className="bg-muted px-1 py-0.5 rounded">accountId</code>, <code className="bg-muted px-1 py-0.5 rounded">holderId</code>, <code className="bg-muted px-1 py-0.5 rounded">currencyISONum</code>, <code className="bg-muted px-1 py-0.5 rounded">cardStatus</code></li>
+                <li>Plus <code className="bg-muted px-1 py-0.5 rounded">cardId</code>, <code className="bg-muted px-1 py-0.5 rounded">previousStatus</code> and <code className="bg-muted px-1 py-0.5 rounded">initiatedBy</code> (see <a href="/docs/webhooks#us-cards" className="underline">US Cards</a>)</li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Newly documented</p>
+              <p className="text-sm text-muted-foreground">
+                <a href="/docs/webhooks#card-unblocked" className="underline">Card Unblocked</a> and the 
+                <a href="/docs/webhooks#account-events" className="underline">Account events</a>, sent for US cards only.
+              </p>
+            </div>
+          </div>
+          <section className="space-y-2">
+            <h3 className="text-lg font-semibold">Compatibility</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Breaking for US-card integrations that parse the previous field names. A delivery already being retried
+              at release time may arrive once more in the previous format.
+            </p>
+          </section>
+        </section>
+
+        <Separator />
+
         <div id="2026-09-03" />
         <section id="api-keys-authentication" className="space-y-4">
           <h2 className="text-2xl font-semibold">API Key Authentication</h2>
