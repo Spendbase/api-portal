@@ -1496,7 +1496,7 @@ def webhook():
             <p className="text-muted-foreground leading-relaxed">
               Fired when a new virtual card is successfully created.
             </p>
-            <WebhookHeaders group="card" type="issue" />
+            <WebhookHeaders group="Card" type="CardIssue" />
             <ResponseBlock status="Payload">{`{
   cardName: string;
   panLastFour: string;
@@ -1518,7 +1518,7 @@ def webhook():
             <p className="text-muted-foreground leading-relaxed">
               Fired when a card is locked or blocked.
             </p>
-            <WebhookHeaders group="card" type="block" />
+            <WebhookHeaders group="Card" type="CardBlock" />
             <ResponseBlock status="Payload">{`{
   cardName: string;
   panLastFour: string;
@@ -1540,7 +1540,7 @@ def webhook():
             <p className="text-muted-foreground leading-relaxed">
               Fired when a card is permanently terminated.
             </p>
-            <WebhookHeaders group="card" type="terminate" />
+            <WebhookHeaders group="Card" type="CardTerminate" />
             <ResponseBlock status="Payload">{`{
   cardName: string;
   panLastFour: string;
@@ -1562,7 +1562,7 @@ def webhook():
             <p className="text-muted-foreground leading-relaxed">
               Fired when a card transaction is authorized (normal or incremental). The transaction is pending settlement.
             </p>
-            <WebhookHeaders group="card" type="authorization" />
+            <WebhookHeaders group="Card" type="Authorization" />
             <ResponseBlock status="Payload">{`{
   tx_type: 'PURCHASE';             // transaction type
   lifecyclePhase: 'AUTHORIZATION'; // authorization stage
@@ -1591,7 +1591,7 @@ def webhook():
             <p className="text-muted-foreground leading-relaxed">
               Fired when a non-refund purchase is settled. Refund settlements are delivered as a Refund event instead.
             </p>
-            <WebhookHeaders group="card" type="settlement" />
+            <WebhookHeaders group="Card" type="Settlement" />
             <ResponseBlock status="Payload">{`{
   tx_type: 'PURCHASE';             // transaction type
   lifecyclePhase: 'SETTLEMENT';    // settlement stage
@@ -1620,7 +1620,7 @@ def webhook():
             <p className="text-muted-foreground leading-relaxed">
               Fired when a one-time password is generated for a 3DS holder authentication challenge. Includes transaction context when available from the 3DS directory server.
             </p>
-            <WebhookHeaders group="card" type="otp" />
+            <WebhookHeaders group="Card" type="OTP" />
             <ResponseBlock status="Payload">{`{
   auth_request_id: number;
   auth_method: number;          // 1=OTP, 2=Background, 3=SMS, 4=Email
@@ -1645,7 +1645,7 @@ def webhook():
             <p className="text-muted-foreground leading-relaxed">
               Fired when a card transaction is declined.
             </p>
-            <WebhookHeaders group="card" type="decline" />
+            <WebhookHeaders group="Card" type="Decline" />
             <ResponseBlock status="Payload">{`{
   tx_type: 'DECLINE';              // transaction type
   lifecyclePhase: 'DECLINE';       // decline stage
@@ -1671,7 +1671,7 @@ def webhook():
             <p className="text-muted-foreground leading-relaxed">
               Fired when an authorized card transaction is reversed (R0 or R2) before settlement.
             </p>
-            <WebhookHeaders group="card" type="reversal" />
+            <WebhookHeaders group="Card" type="Reversal" />
             <ResponseBlock status="Payload">{`{
   tx_type: 'REVERSAL';             // transaction type
   lifecyclePhase: 'AUTHORIZATION'; // authorization stage
@@ -1697,7 +1697,7 @@ def webhook():
             <p className="text-muted-foreground leading-relaxed">
               Fired when a card transaction is refunded. May fire twice for the same transaction: once at authorization time and once at settlement. Use <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">lifecyclePhase</code> to distinguish them.
             </p>
-            <WebhookHeaders group="card" type="refund" />
+            <WebhookHeaders group="Card" type="Refund" />
             <ResponseBlock status="Payload">{`{
   tx_type: 'REFUND';                             // transaction type
   lifecyclePhase: 'AUTHORIZATION' | 'SETTLEMENT'; // refund stage
@@ -1712,6 +1712,118 @@ def webhook():
   panLastFour: string;
   transactionId: string;
   timestamp: string;                // UTC RFC 3339
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* US cards */}
+          <div id="us-cards" className="space-y-4">
+            <h2 className="text-2xl font-semibold">US Cards</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              US cards send every event above with the same payloads, plus the events and fields below. They do not
+              send <strong>Card OTP</strong> or <strong>Internal Transfer</strong>: moving money between your accounts is
+              reported as a pair of <a href="#account-events" className="underline">Balance Adjusted</a> events. A
+              refund on a US card always has <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">lifecyclePhase: 'SETTLEMENT'</code>.
+            </p>
+            <h3 className="text-lg font-semibold">Extra fields on card events</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Card Created, Card Blocked, Card Unblocked and Card Terminated also carry:
+            </p>
+            <ResponseBlock status="Payload">{`{
+  cardId: string;                        // the card's id, as returned by Get Card
+  previousStatus: SpendbaseCardStatus | null; // status before the change; null on Card Created
+  initiatedBy: 'product' | 'bank' | null;     // who made the change; null on Card Created
+}`}</ResponseBlock>
+            <p className="text-muted-foreground leading-relaxed">
+              <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">initiatedBy: 'bank'</code> means the issuing bank changed the card itself, for example a fraud
+              hold or a closure you did not request.
+            </p>
+            <h3 className="text-lg font-semibold">Fields that may be null</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Every documented field is always present. When the bank does not provide a value, the field is 
+              <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">null</code>, never omitted and never an empty string. For US cards this can apply
+              to <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">mccCode</code>, <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">merchantCategory</code>, <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">merchantAmount</code> 
+              and <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">exchangeRate</code> (the bank did not report the merchant side), 
+              <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">rejectReason</code> (no documented reason code), and <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">holderId</code> (the card has no
+              cardholder record).
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Card Unblocked */}
+          <div id="card-unblocked" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Card Unblocked</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              US cards only. Fired when a blocked card becomes usable again: it was unlocked, or the bank lifted its hold.
+            </p>
+            <WebhookHeaders group="Card" type="CardUnblock" />
+            <ResponseBlock status="Payload">{`{
+  cardId: string;
+  cardName: string;
+  panLastFour: string;
+  expYear: number;
+  expMonth: number;
+  accountId: string;
+  holderId: string | null;
+  currencyISONum: string;               // ISO 4217 numeric
+  cardStatus: SpendbaseCardStatus;      // the new status, normally DEFAULT
+  previousStatus: SpendbaseCardStatus;  // normally LOCKED
+  initiatedBy: 'product' | 'bank';
+  timestamp: string;                    // UTC RFC 3339
+}`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Account events */}
+          <div id="account-events" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Account Events</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              US cards only. <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">amount</code> is always positive; read <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">direction</code> 
+              (from the account's point of view) for which way the money moved.
+            </p>
+            <h3 className="text-lg font-semibold">Account Funded / Account Withdrawn</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when money from an external transfer is credited to, or leaves, one of your accounts.
+            </p>
+            <WebhookHeaders group="Account" type="AccountFunded | AccountWithdrawn" />
+            <ResponseBlock status="Payload">{`{
+  accountId: string;           // ledger account id, as used by the Accounts API
+  accountName: string | null;
+  amount: string;              // decimal string, always positive
+  currencyISOCode: 'USD';
+  direction: 'in' | 'out';     // 'in' for AccountFunded, 'out' for AccountWithdrawn
+  timestamp: string;           // UTC RFC 3339
+}`}</ResponseBlock>
+            <h3 className="text-lg font-semibold">Balance Adjusted</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Fired when a balance changes for a reason other than a card transaction or an external transfer: a
+              balance adjustment made by Spendbase, or money moved between two of your accounts (two events: one 
+              <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">out</code> for the source, one <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">in</code> for the destination).
+            </p>
+            <WebhookHeaders group="Account" type="BalanceAdjusted" />
+            <ResponseBlock status="Payload">{`{
+  accountId: string;
+  accountName: string | null;
+  amount: string;              // decimal string, always positive
+  currencyISOCode: 'USD';
+  direction: 'in' | 'out';
+  reason: string | null;       // e.g. 'Transfer between budgets'
+  timestamp: string;           // UTC RFC 3339
+}`}</ResponseBlock>
+            <h3 className="text-lg font-semibold">Account Provisioned / Account Created</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Account Provisioned fires once per company, when its US card programme is ready and cards can be issued.
+              Account Created fires when a new account (budget) is opened.
+            </p>
+            <WebhookHeaders group="Account" type="AccountProvisioned | AccountCreated" />
+            <ResponseBlock status="Payload">{`{
+  accountId: string;
+  accountName: string | null;
+  currencyISOCode: 'USD';
+  timestamp: string;           // UTC RFC 3339
 }`}</ResponseBlock>
           </div>
 
