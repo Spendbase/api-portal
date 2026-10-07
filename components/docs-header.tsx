@@ -5,12 +5,14 @@ import { Search, Menu, X } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { RegionSwitcher, regionPath, useRegion, type Region } from "@/components/region"
 
-const ALL_SECTIONS = [
+const ALL_SECTIONS: { label: string; id: string; group: string; page: string; region?: Region }[] = [
   { label: "Basic Requirements", id: "basic-requirements", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Authentication & TLS", id: "authentication-tls", group: "Getting Started", page: "/docs/getting-started" },
-  { label: "Go Signing Example", id: "go-signing-example", group: "Getting Started", page: "/docs/getting-started" },
-  { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts", page: "/docs/accounts" },
+  { label: "Go Signing Example", id: "go-signing-example", group: "Getting Started", page: "/docs/getting-started", region: "us" },
+  { label: "Quick Start", id: "quick-start", group: "Quick Start", page: "/docs/quick-start" },
+  { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts", page: "/docs/accounts", region: "eu" },
   { label: "Get Bank Accounts", id: "get-bank-accounts", group: "Accounts", page: "/docs/accounts" },
   { label: "Create Account", id: "create-account", group: "Accounts", page: "/docs/accounts" },
   { label: "Get Ledger Accounts", id: "get-ledger-accounts", group: "Accounts", page: "/docs/accounts" },
@@ -29,26 +31,33 @@ const ALL_SECTIONS = [
   { label: "Unlock Card", id: "unlock-card", group: "Cards", page: "/docs/cards" },
   { label: "Terminate Card", id: "terminate-card", group: "Cards", page: "/docs/cards" },
   { label: "Set Limit", id: "set-limit", group: "Cards", page: "/docs/cards" },
-  { label: "Add Cardholder", id: "add-cardholder", group: "Cards", page: "/docs/cards" },
-  { label: "Get Cardholder", id: "get-cardholder", group: "Cards", page: "/docs/cards" },
+  { label: "Add Cardholder", id: "add-cardholder", group: "Cards", page: "/docs/cards", region: "eu" },
+  { label: "Get Cardholder", id: "get-cardholder", group: "Cards", page: "/docs/cards", region: "eu" },
   { label: "Get Team Cardholders", id: "get-team-cardholders", group: "Cards", page: "/docs/cards" },
   { label: "Get Card Transactions", id: "get-card-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Transactions", id: "get-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Master Transactions", id: "get-master-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Add Note to Transaction", id: "add-note-to-tx", group: "Transactions", page: "/docs/transactions" },
   { label: "Verifying Signatures", id: "verify-signature", group: "Webhooks", page: "/docs/webhooks" },
-  { label: "Internal Transfer", id: "internal-transfer", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Webhook Delivery", id: "webhook-delivery", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Created", id: "card-created", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Blocked", id: "card-blocked", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card Unblocked", id: "card-unblocked", group: "Webhooks", page: "/docs/webhooks", region: "us" },
   { label: "Card Terminated", id: "card-terminated", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Authorization", id: "card-authorization", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Settlement", id: "card-settlement", group: "Webhooks", page: "/docs/webhooks" },
-  { label: "Card OTP", id: "card-otp", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Card OTP", id: "card-otp", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
+  { label: "Card OTP Failed", id: "card-otp-failed", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
   { label: "Card Decline", id: "card-decline", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Reversal", id: "card-reversal", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Refund", id: "card-refund", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Account Funded", id: "account-funded", group: "Webhooks", page: "/docs/webhooks", region: "us" },
+  { label: "Account Withdrawn", id: "account-withdrawn", group: "Webhooks", page: "/docs/webhooks", region: "us" },
+  { label: "Balance Adjusted", id: "balance-adjusted", group: "Webhooks", page: "/docs/webhooks", region: "us" },
+  { label: "Account Provisioned", id: "account-provisioned", group: "Webhooks", page: "/docs/webhooks", region: "us" },
+  { label: "Account Created", id: "account-created", group: "Webhooks", page: "/docs/webhooks", region: "us" },
   { label: "Release Notes", id: "release-notes", group: "Versioning", page: "/docs/versioning" },
-  { label: "2026-09-03", id: "2026-09-03", group: "Versioning", page: "/docs/versioning" },
+  { label: "2026-09-03", id: "2026-09-03", group: "Versioning", page: "/docs/versioning", region: "us" },
   { label: "2026-08-13", id: "2026-08-13", group: "Versioning", page: "/docs/versioning" },
   { label: "2026-06-25", id: "2026-06-25", group: "Versioning", page: "/docs/versioning" },
 ]
@@ -60,12 +69,14 @@ export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
+  const region = useRegion()
 
   const results = query.trim()
     ? ALL_SECTIONS.filter(
         (s) =>
-          s.label.toLowerCase().includes(query.toLowerCase()) ||
-          s.group.toLowerCase().includes(query.toLowerCase())
+          (!s.region || s.region === region) &&
+          (s.label.toLowerCase().includes(query.toLowerCase()) ||
+            s.group.toLowerCase().includes(query.toLowerCase()))
       )
     : []
 
@@ -83,7 +94,8 @@ export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
-  const handleNavigate = (page: string, id: string) => {
+  const handleNavigate = (sectionPage: string, id: string) => {
+    const page = regionPath(region, sectionPage)
     if (pathname === page) {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })
     } else {
@@ -116,6 +128,7 @@ export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
           <span className="font-mono text-sm text-muted-foreground hidden sm:inline">API Reference</span>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <RegionSwitcher />
           <div className="relative w-full md:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input

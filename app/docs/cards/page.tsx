@@ -1,16 +1,5 @@
-import type { Metadata } from "next"
-import { CardsContent } from "@/components/docs-content"
-import { CodePanel } from "@/components/code-panel"
+import { LegacyRedirect } from "@/components/region"
 
-export const metadata: Metadata = {
-  title: "Cards — Spendbase API",
-}
-
-export default function CardsPage() {
-  return (
-    <>
-      <CardsContent />
-      <CodePanel section="cards" />
-    </>
-  )
+export default function LegacyPage() {
+  return <LegacyRedirect to="/docs/cards" />
 }

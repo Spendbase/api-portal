@@ -4,8 +4,9 @@ import { useState } from "react"
 import { Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useRegion, type Region } from "@/components/region"
 
-type Section = "getting-started" | "accounts" | "cards" | "transactions" | "webhooks"
+type Section = "getting-started" | "quick-start" | "accounts" | "cards" | "transactions" | "webhooks"
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
@@ -58,10 +59,12 @@ function EnvRow({ label, value, copyable, sub }: { label: string; value: string;
   )
 }
 
-const EXAMPLES: { title: string; section: Section; code: string }[] = [
+// region: only shown for that region (endpoints backed by the cards service are EU-only)
+const EXAMPLES: { title: string; section: Section; code: string; region?: Region }[] = [
   {
     title: "Get Accounts by Currency",
     section: "accounts",
+    region: "eu",
     code: `curl --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -158,6 +161,7 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Create Card",
     section: "cards",
+    region: "eu",
     code: `curl -X POST --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -166,7 +170,25 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   -H "Content-Type: application/json" \\
   -d '{"accountId": "$ACCOUNT_ID",
        "cardName": "Marketing Card",
-       "spendbaseUserId": "$SPENDBASE_USER_ID"}' \\
+       "spendbaseUserId": "$CARDHOLDER_ID",
+       "limit": {"type": "MONTHLY", "amount": 1000}}' \\
+  $BASE_URL/cards/card`,
+  },
+  {
+    // US: the cardholder is identified by the email the Spendbase account was created with
+    title: "Create Card",
+    section: "cards",
+    region: "us",
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  -H "Content-Type: application/json" \\
+  -d '{"accountId": "$ACCOUNT_ID",
+       "cardName": "Marketing Card",
+       "email": "$ACCOUNT_OWNER_EMAIL",
+       "limit": {"type": "MONTHLY", "amount": 1000}}' \\
   $BASE_URL/cards/card`,
   },
   {
@@ -208,8 +230,8 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Get Card Details",
     section: "cards",
-    code: `# Returns 403 for API key auth.
-# Use card-frame instead.
+    code: `# Returns 403 unless your team is PCI DSS compliant.
+# Use card-frame otherwise.
 curl --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -272,6 +294,7 @@ curl --cert client.crt --key client.key \\
   {
     title: "Add Cardholder",
     section: "cards",
+    region: "eu",
     code: `curl -X POST --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -283,11 +306,12 @@ curl --cert client.crt --key client.key \\
     "lastName": "Doe",
     "middleName": "A",
     "email": "john.doe@example.com",
-    "phoneNumber": "+1234567890",
+    "phoneNumber": "+447700900123",
     "dob": "1990-01-15",
     "address": {
       "addressLine1": "1 Main St",
       "city": "London",
+      "region": "Greater London",
       "countryISOCode": "GB",
       "postalCode": "SW1A 1AA"
     }
@@ -297,6 +321,7 @@ curl --cert client.crt --key client.key \\
   {
     title: "Get Cardholder",
     section: "cards",
+    region: "eu",
     code: `curl --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -357,15 +382,38 @@ curl --cert client.crt --key client.key \\
   },
 ]
 
+// EU still uses legacy External-Token auth: swap API key signing headers for a single token header.
+function toRegion(code: string, region: Region) {
+  if (region === "us") return code
+  return code
+    .replace(/^# .*API key.*\n(# .*\n)?/, "")
+    .replace(
+      /  -H "X-Api-Key: \$API_KEY" \\\n  -H "X-Signature: \$SIGNATURE" \\\n  -H "X-Timestamp: \$TIMESTAMP" \\\n  -H "X-Nonce: \$NONCE" \\\n/g,
+      '  -H "External-Token: $EXTERNAL_TOKEN" \\\n',
+    )
+}
+
+const AUTH: Record<Region, { default: string; webhooks: string }> = {
+  us: {
+    default: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce) + TLS Certificates",
+    webhooks: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce)",
+  },
+  eu: {
+    default: "External-Token + TLS Certificates",
+    webhooks: "External-Token + TLS Certificates",
+  },
+}
+
 export function CodePanel({ section }: { section: Section }) {
-  const examples = EXAMPLES.filter((e) => e.section === section)
+  const region = useRegion()
+  const examples = EXAMPLES.filter((e) => e.section === section && (!e.region || e.region === region))
 
   return (
     <aside className="hidden xl:block w-[min(480px,38%)] shrink-0 border-l border-border bg-card sticky top-14 h-[calc(100vh-3.5rem)] self-start">
       <ScrollArea className="h-full">
         <div className="p-6 space-y-6">
           {examples.map((ex) => (
-            <CurlBlock key={ex.title} title={ex.title} code={ex.code} />
+            <CurlBlock key={ex.title} title={ex.title} code={toRegion(ex.code, region)} />
           ))}
 
           <div className="space-y-3">
@@ -385,13 +433,13 @@ export function CodePanel({ section }: { section: Section }) {
                     copyable
                     sub={{ label: "Webhook Public Key", value: "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFrUTJudm1zVDV4SllHQVhHYVhLSwp1bDJTTHF5aWZ0azRoMG11aUZCSWloTXFINFFNdU5GbjVHSGR2dFlWU0h4QXF1SjFSaWVjMlVQWlovWnRMUGFXCndWMWhyV3E5SElNeEZVb1NPMVYxVERGYVdhcFFETXVlQjA3ci9oTXhSVkhzWWcyV0JJMm9XaDlMMWZhbS9WU1IKNjYrc2RPNndQL1NzajJEZ3l0cXpUVFlQU3NWeDV4M0tzN0tjTFRuQlhMWEZXbU9SZmNHcU40RnZpWXRiUit1cwpVWHZ5SkFtT1A3TXN5cU56KzNBOWg3L0hsbEsxeWhJdGhpMWRGSjI3TUc2aXRnL1U1aG1vVE1Rb1BqUWU3KzkrCi9rNzhDQjBESGJ4dmQwS2sxOTVCcTI1RWx6VTRYeFN4bW1aeXh4UU9VdUpOR1pMaGFmdzV4T3BYbFljUFlXM1EKK3dJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==" }}
                   />
-                  <EnvRow label="Authentication" value="X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce)" />
+                  <EnvRow label="Authentication" value={AUTH[region].webhooks} />
                 </>
               ) : (
                 <>
                   <EnvRow label="Development" value="https://cards-integration-api.dev.spendbase.co/cards-adapter/v1/public/" copyable />
                   <EnvRow label="Production" value="https://cards-integration-api.prod.spendbase.co/cards-adapter/v1/public/" copyable />
-                  <EnvRow label="Authentication" value="X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce) + TLS Certificates" />
+                  <EnvRow label="Authentication" value={AUTH[region].default} />
                 </>
               )}
             </div>

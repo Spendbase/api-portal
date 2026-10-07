@@ -6,22 +6,28 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { ChevronDown, ChevronRight, X } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { regionPath, useRegion, type Region } from "@/components/region"
 
-const sections = [
+export const DOCS_SECTIONS: { title: string; path: string; items: { label: string; id: string; region?: Region }[] }[] = [
   {
     title: "Getting Started",
     path: "/docs/getting-started",
     items: [
       { label: "Basic Requirements", id: "basic-requirements" },
       { label: "Authentication & TLS", id: "authentication-tls" },
-      { label: "Go Signing Example", id: "go-signing-example" },
+      { label: "Go Signing Example", id: "go-signing-example", region: "us" },
     ],
+  },
+  {
+    title: "Quick Start",
+    path: "/docs/quick-start",
+    items: [],
   },
   {
     title: "Accounts",
     path: "/docs/accounts",
     items: [
-      { label: "Get Accounts by Currency", id: "get-accounts-by-currency" },
+      { label: "Get Accounts by Currency", id: "get-accounts-by-currency", region: "eu" },
       { label: "Get Bank Accounts", id: "get-bank-accounts" },
       { label: "Create Account", id: "create-account" },
       { label: "Get Ledger Accounts", id: "get-ledger-accounts" },
@@ -46,8 +52,8 @@ const sections = [
       { label: "Unlock Card", id: "unlock-card" },
       { label: "Terminate Card", id: "terminate-card" },
       { label: "Set Limit", id: "set-limit" },
-      { label: "Add Cardholder", id: "add-cardholder" },
-      { label: "Get Cardholder", id: "get-cardholder" },
+      { label: "Add Cardholder", id: "add-cardholder", region: "eu" },
+      { label: "Get Cardholder", id: "get-cardholder", region: "eu" },
       { label: "Get Team Cardholders", id: "get-team-cardholders" },
     ],
   },
@@ -66,16 +72,23 @@ const sections = [
     path: "/docs/webhooks",
     items: [
       { label: "Verifying Signatures", id: "verify-signature" },
-      { label: "Internal Transfer", id: "internal-transfer" },
+      { label: "Delivery", id: "webhook-delivery" },
       { label: "Card Created", id: "card-created" },
       { label: "Card Blocked", id: "card-blocked" },
+      { label: "Card Unblocked", id: "card-unblocked", region: "us" },
       { label: "Card Terminated", id: "card-terminated" },
       { label: "Card Authorization", id: "card-authorization" },
       { label: "Card Settlement", id: "card-settlement" },
-      { label: "Card OTP", id: "card-otp" },
+      { label: "Card OTP", id: "card-otp", region: "eu" },
+      { label: "Card OTP Failed", id: "card-otp-failed", region: "eu" },
       { label: "Card Decline", id: "card-decline" },
       { label: "Card Reversal", id: "card-reversal" },
       { label: "Card Refund", id: "card-refund" },
+      { label: "Account Funded", id: "account-funded", region: "us" },
+      { label: "Account Withdrawn", id: "account-withdrawn", region: "us" },
+      { label: "Balance Adjusted", id: "balance-adjusted", region: "us" },
+      { label: "Account Provisioned", id: "account-provisioned", region: "us" },
+      { label: "Account Created", id: "account-created", region: "us" },
     ],
   },
   {
@@ -83,7 +96,7 @@ const sections = [
     path: "/docs/versioning",
     items: [
       { label: "Release Notes", id: "release-notes" },
-      { label: "2026-09-03", id: "2026-09-03" },
+      { label: "2026-09-03", id: "2026-09-03", region: "us" },
       { label: "2026-08-13", id: "2026-08-13" },
       { label: "2026-06-25", id: "2026-06-25" },
     ],
@@ -101,6 +114,7 @@ function SidebarNav({
   toggle: (title: string) => void
   onLinkClick?: () => void
 }) {
+  const region = useRegion()
   const isActive = (sectionPath: string) =>
     pathname === sectionPath || pathname.startsWith(sectionPath + "/")
 
@@ -116,9 +130,25 @@ function SidebarNav({
       </div>
 
       <nav className="px-3 py-4 space-y-1">
-        {sections.map((section) => {
-          const active = isActive(section.path)
+        {DOCS_SECTIONS.map((section) => {
+          const sectionPath = regionPath(region, section.path)
+          const active = isActive(sectionPath)
           const open = expanded[section.title]
+          // A section that fits on one screen has no anchors: render it as a plain link.
+          if (section.items.length === 0) {
+            return (
+              <Link
+                key={section.title}
+                href={sectionPath}
+                onClick={onLinkClick}
+                className={`flex w-full items-center rounded-md px-2 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {section.title}
+              </Link>
+            )
+          }
           return (
             <div key={section.title}>
               <button
@@ -140,11 +170,11 @@ function SidebarNav({
               </button>
               {open && (
                 <ul className="mt-1 mb-2">
-                  {section.items.map((item) => {
+                  {section.items.filter((item) => !item.region || item.region === region).map((item) => {
                     return (
                       <li key={item.id}>
                         <Link
-                          href={`${section.path}#${item.id}`}
+                          href={`${sectionPath}#${item.id}`}
                           onClick={onLinkClick}
                           className={`flex items-center rounded-md px-2 py-1.5 text-sm transition-colors ${
                             active
@@ -170,7 +200,7 @@ function SidebarNav({
 export function DocsSidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname()
   const [expanded, setExpanded] = useState<Record<string, boolean>>(
-    Object.fromEntries(sections.map((s) => [s.title, true]))
+    Object.fromEntries(DOCS_SECTIONS.map((s) => [s.title, true]))
   )
 
   const toggle = (title: string) =>
