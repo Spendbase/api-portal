@@ -6,15 +6,16 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { ChevronDown, ChevronRight, X } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useRegion, type Region } from "@/components/region"
 
-const sections = [
+const sections: { title: string; path: string; items: { label: string; id: string; region?: Region }[] }[] = [
   {
     title: "Getting Started",
     path: "/docs/getting-started",
     items: [
       { label: "Basic Requirements", id: "basic-requirements" },
       { label: "Authentication & TLS", id: "authentication-tls" },
-      { label: "Go Signing Example", id: "go-signing-example" },
+      { label: "Go Signing Example", id: "go-signing-example", region: "us" },
     ],
   },
   {
@@ -83,7 +84,7 @@ const sections = [
     path: "/docs/versioning",
     items: [
       { label: "Release Notes", id: "release-notes" },
-      { label: "2026-09-03", id: "2026-09-03" },
+      { label: "2026-09-03", id: "2026-09-03", region: "us" },
       { label: "2026-08-13", id: "2026-08-13" },
       { label: "2026-06-25", id: "2026-06-25" },
     ],
@@ -101,6 +102,7 @@ function SidebarNav({
   toggle: (title: string) => void
   onLinkClick?: () => void
 }) {
+  const { region } = useRegion()
   const isActive = (sectionPath: string) =>
     pathname === sectionPath || pathname.startsWith(sectionPath + "/")
 
@@ -140,7 +142,7 @@ function SidebarNav({
               </button>
               {open && (
                 <ul className="mt-1 mb-2">
-                  {section.items.map((item) => {
+                  {section.items.filter((item) => !item.region || item.region === region).map((item) => {
                     return (
                       <li key={item.id}>
                         <Link

@@ -5,11 +5,12 @@ import { Search, Menu, X } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { RegionSwitcher, useRegion, type Region } from "@/components/region"
 
-const ALL_SECTIONS = [
+const ALL_SECTIONS: { label: string; id: string; group: string; page: string; region?: Region }[] = [
   { label: "Basic Requirements", id: "basic-requirements", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Authentication & TLS", id: "authentication-tls", group: "Getting Started", page: "/docs/getting-started" },
-  { label: "Go Signing Example", id: "go-signing-example", group: "Getting Started", page: "/docs/getting-started" },
+  { label: "Go Signing Example", id: "go-signing-example", group: "Getting Started", page: "/docs/getting-started", region: "us" },
   { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts", page: "/docs/accounts" },
   { label: "Get Bank Accounts", id: "get-bank-accounts", group: "Accounts", page: "/docs/accounts" },
   { label: "Create Account", id: "create-account", group: "Accounts", page: "/docs/accounts" },
@@ -48,7 +49,7 @@ const ALL_SECTIONS = [
   { label: "Card Reversal", id: "card-reversal", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Refund", id: "card-refund", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Release Notes", id: "release-notes", group: "Versioning", page: "/docs/versioning" },
-  { label: "2026-09-03", id: "2026-09-03", group: "Versioning", page: "/docs/versioning" },
+  { label: "2026-09-03", id: "2026-09-03", group: "Versioning", page: "/docs/versioning", region: "us" },
   { label: "2026-08-13", id: "2026-08-13", group: "Versioning", page: "/docs/versioning" },
   { label: "2026-06-25", id: "2026-06-25", group: "Versioning", page: "/docs/versioning" },
 ]
@@ -60,12 +61,14 @@ export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
+  const { region } = useRegion()
 
   const results = query.trim()
     ? ALL_SECTIONS.filter(
         (s) =>
-          s.label.toLowerCase().includes(query.toLowerCase()) ||
-          s.group.toLowerCase().includes(query.toLowerCase())
+          (!s.region || s.region === region) &&
+          (s.label.toLowerCase().includes(query.toLowerCase()) ||
+            s.group.toLowerCase().includes(query.toLowerCase()))
       )
     : []
 
@@ -116,6 +119,7 @@ export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
           <span className="font-mono text-sm text-muted-foreground hidden sm:inline">API Reference</span>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <RegionSwitcher />
           <div className="relative w-full md:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
