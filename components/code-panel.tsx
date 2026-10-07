@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useRegion, type Region } from "@/components/region"
 
-type Section = "getting-started" | "accounts" | "cards" | "transactions" | "webhooks"
+type Section = "getting-started" | "quick-start" | "accounts" | "cards" | "transactions" | "webhooks"
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)

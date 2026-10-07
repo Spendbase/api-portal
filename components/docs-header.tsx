@@ -11,6 +11,7 @@ const ALL_SECTIONS: { label: string; id: string; group: string; page: string; re
   { label: "Basic Requirements", id: "basic-requirements", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Authentication & TLS", id: "authentication-tls", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Go Signing Example", id: "go-signing-example", group: "Getting Started", page: "/docs/getting-started", region: "us" },
+  { label: "Quick Start", id: "quick-start", group: "Quick Start", page: "/docs/quick-start" },
   { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts", page: "/docs/accounts", region: "eu" },
   { label: "Get Bank Accounts", id: "get-bank-accounts", group: "Accounts", page: "/docs/accounts" },
   { label: "Create Account", id: "create-account", group: "Accounts", page: "/docs/accounts" },

@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect } from "react"
+import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
@@ -51,6 +52,15 @@ export function RegionSwitcher() {
         </button>
       ))}
     </div>
+  )
+}
+
+// Link to another docs page in the current region: href="/docs/cards#get-card" -> "/docs/eu/cards#get-card".
+export function RegionLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={regionPath(useRegion(), href)} className="underline underline-offset-2 hover:text-foreground">
+      {children}
+    </Link>
   )
 }
 

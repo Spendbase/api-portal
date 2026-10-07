@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { AlertCircle } from "lucide-react"
 import { ResponseBlock } from "@/components/response-block"
-import { RegionOnly } from "@/components/region"
+import { RegionLink, RegionOnly } from "@/components/region"
 
 function GetBadge() {
   return (
@@ -587,6 +587,138 @@ func example() error {
 }`}</ResponseBlock>
           </div>
         </RegionOnly>
+      </div>
+    </main>
+  )
+}
+
+function QuickStartStep({ id, n, title, children }: { id: string; n: number; title: string; children: React.ReactNode }) {
+  return (
+    <div id={id} className="flex gap-4">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+        {n}
+      </span>
+      <div className="min-w-0 flex-1 space-y-2">
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <div className="space-y-2 text-muted-foreground leading-relaxed">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+export function QuickStartContent() {
+  const code = "bg-muted px-1 py-0.5 rounded text-xs"
+  return (
+    <main className="flex-1 min-w-0 py-12 px-6 lg:px-12">
+      <div className="mx-auto max-w-3xl space-y-8">
+        <div id="quick-start">
+          <h1 className="text-4xl font-bold tracking-tight">Quick Start</h1>
+          <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
+            The steps to go from a new integration to your first card. Complete{" "}
+            <RegionLink href="/docs/getting-started">Getting Started</RegionLink> first: you need TLS certificates and
+            <RegionOnly region="us"> an API key</RegionOnly>
+            <RegionOnly region="eu"> an external token</RegionOnly> to call the API.
+          </p>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-10">
+          <QuickStartStep id="qs-bank-account" n={1} title="Get your bank account">
+            <p>
+              Call <RegionLink href="/docs/accounts#get-bank-accounts">Get bank accounts</RegionLink>
+              <RegionOnly region="eu">
+                {" "}and pick the bank account for your currency (e.g. <code className={code}>EUR</code>)
+              </RegionOnly>
+              . Take its <code className={code}>id</code>.
+            </p>
+          </QuickStartStep>
+
+          <QuickStartStep id="qs-ledger-accounts" n={2} title="Get your accounts">
+            <p>
+              Call <RegionLink href="/docs/accounts#get-ledger-accounts">Get ledger accounts</RegionLink> with the bank
+              account <code className={code}>id</code>.
+            </p>
+            <RegionOnly region="eu">
+              <p>
+                Take the <code className={code}>id</code> of the master account. Cards can be issued on it directly.
+              </p>
+            </RegionOnly>
+            <RegionOnly region="us">
+              <p>
+                A sub-account named <code className={code}>Main budget</code> is already created for you. Take its{" "}
+                <code className={code}>id</code>: you can issue cards on it right away.
+              </p>
+            </RegionOnly>
+          </QuickStartStep>
+
+          <QuickStartStep id="qs-sub-account" n={3} title="Create a sub-account (optional)">
+            <p>
+              Sub-accounts work as separate budgets. Create one with{" "}
+              <RegionLink href="/docs/accounts#create-account">Create account</RegionLink>, passing the bank account{" "}
+              <code className={code}>id</code> from step 1 as <code className={code}>ledgerBankAccountId</code>.
+            </p>
+            <RegionOnly region="us">
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+                The API for transfers between sub-accounts is not available in the US yet. Transfers can be made
+                manually: send a request to the Spendbase team in chat.
+              </div>
+            </RegionOnly>
+          </QuickStartStep>
+
+          <RegionOnly region="eu">
+            <QuickStartStep id="qs-cardholder" n={4} title="Create a cardholder">
+              <p>
+                Every card needs a verified cardholder. Create one with{" "}
+                <RegionLink href="/docs/cards#add-cardholder">Add cardholder</RegionLink>. The email must be unique;
+                preferably use an email on your own domain.
+              </p>
+              <p>
+                The cardholder then has to pass KYC verification. On the development environment, contact the Spendbase
+                team and we will approve it for you.
+              </p>
+              <p>
+                Check the verification status with{" "}
+                <RegionLink href="/docs/cards#get-cardholder">Get cardholder</RegionLink> or{" "}
+                <RegionLink href="/docs/cards#get-team-cardholders">Get team cardholders</RegionLink>. Continue once the
+                status is <code className={code}>Approved</code>.
+              </p>
+            </QuickStartStep>
+          </RegionOnly>
+
+          <RegionOnly region="eu">
+            <QuickStartStep id="qs-create-card" n={5} title="Issue a card">
+              <p>
+                Call <RegionLink href="/docs/cards#create-card">Create card</RegionLink> with:
+              </p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>
+                  <code className={code}>accountId</code>: the master account or a sub-account{" "}
+                  <code className={code}>id</code>
+                </li>
+                <li>
+                  <code className={code}>spendbaseUserId</code>: the cardholder <code className={code}>id</code>{" "}
+                  returned by Add cardholder
+                </li>
+              </ul>
+            </QuickStartStep>
+          </RegionOnly>
+          <RegionOnly region="us">
+            <QuickStartStep id="qs-create-card" n={4} title="Issue a card">
+              <p>
+                Call <RegionLink href="/docs/cards#create-card">Create card</RegionLink> with:
+              </p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>
+                  <code className={code}>accountId</code>: the sub-account <code className={code}>id</code>
+                </li>
+                <li>
+                  <code className={code}>email</code>: the email the Spendbase account was created with
+                </li>
+              </ul>
+            </QuickStartStep>
+          </RegionOnly>
+        </div>
       </div>
     </main>
   )
@@ -1291,6 +1423,21 @@ export function CardsContent() {
                   <code className="bg-muted px-1 rounded text-xs">UNLIMITED</code>.
                 </Param>
               </div>
+            </div>
+            <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <RegionOnly region="us">
+                <p>
+                  Setting or updating a limit resets its usage. Only transactions made after the limit is set count
+                  towards it.
+                </p>
+              </RegionOnly>
+              <RegionOnly region="eu">
+                <p>
+                  All transactions within the current limit period count towards the limit, including those made before
+                  the limit was set or changed.
+                </p>
+              </RegionOnly>
             </div>
             <ResponseBlock>{`{
   "message": "Limit was requested successfully.",

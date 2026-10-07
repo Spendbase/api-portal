@@ -19,6 +19,11 @@ const sections: { title: string; path: string; items: { label: string; id: strin
     ],
   },
   {
+    title: "Quick Start",
+    path: "/docs/quick-start",
+    items: [],
+  },
+  {
     title: "Accounts",
     path: "/docs/accounts",
     items: [
@@ -129,6 +134,21 @@ function SidebarNav({
           const sectionPath = regionPath(region, section.path)
           const active = isActive(sectionPath)
           const open = expanded[section.title]
+          // A section that fits on one screen has no anchors: render it as a plain link.
+          if (section.items.length === 0) {
+            return (
+              <Link
+                key={section.title}
+                href={sectionPath}
+                onClick={onLinkClick}
+                className={`flex w-full items-center rounded-md px-2 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {section.title}
+              </Link>
+            )
+          }
           return (
             <div key={section.title}>
               <button
