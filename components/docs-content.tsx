@@ -43,6 +43,15 @@ function ScopeBadge({ scope }: { scope: string }) {
   )
 }
 
+function Note({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+      <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+      <div className="space-y-1">{children}</div>
+    </div>
+  )
+}
+
 function EnumValues({ name, values }: { name?: string; values: [string, string][] }) {
   return (
     <div className="space-y-1.5 text-sm">
@@ -94,9 +103,7 @@ const CARD_OBJECT = `{
   },
   "cardLast4": "4242",
   "cardName": "Marketing Card",
-  "cardType": "VIRTUAL",
   "currencyISOCode": "EUR",
-  "deliveryStatus": "string",
   "id": "string",
   "issuedAt": "string",
   "ledgerAccountId": "string",
@@ -127,8 +134,7 @@ const CARD_OBJECT = `{
     "spentAmount": 0,
     "type": "MONTHLY"
   },
-  "status": "DEFAULT",
-  "userPinSet": true
+  "status": "DEFAULT"
 }`
 
 const CARD_TRANSACTION_OBJECT = `{
@@ -446,6 +452,24 @@ export function GettingStartedContent() {
             </div>
           </div>
 
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Rate limits and retries</h3>
+            <ul className="list-disc list-inside space-y-1.5 text-muted-foreground leading-relaxed">
+              <li>
+                Up to 100 requests per minute per client IP. Above that the API returns{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">429</code> with{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">{`{"error": "Too many requests"}`}</code>. A{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">429</code> can also come from the card provider when it
+                rate-limits requests.
+              </li>
+              <li>
+                Write requests are not idempotent and there is no idempotency key. If a request times out, check the
+                result (e.g. list the cards or transactions) before retrying, otherwise a retry can create a second card
+                or move money twice.
+              </li>
+            </ul>
+          </div>
+
           <div className="flex gap-3 rounded-lg border border-orange-500/20 bg-orange-500/10 p-4">
             <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
             <div>
@@ -659,6 +683,10 @@ export function QuickStartContent() {
               <code className={code}>id</code> from step 1 as <code className={code}>ledgerBankAccountId</code>.
             </p>
             <RegionOnly region="us">
+              <p>
+                In the US a sub-account name can be at most 13 characters, and a new sub-account starts with no funds:
+                cards on it are declined until the Spendbase team funds it.
+              </p>
               <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
                 The API for transfers between sub-accounts is not available in the US yet. Transfers can be made
                 manually: send a request to the Spendbase team in chat.
@@ -713,9 +741,15 @@ export function QuickStartContent() {
                   <code className={code}>accountId</code>: the sub-account <code className={code}>id</code>
                 </li>
                 <li>
-                  <code className={code}>email</code>: the email the Spendbase account was created with
+                  <code className={code}>cardName</code>: a name for the card
                 </li>
               </ul>
+              <p>
+                The card is issued to the owner of the API key: the user the Spendbase account was created with.{" "}
+                <code className={code}>email</code> and <code className={code}>spendbaseUserId</code> are not needed.
+                Set a spending limit with <RegionLink href="/docs/cards#set-limit">Set limit</RegionLink> after the card
+                is created.
+              </p>
             </QuickStartStep>
           </RegionOnly>
         </div>
@@ -867,6 +901,19 @@ export function AccountsContent() {
               created account (use it for transfers and the get-account-by-ID route); it is an empty string if the
               account could not be found in the ledger right after creation.
             </p>
+            <RegionOnly region="us">
+              <Note>
+                <p>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">accountName</code> can be at most 13 characters (an emoji counts as 2); longer names
+                  return <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> <code className="bg-muted px-1 py-0.5 rounded text-xs">a budget name can be at most 13 characters</code>.
+                </p>
+                <p>
+                  The sub-account is always created under your company&apos;s bank account;{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">ledgerBankAccountId</code> only sets its currency. A new sub-account starts with no funds,
+                  so cards on it are declined until the Spendbase team funds it.
+                </p>
+              </Note>
+            </RegionOnly>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
@@ -911,6 +958,15 @@ export function AccountsContent() {
               <code className="bg-muted px-1 py-0.5 rounded text-xs">ref</code> of a sub account is the account{" "}
               <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> returned by create account.
             </p>
+            <RegionOnly region="us">
+              <Note>
+                <p>
+                  US accounts have two levels: the bank account and its sub-accounts.{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">masterAccounts</code> is empty, and the first sub-account is{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">Main budget</code>.
+                </p>
+              </Note>
+            </RegionOnly>
             <div className="rounded-lg border border-border bg-card p-4 space-y-4">
               <EnumValues
                 name="type"
@@ -995,6 +1051,14 @@ export function AccountsContent() {
               currency and available balance on the source account are checked. Responds with a success message if the
               money was transferred.
             </p>
+            <RegionOnly region="us">
+              <Note>
+                <p>
+                  Not available in the US: the request is always rejected with <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. Transfers between
+                  sub-accounts can be made manually: send a request to the Spendbase team in chat.
+                </p>
+              </Note>
+            </RegionOnly>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
@@ -1035,6 +1099,14 @@ export function AccountsContent() {
               debit and the credit transaction of the transfer. The HTTP status mirrors the{" "}
               <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code> field of the response.
             </p>
+            <RegionOnly region="us">
+              <Note>
+                <p>
+                  Not available in the US: the request is always rejected with <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. Transfers between
+                  sub-accounts can be made manually: send a request to the Spendbase team in chat.
+                </p>
+              </Note>
+            </RegionOnly>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
@@ -1072,6 +1144,14 @@ export function AccountsContent() {
             <p className="text-muted-foreground leading-relaxed">
               Responds with the account ID, new name and ledger account ID.
             </p>
+            <RegionOnly region="us">
+              <Note>
+                <p>
+                  Not available in the US: a sub-account keeps the name it was created with. The request is always
+                  rejected with <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>.
+                </p>
+              </Note>
+            </RegionOnly>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Path Parameters</h3>
               <div className="space-y-2">
@@ -1149,35 +1229,67 @@ export function CardsContent() {
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
                 <Param name="accountId" type="string" required>Card will be created on the account with the given ID</Param>
-                <Param name="cardName" type="string" required>Custom name for card</Param>
-                <Param name="spendbaseUserId" type="string">Preferred cardholder identifier. Use this for all new requests.</Param>
-                <Param name="email" type="string">Cardholder email — deprecated. Still accepted as a legacy fallback, but new integrations should send <code className="bg-muted px-1 py-0.5 rounded">spendbaseUserId</code> instead.</Param>
-                <Param name="cardType" type="string">
-                  <EnumValues
-                    values={[
-                      ["VIRTUAL", "Default. A virtual card for online payments and mobile wallets."],
-                      ["PHYSICAL", "A plastic card shipped to the delivery address."],
-                    ]}
-                  />
+                <Param name="cardName" type="string" required>
+                  Custom name for the card.
+                  <RegionOnly region="eu">
+                    {" "}3–50 characters: Latin letters, digits, spaces and <code className="bg-muted px-1 py-0.5 rounded text-xs">- , . /</code>. Other characters are
+                    rejected by the card provider.
+                  </RegionOnly>
+                  <RegionOnly region="us"> Up to 255 characters.</RegionOnly>
                 </Param>
-                <Param name="expirationDate" type="string">Custom expiration date for the card</Param>
+                <Param name="spendbaseUserId" type="string">
+                  <RegionOnly region="eu">
+                    Cardholder ID: the <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> returned by{" "}
+                    <a href="#add-cardholder" className="underline">Add cardholder</a>. Either{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is required.
+                  </RegionOnly>
+                  <RegionOnly region="us">Not used in the US: the card is issued to the owner of the API key.</RegionOnly>
+                </Param>
+                <Param name="email" type="string">
+                  <RegionOnly region="eu">
+                    Cardholder email — deprecated. Still accepted as a legacy fallback, but new integrations should send{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> instead.
+                  </RegionOnly>
+                  <RegionOnly region="us">Not used in the US: the card is issued to the owner of the API key.</RegionOnly>
+                </Param>
                 <Param name="limit" type="object">
                   Initial card limit, same shape as the{" "}
                   <a href="#set-limit" className="underline">Set limit</a> body:{" "}
                   <code className="bg-muted px-1 rounded text-xs">type</code> (required),{" "}
-                  <code className="bg-muted px-1 rounded text-xs">amount</code>
-                </Param>
-                <Param name="delivery" type="object">
-                  Delivery address for physical cards:{" "}
-                  <code className="bg-muted px-1 rounded text-xs">addressLine1</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">addressLine2</code> (optional){" "}
-                  <code className="bg-muted px-1 rounded text-xs">city</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">countryIsoCode</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">state</code> (optional){" "}
-                  <code className="bg-muted px-1 rounded text-xs">zipcode</code>
+                  <code className="bg-muted px-1 rounded text-xs">amount</code>.
+                  <RegionOnly region="eu"> Applied asynchronously after the card is created.</RegionOnly>
+                  <RegionOnly region="us">
+                    {" "}Not applied in the US: the card is created without a limit. Call Set limit after creating the
+                    card.
+                  </RegionOnly>
                 </Param>
               </div>
             </div>
+            <RegionOnly region="eu">
+              <Note>
+                <p>
+                  The cardholder&apos;s full name is printed on the card and can be at most 26 characters. A company can
+                  have up to 50 cards; terminated cards count towards this limit.
+                </p>
+                <p>
+                  The card currency must be allowed for the company&apos;s country: EUR, GBP or USD in GB, JE, IM, GG and
+                  SH; EUR, USD or PLN in PL; EUR or USD in DE, ES, EE, LV, LT, CY, CZ and RO; EUR only in other EEA
+                  countries.
+                </p>
+                <p>
+                  If the cardholder is not approved yet, the card is created with status <code className="bg-muted px-1 py-0.5 rounded text-xs">NEW</code> and has no
+                  card number until the cardholder passes verification.
+                </p>
+              </Note>
+            </RegionOnly>
+            <RegionOnly region="us">
+              <Note>
+                <p>
+                  The card is issued to the owner of the API key, and only that user can read its details. The card
+                  currency is always USD.
+                </p>
+              </Note>
+            </RegionOnly>
             <ResponseBlock>{`{
   "code": 200,
   "message": "200 OK",
@@ -1223,7 +1335,7 @@ export function CardsContent() {
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
                 <Param name="cursor" type="string">Cursor returned by the previous page (<code className="bg-muted px-1 rounded text-xs">nextCursor</code>). Max 512 characters, no control characters.</Param>
-                <Param name="limit" type="integer">Maximum number of items to return, 0–1000. Defaults to 50 when omitted or 0. A non-integer or out-of-range value returns 400.</Param>
+                <Param name="limit" type="integer">Maximum number of items to return, 1–50. Defaults to 50 when omitted. Values above 50 or non-integer values return 400.</Param>
               </div>
             </div>
             <ResponseBlock>{`{
@@ -1255,7 +1367,7 @@ export function CardsContent() {
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
                 <Param name="cursor" type="string">Cursor returned by the previous page (<code className="bg-muted px-1 rounded text-xs">nextCursor</code>). Max 512 characters, no control characters.</Param>
-                <Param name="limit" type="integer">Maximum number of items to return, 0–1000. Defaults to 50 when omitted or 0. A non-integer or out-of-range value returns 400.</Param>
+                <Param name="limit" type="integer">Maximum number of items to return, 1–50. Defaults to 50 when omitted. Values above 50 or non-integer values return 400.</Param>
               </div>
             </div>
             <ResponseBlock>{`{
@@ -1294,6 +1406,18 @@ export function CardsContent() {
                 Non-compliant integrations should use <a href="#get-card-frame" className="underline">Get card frame</a> instead.
               </p>
             </div>
+            <Note>
+              <p>
+                Only the card&apos;s owner can read its details; other users, including company admins, get{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">403</code>.
+                <RegionOnly region="eu">
+                  {" "}A card with status <code className="bg-muted px-1 py-0.5 rounded text-xs">NEW</code> returns empty card number, CVV and expiry.
+                </RegionOnly>
+                <RegionOnly region="us">
+                  {" "}A terminated card returns an empty card number and CVV.
+                </RegionOnly>
+              </p>
+            </Note>
             <ResponseBlock>{`{
   "billingAddress": {
     "city": "string",
@@ -1307,9 +1431,7 @@ export function CardsContent() {
   "expirationMonth": "string",
   "expirationYear": "string",
   "id": "string",
-  "issuedAt": "string",
-  "pin": "string",
-  "userPinSet": true
+  "issuedAt": "string"
 }`}</ResponseBlock>
           </div>
 
@@ -1326,7 +1448,7 @@ export function CardsContent() {
             <p className="text-muted-foreground leading-relaxed">
               Returns a short-lived signed URL with card details and its expiration timestamp (RFC 3339). The URL
               expires 1 minute after it is issued. Use it to display card details in an iframe without handling
-              sensitive data directly. Does not require PCI DSS compliance.
+              sensitive data directly. Does not require PCI DSS compliance. Only the card&apos;s owner can open it.
             </p>
             <ResponseBlock>{`{
   "url": "string",
@@ -1347,6 +1469,19 @@ export function CardsContent() {
             <p className="text-muted-foreground leading-relaxed">
               No required body. Responds with a success message if the card status was changed.
             </p>
+            <RegionOnly region="eu">
+              <Note>
+                <p>
+                  Locking an already locked card returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. A card with status <code className="bg-muted px-1 py-0.5 rounded text-xs">NEW</code>{" "}
+                  cannot be locked or unlocked, only terminated.
+                </p>
+              </Note>
+            </RegionOnly>
+            <RegionOnly region="us">
+              <Note>
+                <p>Locking an already locked card succeeds without changes.</p>
+              </Note>
+            </RegionOnly>
             <ResponseBlock>{`{
   "message": "Card status was successfully changed.",
   "status": "Success"
@@ -1366,6 +1501,18 @@ export function CardsContent() {
             <p className="text-muted-foreground leading-relaxed">
               No required body. Responds with a success message if the card status was changed.
             </p>
+            <RegionOnly region="eu">
+              <Note>
+                <p>
+                  Unlocking an active card returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. A terminated card cannot be unlocked.
+                </p>
+              </Note>
+            </RegionOnly>
+            <RegionOnly region="us">
+              <Note>
+                <p>Unlocking an active card succeeds without changes. A terminated card cannot be unlocked.</p>
+              </Note>
+            </RegionOnly>
             <ResponseBlock>{`{
   "message": "Card status was successfully changed.",
   "status": "Success"
@@ -1385,6 +1532,12 @@ export function CardsContent() {
             <p className="text-muted-foreground leading-relaxed">
               No required body. Permanently closes the card — this action cannot be undone.
             </p>
+            <Note>
+              <p>
+                Terminating an already terminated card returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. A terminated card cannot be locked
+                or unlocked.
+              </p>
+            </Note>
             <ResponseBlock>{`{
   "message": "Card status was successfully changed.",
   "status": "Success"
@@ -1408,18 +1561,31 @@ export function CardsContent() {
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
                 <Param name="type" type="string" required>
-                  <EnumValues
-                    values={[
-                      ["DAILY", "Spending cap that resets every day."],
-                      ["WEEKLY", "Spending cap that resets every week."],
-                      ["MONTHLY", "Spending cap that resets every month."],
-                      ["FIXED", "Total spending cap for the card. It does not reset."],
-                      ["UNLIMITED", "No spending cap. amount is not needed."],
-                    ]}
-                  />
+                  <RegionOnly region="eu">
+                    <EnumValues
+                      values={[
+                        ["DAILY", "Spending cap over a rolling 1-day period, counted from the first transaction."],
+                        ["WEEKLY", "Spending cap over a rolling 7-day period."],
+                        ["MONTHLY", "Spending cap over a rolling 30-day period (not a calendar month)."],
+                        ["FIXED", "Spending cap over a rolling 365-day period."],
+                        ["UNLIMITED", "No spending cap. amount is not needed."],
+                      ]}
+                    />
+                  </RegionOnly>
+                  <RegionOnly region="us">
+                    <EnumValues
+                      values={[
+                        ["DAILY", "Spending cap that resets every day."],
+                        ["WEEKLY", "Spending cap that resets every week."],
+                        ["MONTHLY", "Spending cap that resets every month."],
+                        ["FIXED", "Spending cap for the calendar year. Resets on 1 January (UTC)."],
+                        ["UNLIMITED", "No spending cap. amount is not needed."],
+                      ]}
+                    />
+                  </RegionOnly>
                 </Param>
                 <Param name="amount" type="number">
-                  Limit value to set (decimals allowed). Not needed for{" "}
+                  Limit value, 0.01–500000 (decimals allowed). Required for every type except{" "}
                   <code className="bg-muted px-1 rounded text-xs">UNLIMITED</code>.
                 </Param>
               </div>
@@ -1439,6 +1605,25 @@ export function CardsContent() {
                 </p>
               </RegionOnly>
             </div>
+            <Note>
+              <p>
+                Only cards with status <code className="bg-muted px-1 py-0.5 rounded text-xs">DEFAULT</code> can get a limit: other statuses return{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code> <code className="bg-muted px-1 py-0.5 rounded text-xs">card is not active</code> (or <code className="bg-muted px-1 py-0.5 rounded text-xs">card is expired</code>). Setting
+                the same type and amount again returns <code className="bg-muted px-1 py-0.5 rounded text-xs">200</code> without changes.
+              </p>
+              <RegionOnly region="eu">
+                <p>
+                  Only company admins can set limits. The limit is applied asynchronously, usually within 30–90 seconds;
+                  until then it appears as <code className="bg-muted px-1 py-0.5 rounded text-xs">pendingLimit</code> on the card. Another update while one is
+                  pending returns <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>.
+                </p>
+              </RegionOnly>
+              <RegionOnly region="us">
+                <p>
+                  Two concurrent updates of the same card return <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>; nothing is changed.
+                </p>
+              </RegionOnly>
+            </Note>
             <ResponseBlock>{`{
   "message": "Limit was requested successfully.",
   "status": "Success"
@@ -1558,6 +1743,9 @@ export function CardsContent() {
                 <code className="bg-muted px-1 py-0.5 rounded text-xs">External-Token</code>
               </RegionOnly>
               . No path or query parameters.
+              <RegionOnly region="us">
+                {" "}Not paginated: a company with more than 1000 cardholders gets <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
+              </RegionOnly>
             </p>
             <ResponseBlock>{`[
   {
@@ -1825,11 +2013,16 @@ export function TransactionsContent() {
               equals <code className="font-mono">Master Account</code>). For internal transfers
               (<code className="font-mono">sourceType: Internal</code>) only one leg is kept: a{" "}
               <code className="font-mono">debit</code> whose receiver is the Master Account, or a{" "}
-              <code className="font-mono">credit</code> whose sender is the Master Account. This endpoint is not paginated by the caller — it returns
-              the first upstream page; <code className="font-mono">hasMore</code>, <code className="font-mono">nextCursor</code>{" "}
-              and account <code className="font-mono">balances</code> are passed through from upstream when present.
+              <code className="font-mono">credit</code> whose sender is the Master Account. This endpoint is not paginated: it returns
+              all matching transactions; account <code className="font-mono">balances</code> are passed through from
+              upstream when present.
               Fields with zero/empty values are omitted from the response.
             </p>
+            <RegionOnly region="us">
+              <Note>
+                <p>US accounts have no master account, so this endpoint returns an empty list.</p>
+              </Note>
+            </RegionOnly>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Path Parameters</h3>
               <div className="space-y-2">

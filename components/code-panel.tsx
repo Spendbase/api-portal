@@ -161,6 +161,7 @@ const EXAMPLES: { title: string; section: Section; code: string; region?: Region
   {
     title: "Create Card",
     section: "cards",
+    region: "eu",
     code: `curl -X POST --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -169,7 +170,22 @@ const EXAMPLES: { title: string; section: Section; code: string; region?: Region
   -H "Content-Type: application/json" \\
   -d '{"accountId": "$ACCOUNT_ID",
        "cardName": "Marketing Card",
-       "spendbaseUserId": "$SPENDBASE_USER_ID"}' \\
+       "spendbaseUserId": "$CARDHOLDER_ID"}' \\
+  $BASE_URL/cards/card`,
+  },
+  {
+    // US: the card is issued to the API key owner, so no cardholder field
+    title: "Create Card",
+    section: "cards",
+    region: "us",
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  -H "Content-Type: application/json" \\
+  -d '{"accountId": "$ACCOUNT_ID",
+       "cardName": "Marketing Card"}' \\
   $BASE_URL/cards/card`,
   },
   {
