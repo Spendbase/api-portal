@@ -77,7 +77,7 @@ function Param({
           {required ? "required" : "optional"}
         </Badge>
       </div>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{children}</p>
+      <div className="mt-2 text-sm leading-relaxed text-muted-foreground">{children}</div>
     </div>
   )
 }
@@ -2132,6 +2132,439 @@ function EuWebhookEvents() {
   )
 }
 
+// US webhooks are produced by cards-highnote and delivered by the webhooks service.
+// Source of truth: cards-highnote internal/services/webhook + docs/client-webhook-extensions.md.
+const US_CARD_LIFECYCLE_PAYLOAD = `{
+  cardId: string;                        // card ID, as returned by Get Card
+  cardName: string | null;
+  panLastFour: string | null;
+  expYear: number | null;
+  expMonth: number | null;
+  accountId: string | null;              // ledger account ID of the card's account
+  holderId: string | null;               // cardholder record ID (not the user ID in Get Card's cardHolder.id); null if none
+  currencyISONum: string | null;         // ISO 4217 numeric, e.g. "840"
+  cardStatus: SpendbaseCardStatus;       // status after the change
+  previousStatus: SpendbaseCardStatus | null;  // status before the change; null on Card Created
+  initiatedBy: 'product' | 'bank' | null;      // who made the change; null on Card Created
+  timestamp: string;                     // UTC RFC 3339
+}`
+
+function UsCardLifecycleValues() {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+      <EnumValues
+        name="cardStatus / previousStatus"
+        values={[
+          ["NEW", "Issued but not activated yet."],
+          ["DEFAULT", "Active and ready to use."],
+          ["LOCKED", "Locked through Spendbase (API, app or an operator)."],
+          ["SUSPENDED", "Put on hold by the issuing bank."],
+          ["TERMINATED", "Permanently closed."],
+        ]}
+      />
+      <EnumValues
+        name="initiatedBy"
+        values={[
+          ["product", "The change was requested through Spendbase: the API, the app or an operator."],
+          ["bank", "The issuing bank changed the card itself, e.g. a fraud hold or a closure you did not request."],
+        ]}
+      />
+    </div>
+  )
+}
+
+function UsWebhookEvents() {
+  const code = "px-1.5 py-0.5 rounded bg-muted font-mono text-sm"
+  return (
+    <>
+      <Separator />
+
+      {/* Delivery */}
+      <div id="webhook-delivery" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Delivery</h2>
+        <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed">
+          <li>
+            Card events use the <code className={code}>Card</code> group and money-movement events use the{" "}
+            <code className={code}>Account</code> group. The event is identified by the{" "}
+            <code className={code}>X-Event-Type</code> header.
+          </li>
+          <li>
+            Respond with any status below <code className={code}>400</code> within 5 seconds. Timeouts, network errors
+            and <code className={code}>4xx</code>/<code className={code}>5xx</code> responses are retried up to 5 times
+            with exponential backoff (1s up to 30s).
+          </li>
+          <li>
+            Each occurrence produces one event, but a retried delivery can reach you more than once. Payloads carry no
+            event ID, so make your handler idempotent.
+          </li>
+          <li>Events are not guaranteed to arrive in order. JSON field order is not guaranteed either.</li>
+          <li>
+            Every documented field is always present. A value the bank did not provide is{" "}
+            <code className={code}>null</code>. It is never omitted and never an empty string.
+          </li>
+          <li>
+            Amounts are decimal strings with two decimal places, e.g. <code className={code}>&quot;12.00&quot;</code>.
+            Fields ending in <code className={code}>Ison</code> or <code className={code}>ISONum</code> are ISO 4217
+            numeric currency codes, e.g. <code className={code}>&quot;840&quot;</code> for USD.{" "}
+            <code className={code}>exchangeRate</code> has up to 6 decimal places.
+          </li>
+          <li>
+            <code className={code}>timestamp</code> is when the webhook was created (UTC, RFC 3339, e.g.{" "}
+            <code className={code}>2026-10-07T12:34:56Z</code>), not when the transaction happened.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <p className="text-sm font-medium">Fields that can be null</p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>
+              <code className={code}>mccCode</code>, <code className={code}>merchantCategory</code>: the card network did
+              not report the merchant&apos;s category.
+            </li>
+            <li>
+              <code className={code}>merchantAmount</code>, <code className={code}>exchangeRate</code>: a cross-currency
+              purchase where the bank did not report the amount in the merchant&apos;s currency. For a same-currency
+              purchase, <code className={code}>merchantAmount</code> equals the billing amount and{" "}
+              <code className={code}>exchangeRate</code> is <code className={code}>&quot;1&quot;</code>.
+            </li>
+            <li>
+              <code className={code}>rejectReason</code>: the bank declined without a reason that maps to a documented
+              value.
+            </li>
+            <li>
+              <code className={code}>holderId</code>: the card has no cardholder record.
+            </li>
+            <li>
+              <code className={code}>accountId</code>, <code className={code}>expYear</code>,{" "}
+              <code className={code}>expMonth</code>, <code className={code}>cardName</code>,{" "}
+              <code className={code}>panLastFour</code>: rare, when the card record is missing that value.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Card Created */}
+      <div id="card-created" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Created</h2>
+        <p className="text-muted-foreground leading-relaxed">Fired when a new card is issued.</p>
+        <WebhookHeaders group="Card" type="CardIssue" />
+        <ResponseBlock status="Payload">{US_CARD_LIFECYCLE_PAYLOAD}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Card Blocked */}
+      <div id="card-blocked" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Blocked</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a card is locked through Spendbase or put on hold by the issuing bank.
+        </p>
+        <WebhookHeaders group="Card" type="CardBlock" />
+        <ResponseBlock status="Payload">{US_CARD_LIFECYCLE_PAYLOAD}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Card Unblocked */}
+      <div id="card-unblocked" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Unblocked</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a blocked card becomes usable again: it was unlocked through Spendbase, or the bank lifted its
+          hold. <code className={code}>cardStatus</code> is normally <code className={code}>DEFAULT</code> and{" "}
+          <code className={code}>previousStatus</code> is normally <code className={code}>LOCKED</code>.
+        </p>
+        <WebhookHeaders group="Card" type="CardUnblock" />
+        <ResponseBlock status="Payload">{US_CARD_LIFECYCLE_PAYLOAD}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Card Terminated */}
+      <div id="card-terminated" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Terminated</h2>
+        <p className="text-muted-foreground leading-relaxed">Fired when a card is permanently closed.</p>
+        <WebhookHeaders group="Card" type="CardTerminate" />
+        <ResponseBlock status="Payload">{US_CARD_LIFECYCLE_PAYLOAD}</ResponseBlock>
+        <UsCardLifecycleValues />
+      </div>
+
+      <Separator />
+
+      {/* Card Authorization */}
+      <div id="card-authorization" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Authorization</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a card transaction is authorized. The transaction is pending settlement.
+        </p>
+        <WebhookHeaders group="Card" type="Authorization" />
+        <ResponseBlock status="Payload">{`{
+  tx_type: 'PURCHASE';
+  lifecyclePhase: 'AUTHORIZATION';
+  transactionId: string;                   // transaction ID, same for every event of one purchase
+  cardId: string;                          // card ID, as returned by Get Card
+  panLastFour: string | null;
+  accountName: string | null;
+  merchantName: string | null;
+  merchantAmount: string | null;           // decimal string, merchant currency, always positive
+  merchantCurrencyISOCode: string | null;  // alpha-3, e.g. "USD"
+  billingAmount: string;                   // decimal string, billing currency, always positive
+  billingCurrencyIson: string | null;      // ISO 4217 numeric
+  exchangeRate: string | null;             // decimal string, billingAmount / merchantAmount
+  cardName: string | null;
+  merchantCategory: string | null;
+  mccCode: string | null;
+  timestamp: string;                       // UTC RFC 3339
+}`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Card Settlement */}
+      <div id="card-settlement" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Settlement</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a purchase is settled. Refund settlements are delivered as a Refund event instead.
+        </p>
+        <WebhookHeaders group="Card" type="Settlement" />
+        <ResponseBlock status="Payload">{`{
+  tx_type: 'PURCHASE';
+  lifecyclePhase: 'SETTLEMENT';
+  merchantAmount: string | null;           // decimal string, merchant currency, always positive
+  merchantCurrencyISOCode: string | null;  // ISO 4217 numeric
+  billingAmount: string;                   // decimal string, billing currency, always positive
+  billingCurrencyIson: string | null;      // ISO 4217 numeric
+  exchangeRate: string | null;             // decimal string
+  settlementCurrencyIson: string | null;   // ISO 4217 numeric, same as billingCurrencyIson
+  transactionAmount: string | null;        // decimal string, merchant currency, negative for a purchase (e.g. "-12.00")
+  merchantName: string | null;
+  mccCode: string | null;
+  cardId: string;
+  cardName: string | null;
+  panLastFour: string | null;
+  transactionId: string;
+  timestamp: string;                       // UTC RFC 3339
+}`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Card Decline */}
+      <div id="card-decline" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Decline</h2>
+        <p className="text-muted-foreground leading-relaxed">Fired when a card transaction is declined.</p>
+        <WebhookHeaders group="Card" type="Decline" />
+        <ResponseBlock status="Payload">{`{
+  tx_type: 'DECLINE';
+  lifecyclePhase: 'DECLINE';
+  rejectReason: string | null;             // see values below
+  merchantName: string | null;
+  mccCode: string | null;
+  amount: string | null;                   // decimal string, attempted amount in billing currency
+  merchantAmount: string | null;           // decimal string, merchant currency, always positive
+  merchantCurrencyISOCode: string | null;  // ISO 4217 numeric
+  cardId: string;
+  cardName: string | null;
+  panLastFour: string | null;
+  transactionId: string;
+  timestamp: string;                       // UTC RFC 3339
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="rejectReason"
+            values={[
+              ["INSUFFICIENT_FUNDS", "Not enough available balance on the account."],
+              ["LIMIT_EXCEEDED", "A card limit was exceeded."],
+              ["CARD_BLOCKED", "The card is locked."],
+              ["CARD_SUSPENDED", "The card is suspended."],
+              ["CARD_ACCOUNT_BLOCKED", "The account behind the card is blocked."],
+              ["EXPIRATION_DATE", "Wrong or expired card expiration date."],
+              ["CVC_CVV", "Wrong CVC/CVV."],
+              ["MAGNETIC_STRIPE_INVALID", "The magnetic stripe data is invalid."],
+              ["RISK_TRANSACTION_NOT_PERMITTED", "The transaction type is not permitted by risk rules."],
+              ["RISK_TRANSACTION_REJECTED", "The transaction was rejected by risk rules."],
+              ["DO_NOT_HONOR", "Declined by the issuer without a specific reason."],
+            ]}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Card Reversal */}
+      <div id="card-reversal" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Reversal</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when an authorized card transaction is reversed before settlement.
+        </p>
+        <WebhookHeaders group="Card" type="Reversal" />
+        <ResponseBlock status="Payload">{`{
+  tx_type: 'REVERSAL';
+  lifecyclePhase: 'AUTHORIZATION';
+  billingCurrencyIson: string | null;      // ISO 4217 numeric
+  merchantName: string | null;
+  mccCode: string | null;
+  billingAmount: string;                   // decimal string, billing currency, always positive
+  merchantAmount: string | null;           // decimal string, merchant currency, always positive
+  merchantCurrencyISOCode: string | null;  // ISO 4217 numeric
+  cardId: string;
+  cardName: string | null;
+  panLastFour: string | null;
+  transactionId: string;
+  timestamp: string;                       // UTC RFC 3339
+}`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Card Refund */}
+      <div id="card-refund" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Refund</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a card transaction is refunded. It can fire twice for the same refund: once at authorization and
+          once at settlement. Use <code className={code}>lifecyclePhase</code> to tell them apart.
+        </p>
+        <WebhookHeaders group="Card" type="Refund" />
+        <ResponseBlock status="Payload">{`{
+  tx_type: 'REFUND';
+  lifecyclePhase: 'AUTHORIZATION' | 'SETTLEMENT';
+  billingCurrencyIson: string | null;      // ISO 4217 numeric
+  merchantName: string | null;
+  mccCode: string | null;
+  billingAmount: string;                   // decimal string, billing currency, always positive
+  merchantAmount: string | null;           // decimal string, merchant currency, always positive
+  merchantCurrencyISOCode: string | null;  // ISO 4217 numeric
+  cardId: string;
+  cardName: string | null;
+  panLastFour: string | null;
+  transactionId: string;
+  timestamp: string;                       // UTC RFC 3339
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="lifecyclePhase"
+            values={[
+              ["AUTHORIZATION", "The refund was authorized. Funds are not credited yet."],
+              ["SETTLEMENT", "The refund was settled. Funds are credited to the account."],
+            ]}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Account Funded */}
+      <div id="account-funded" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Account Funded</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when money from an external transfer is credited to one of your accounts.
+        </p>
+        <WebhookHeaders group="Account" type="AccountFunded" />
+        <ResponseBlock status="Payload">{`{
+  accountId: string;           // ledger account ID, as used by the Accounts API
+  accountName: string | null;
+  amount: string;              // decimal string, always positive
+  currencyISOCode: 'USD';
+  direction: 'in';
+  timestamp: string;           // UTC RFC 3339
+}`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Account Withdrawn */}
+      <div id="account-withdrawn" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Account Withdrawn</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when money leaves one of your accounts through an external transfer.
+        </p>
+        <WebhookHeaders group="Account" type="AccountWithdrawn" />
+        <ResponseBlock status="Payload">{`{
+  accountId: string;           // ledger account ID
+  accountName: string | null;
+  amount: string;              // decimal string, always positive
+  currencyISOCode: 'USD';
+  direction: 'out';
+  timestamp: string;           // UTC RFC 3339
+}`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Balance Adjusted */}
+      <div id="balance-adjusted" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Balance Adjusted</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when an account balance changes for a reason other than a card transaction or an external transfer:
+        </p>
+        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+          <li>a balance adjustment made by Spendbase, or</li>
+          <li>
+            money moved between two of your accounts. You receive <strong>two</strong> events:{" "}
+            <code className={code}>direction: &apos;out&apos;</code> for the source account and{" "}
+            <code className={code}>direction: &apos;in&apos;</code> for the destination, both with{" "}
+            <code className={code}>reason: &apos;Transfer between budgets&apos;</code>.
+          </li>
+        </ul>
+        <WebhookHeaders group="Account" type="BalanceAdjusted" />
+        <ResponseBlock status="Payload">{`{
+  accountId: string;           // ledger account ID
+  accountName: string | null;
+  amount: string;              // decimal string, always positive; read direction
+  currencyISOCode: 'USD';
+  direction: 'in' | 'out';     // from this account's point of view
+  reason: string | null;       // human-readable reason
+  timestamp: string;           // UTC RFC 3339
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="direction"
+            values={[
+              ["in", "Money came into this account."],
+              ["out", "Money left this account."],
+            ]}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Account Provisioned */}
+      <div id="account-provisioned" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Account Provisioned</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired once per company, when its US card programme is ready. From this moment, cards can be issued.
+        </p>
+        <WebhookHeaders group="Account" type="AccountProvisioned" />
+        <ResponseBlock status="Payload">{`{
+  accountId: string;           // the company's main ledger account ID
+  accountName: string | null;
+  currencyISOCode: 'USD';
+  timestamp: string;           // UTC RFC 3339
+}`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Account Created */}
+      <div id="account-created" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Account Created</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a new account (budget) is opened for your company.
+        </p>
+        <WebhookHeaders group="Account" type="AccountCreated" />
+        <ResponseBlock status="Payload">{`{
+  accountId: string;           // ledger account ID
+  accountName: string | null;
+  currencyISOCode: 'USD';
+  timestamp: string;           // UTC RFC 3339
+}`}</ResponseBlock>
+      </div>
+
+    </>
+  )
+}
+
 function WebhookHeaders({ group, type }: { group: string; type: string }) {
   return (
     <div className="space-y-2">
@@ -2300,280 +2733,7 @@ def webhook():
           </div>
 
           <RegionOnly region="us">
-            <Separator />
-
-            {/* Internal Transfer */}
-            <div id="internal-transfer" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Internal Transfer</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when an internal transfer between accounts is completed.
-              </p>
-              <WebhookHeaders group="bank" type="internal" />
-              <ResponseBlock status="Payload">{`{
-  state: 'Confirmed';
-  type: 'Debit' | 'Credit';
-  amount: number;
-  currencyISOCode: 'EUR' | 'GBP' | 'USD';
-  paymentType: 'P2P';
-  externalTransactionId: string;
-  senderName: string;
-  receiverName: string;
-  timestamp: string;
-}`}</ResponseBlock>
-              <div className="rounded-lg border border-border bg-card p-4 space-y-4">
-                <EnumValues
-                  name="type"
-                  values={[
-                    ["Debit", "Money left the account."],
-                    ["Credit", "Money came into the account."],
-                  ]}
-                />
-                <EnumValues
-                  name="currencyISOCode"
-                  values={[
-                    ["EUR", "Euro"],
-                    ["GBP", "British pound"],
-                    ["USD", "US dollar"],
-                  ]}
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Card Created */}
-            <div id="card-created" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Card Created</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when a new virtual card is successfully created.
-              </p>
-              <WebhookHeaders group="card" type="issue" />
-              <ResponseBlock status="Payload">{`{
-  cardName: string;
-  panLastFour: string;
-  expYear: number;
-  expMonth: number;
-  accountId: string;
-  holderId: string;
-  currencyISONum: string;
-  cardStatus: SpendbaseCardStatus;
-  timestamp: string;
-}`}</ResponseBlock>
-            </div>
-
-            <Separator />
-
-            {/* Card Blocked */}
-            <div id="card-blocked" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Card Blocked</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when a card is locked or blocked.
-              </p>
-              <WebhookHeaders group="card" type="block" />
-              <ResponseBlock status="Payload">{`{
-  cardName: string;
-  panLastFour: string;
-  expYear: number;
-  expMonth: number;
-  accountId: string;
-  holderId: string;
-  currencyISONum: string;
-  cardStatus: SpendbaseCardStatus;
-  timestamp: string;
-}`}</ResponseBlock>
-            </div>
-
-            <Separator />
-
-            {/* Card Terminated */}
-            <div id="card-terminated" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Card Terminated</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when a card is permanently terminated.
-              </p>
-              <WebhookHeaders group="card" type="terminate" />
-              <ResponseBlock status="Payload">{`{
-  cardName: string;
-  panLastFour: string;
-  expYear: number;
-  expMonth: number;
-  accountId: string;
-  holderId: string;
-  currencyISONum: string;
-  cardStatus: SpendbaseCardStatus;
-  timestamp: string;
-}`}</ResponseBlock>
-            </div>
-
-            <Separator />
-
-            {/* Card Authorization */}
-            <div id="card-authorization" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Card Authorization</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when a card transaction is authorized (normal or incremental). The transaction is pending settlement.
-              </p>
-              <WebhookHeaders group="card" type="authorization" />
-              <ResponseBlock status="Payload">{`{
-  tx_type: 'PURCHASE';             // transaction type
-  lifecyclePhase: 'AUTHORIZATION'; // authorization stage
-  transactionId: string;
-  cardId: string;
-  panLastFour: string;
-  accountName: string;
-  merchantName: string;
-  merchantAmount: string;           // decimal string
-  merchantCurrencyISOCode: string;
-  billingAmount: string;            // decimal string
-  billingCurrencyIson: string;      // ISO 4217 numeric
-  exchangeRate: string;             // decimal string
-  cardName: string;
-  merchantCategory: string | null;  // optional
-  mccCode: string;
-  timestamp: string;                // UTC RFC 3339
-}`}</ResponseBlock>
-            </div>
-
-            <Separator />
-
-            {/* Card Settlement */}
-            <div id="card-settlement" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Card Settlement</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when a non-refund purchase is settled. Refund settlements are delivered as a Refund event instead.
-              </p>
-              <WebhookHeaders group="card" type="settlement" />
-              <ResponseBlock status="Payload">{`{
-  tx_type: 'PURCHASE';             // transaction type
-  lifecyclePhase: 'SETTLEMENT';    // settlement stage
-  merchantAmount: string;           // decimal string
-  merchantCurrencyISOCode: string;  // ISO 4217 numeric
-  billingAmount: string;            // decimal string
-  billingCurrencyIson: string;      // ISO 4217 numeric
-  exchangeRate: string;             // decimal string
-  settlementCurrencyIson: string;   // ISO 4217 numeric
-  transactionAmount: string;        // decimal string; may be negative
-  merchantName: string;
-  mccCode: string;
-  cardId: string;
-  cardName: string;
-  panLastFour: string;
-  transactionId: string;
-  timestamp: string;                // UTC RFC 3339
-}`}</ResponseBlock>
-            </div>
-
-            <Separator />
-
-            {/* Card OTP */}
-            <div id="card-otp" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Card OTP</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when a one-time password is generated for a 3DS holder authentication challenge. Includes transaction context when available from the 3DS directory server.
-              </p>
-              <WebhookHeaders group="card" type="otp" />
-              <ResponseBlock status="Payload">{`{
-  auth_request_id: number;
-  auth_method: number;          // 1=OTP, 2=Background, 3=SMS, 4=Email
-  validation_value: string;     // sensitive
-  card_id: string;
-  card_name: string;
-  request_expires_at: number;   // Unix timestamp (seconds)
-  amount: string;               // decimal string
-  currencyIson?: string;        // ISO 4217 numeric; optional
-  merchant_name?: string;       // optional
-  user_id: string;
-  transaction_id: string;
-  timestamp: string;            // UTC RFC 3339
-}`}</ResponseBlock>
-            </div>
-
-            <Separator />
-
-            {/* Card Decline */}
-            <div id="card-decline" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Card Decline</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when a card transaction is declined.
-              </p>
-              <WebhookHeaders group="card" type="decline" />
-              <ResponseBlock status="Payload">{`{
-  tx_type: 'DECLINE';              // transaction type
-  lifecyclePhase: 'DECLINE';       // decline stage
-  rejectReason: string;
-  merchantName: string;
-  mccCode: string;
-  amount: string;               // decimal string; billing currency
-  merchantAmount: string;       // decimal string; merchant currency
-  merchantCurrencyISOCode: string; // ISO 4217 numeric
-  cardId: string;
-  cardName: string;
-  panLastFour: string;
-  transactionId: string;
-  timestamp: string;            // UTC RFC 3339
-}`}</ResponseBlock>
-            </div>
-
-            <Separator />
-
-            {/* Card Reversal */}
-            <div id="card-reversal" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Card Reversal</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when an authorized card transaction is reversed (R0 or R2) before settlement.
-              </p>
-              <WebhookHeaders group="card" type="reversal" />
-              <ResponseBlock status="Payload">{`{
-  tx_type: 'REVERSAL';             // transaction type
-  lifecyclePhase: 'AUTHORIZATION'; // authorization stage
-  billingCurrencyIson: string;      // ISO 4217 numeric
-  merchantName: string;
-  mccCode: string;
-  billingAmount: string;            // decimal string
-  merchantAmount: string;           // decimal string
-  merchantCurrencyISOCode: string;  // ISO 4217 numeric
-  cardId: string;
-  cardName: string;
-  panLastFour: string;
-  transactionId: string;
-  timestamp: string;                // UTC RFC 3339
-}`}</ResponseBlock>
-            </div>
-
-            <Separator />
-
-            {/* Card Refund */}
-            <div id="card-refund" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Card Refund</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Fired when a card transaction is refunded. May fire twice for the same transaction: once at authorization time and once at settlement. Use <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-sm">lifecyclePhase</code> to distinguish them.
-              </p>
-              <WebhookHeaders group="card" type="refund" />
-              <ResponseBlock status="Payload">{`{
-  tx_type: 'REFUND';                             // transaction type
-  lifecyclePhase: 'AUTHORIZATION' | 'SETTLEMENT'; // refund stage
-  billingCurrencyIson: string;      // ISO 4217 numeric
-  merchantName: string;
-  mccCode: string;
-  billingAmount: string;            // decimal string
-  merchantAmount: string;           // decimal string
-  merchantCurrencyISOCode: string;  // ISO 4217 numeric
-  cardId: string;
-  cardName: string;
-  panLastFour: string;
-  transactionId: string;
-  timestamp: string;                // UTC RFC 3339
-}`}</ResponseBlock>
-              <div className="rounded-lg border border-border bg-card p-4">
-                <EnumValues
-                  name="lifecyclePhase"
-                  values={[
-                    ["AUTHORIZATION", "The refund was authorized. Funds are not credited yet."],
-                    ["SETTLEMENT", "The refund was settled. Funds are credited to the account."],
-                  ]}
-                />
-              </div>
-            </div>
+            <UsWebhookEvents />
           </RegionOnly>
 
           <RegionOnly region="eu">
