@@ -43,6 +43,20 @@ function ScopeBadge({ scope }: { scope: string }) {
   )
 }
 
+function EnumValues({ name, values }: { name?: string; values: [string, string][] }) {
+  return (
+    <div className="space-y-1.5 text-sm">
+      {name && <p className="font-medium">{name}</p>}
+      {values.map(([value, desc]) => (
+        <div key={value}>
+          <code className="bg-muted px-2 py-0.5 rounded text-xs font-mono">{value}</code>
+          <span className="ml-2 text-muted-foreground">— {desc}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function Param({
   name,
   type,
@@ -69,125 +83,151 @@ function Param({
 }
 
 const CARD_OBJECT = `{
-  "accountFreeBalance": 0,
-  "accountName": "string",
+  "accountFreeBalance": 12500.5,
+  "accountName": "Marketing",
+  "availableToSpend": 750,
   "cardHolder": {
-    "email": "string",
-    "fullName": "string",
+    "email": "john.doe@example.com",
+    "fullName": "John Doe",
     "id": "string",
     "logoUrl": "string"
   },
-  "cardLast4": "string",
-  "cardName": "string",
-  "currencyISOCode": "string",
+  "cardLast4": "4242",
+  "cardName": "Marketing Card",
+  "cardType": "VIRTUAL",
+  "currencyISOCode": "EUR",
+  "deliveryStatus": "string",
   "id": "string",
   "issuedAt": "string",
   "ledgerAccountId": "string",
   "limit": {
     "activatedAt": "string",
-    "amount": 0,
-    "currencyISOCode": "string",
-    "deleteRequested": true,
+    "affectedFrom": "string",
+    "amount": 1000,
+    "currencyISOCode": "EUR",
+    "deleteRequested": false,
     "externalId": 0,
     "id": "string",
     "periodEnd": "string",
     "periodStart": "string",
-    "spentAmount": 0,
-    "type": "string"
+    "spentAmount": 250,
+    "type": "MONTHLY"
   },
   "onboardingStatus": "string",
   "pendingLimit": {
     "activatedAt": "string",
-    "amount": 0,
-    "currencyISOCode": "string",
-    "deleteRequested": true,
+    "affectedFrom": "string",
+    "amount": 2000,
+    "currencyISOCode": "EUR",
+    "deleteRequested": false,
     "externalId": 0,
     "id": "string",
     "periodEnd": "string",
     "periodStart": "string",
     "spentAmount": 0,
-    "type": "string"
+    "type": "MONTHLY"
   },
-  "status": "string"
+  "status": "DEFAULT",
+  "userPinSet": true
 }`
 
-const TRANSACTION_OBJECT = `{
-  "amount": 0,
+const CARD_TRANSACTION_OBJECT = `{
+  "account_id": "6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b",
+  "amount": 42.5,
   "attachment": {
-    "fileName": "string",
-    "fileURL": "string",
-    "note": "string",
-    "originalFileName": "string"
+    "fileName": "c1d2e3f4-receipt.pdf",
+    "fileURL": "https://files.spendbase.co/attachments/c1d2e3f4-receipt.pdf",
+    "note": "Q3 ads campaign",
+    "originalFileName": "receipt.pdf"
   },
-  "cardId": "string",
-  "cardRef": "string",
-  "category": 0,
-  "createdAt": 0,
-  "currencyISOCode": "string",
+  "cardRef": "8d3e5a7c-1f2b-4c6d-9e0a-b1c2d3e4f5a6",
+  "category": 5,
+  "createdAt": 1754041210,
+  "currencyISOCode": "USD",
   "details": {
-    "accountName": "string",
-    "cardName": "string",
-    "cardholderName": "string",
-    "exchangeRate": 0,
-    "externalTransactionId": "string",
-    "feeFixed": 0,
-    "feePercent": 0,
+    "accountName": "Marketing",
+    "cardName": "Ads card",
+    "cardholderName": "Jane Doe",
+    "externalTransactionId": "f0e1d2c3-b4a5-4968-8776-a5b4c3d2e1f0",
     "hasAttachment": true,
-    "mcc": "string",
-    "merchantAddress": "string",
-    "merchantAmount": 0,
-    "merchantCategory": "string",
-    "merchantCurrencyISOCode": "string",
-    "merchantLogoUrl": "string",
-    "merchantName": "string",
-    "merchantOriginalName": "string",
-    "merchantProviderName": "string",
-    "panLastFour": "string",
-    "purpose": "string",
-    "receiverAddress": "string",
-    "receiverIban": "string",
-    "receiverName": "string",
-    "recipientEmail": "string",
-    "recipientId": "string",
-    "reference": "string",
-    "rejectReason": "string",
-    "senderAddress": "string",
-    "senderIban": "string",
-    "senderName": "string",
-    "sourceCurrencyISOCode": "string",
-    "sourceGrossAmount": 0,
-    "transferSchema": "string"
+    "mcc": "7311",
+    "merchantAmount": 42.5,
+    "merchantCategory": "Advertising Services",
+    "merchantCurrencyISOCode": "USD",
+    "merchantLogoUrl": "https://logo.clearbit.com/google.com",
+    "merchantName": "Google Ads",
+    "merchantOriginalName": "GOOGLE *ADS4471",
+    "panLastFour": "4242"
   },
-  "entry_id": "string",
+  "entry_id": "0b9c8d7e-6f5a-4b3c-2d1e-0f9a8b7c6d5e",
   "eventType": "Undefined",
-  "id": "string",
-  "is_locked": true,
-  "message": "string",
-  "receipt": "string",
-  "ref": "string",
-  "sourceType": "Undefined",
-  "state": "Pending",
-  "type": "string",
-  "updatedAt": 0,
-  "isReversed": "string",
-  "originalTransactionId": "string"
+  "id": "3a4b5c6d-7e8f-4091-a2b3-c4d5e6f7a8b9",
+  "paymentType": "POS",
+  "ref": "TX-20250801-000123",
+  "sourceType": "Card",
+  "state": "Confirmed",
+  "type": "debit",
+  "updatedAt": 1754041275,
+  "cardId": "8d3e5a7c-1f2b-4c6d-9e0a-b1c2d3e4f5a6"
 }`
+
+const BANK_TRANSACTION_OBJECT = `{
+  "account_id": "6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b",
+  "amount": 1500,
+  "createdAt": 1753950000,
+  "currencyISOCode": "USD",
+  "details": {
+    "accountName": "Marketing",
+    "receiverName": "Marketing",
+    "reference": "Monthly budget top-up",
+    "senderName": "Master Account"
+  },
+  "entry_id": "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+  "eventType": "Undefined",
+  "id": "9f8e7d6c-5b4a-4392-8170-6f5e4d3c2b1a",
+  "ref": "TX-20250731-000087",
+  "sourceType": "Internal",
+  "state": "Confirmed",
+  "type": "credit",
+  "updatedAt": 1753950004
+}`
+
+const indentJson = (json: string, pad: string) =>
+  json.split("\n").map(l => pad + l).join("\n").trimStart()
 
 const LEDGER_ACCOUNT_OBJECT = `{
-  "createdAt": 0,
+  "cardCount": 3,
+  "createdAt": 1717430400,
   "credit": true,
-  "currencyISOCode": "string",
-  "freeBalance": 0,
+  "currencyISOCode": "EUR",
+  "freeBalance": 1250.5,
   "id": "string",
-  "multicurrency": true,
-  "name": "string",
+  "multicurrency": false,
+  "name": "Marketing",
+  "pendingBalance": 49.5,
+  "ref": "string",
+  "state": "active",
+  "step": "string",
+  "totalBalance": 1300,
+  "type": "sub",
+  "updatedAt": 1717430400
+}`
+
+const BANK_ACCOUNT_OBJECT = `{
+  "createdAt": 1717430400,
+  "credit": true,
+  "currencyISOCode": "EUR",
+  "freeBalance": 15000,
+  "id": "string",
+  "multicurrency": false,
+  "name": "EUR bank account",
   "pendingBalance": 0,
   "ref": "string",
   "state": "active",
   "step": "string",
-  "totalBalance": 0,
+  "totalBalance": 15000,
   "type": "bank",
-  "updatedAt": 0
+  "updatedAt": 1717430400
 }`
 
 export function GettingStartedContent() {
@@ -559,46 +599,106 @@ export function AccountsContent() {
         <div className="space-y-8">
           <h1 className="text-4xl font-bold tracking-tight">Accounts</h1>
 
-          {/* Get accounts by currency */}
-          <div id="get-accounts-by-currency" className="space-y-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <GetBadge />
-              <code className="text-sm font-mono">/accounts/accounts/:currency</code>
-            </div>
-            <ScopeBadge scope="accountsRead" />
-            <h2 className="text-2xl font-semibold">Get a list of all accounts</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Currency (EUR, USD…) as path param. The response includes sub-accounts and the master-account in
-              the requested currency. Account data contains ID, name, balance info, etc.
-            </p>
-            <ResponseBlock>{`{
+          <RegionOnly region="eu">
+            {/* Get accounts by currency */}
+            <div id="get-accounts-by-currency" className="space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <GetBadge />
+                <code className="text-sm font-mono">/accounts/accounts/:currency</code>
+              </div>
+              <ScopeBadge scope="accountsRead" />
+              <h2 className="text-2xl font-semibold">Get a list of all accounts</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Currency (EUR, USD…) as path param. The response includes sub-accounts and the master-account in
+                the requested currency. Account data contains ID, name, balance info, etc.
+              </p>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Path Parameters</h3>
+                <div className="space-y-2">
+                  <Param name="currency" type="string" required>ISO 4217 alphabetic currency code, e.g. EUR</Param>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+                <EnumValues
+                  name="tribeAccountStatus — account status at the card provider"
+                  values={[
+                    ["A", "Active. The account is open and can be used."],
+                    ["B", "Blocked. Operations on the account are blocked."],
+                    ["P", "Pending. The account is being opened at the provider."],
+                    ["R", "Rejected. The provider declined to open the account."],
+                    ["S", "Suspended. The account is temporarily suspended by the provider."],
+                  ]}
+                />
+                <EnumValues
+                  name="tribeCreationStatus — result of creating the account at the provider"
+                  values={[
+                    ["SUCCESS", "The account was created at the provider."],
+                    ["PENDING", "Creation was requested and is waiting for the provider to confirm."],
+                    ["ERROR", "The provider failed to create the account."],
+                    ["UNKNOWN", "The creation result could not be determined."],
+                  ]}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">availableBalance</code> is omitted when unknown.
+              </p>
+              <ResponseBlock>{`{
   "masterAccounts": [
     {
-      "availableBalance": 0,
+      "availableBalance": 15000,
+      "createRequestBody": {
+        "accountName": "string",
+        "holderId": 0,
+        "requestReferenceId": "string",
+        "spendbaseTeamId": "string",
+        "spendbaseUserId": "string"
+      },
+      "createResponseBody": {
+        "holder_id": 0,
+        "id": 0
+      },
       "id": "string",
-      "tribeAccountCurrencyISONum": "string",
+      "spendbaseTeamId": "string",
+      "spendbaseUserId": "string",
+      "tribeAccountCurrencyISONum": "978",
       "tribeAccountId": 0,
+      "tribeAccountRequestReferenceId": "string",
       "tribeAccountStatus": "A",
-      "tribeCreationStatus": "ERROR",
+      "tribeCreationStatus": "SUCCESS",
       "tribeHolderId": 0
     }
   ],
   "subAccounts": [
     {
-      "accountName": "string",
-      "availableBalance": 0,
+      "accountName": "Marketing",
+      "availableBalance": 1250.5,
+      "createRequestBody": {
+        "accountName": "Marketing",
+        "holderId": 0,
+        "requestReferenceId": "string",
+        "spendbaseTeamId": "string",
+        "spendbaseUserId": "string"
+      },
+      "createResponseBody": {
+        "holder_id": 0,
+        "id": 0
+      },
       "id": "string",
-      "tribeAccountCurrencyISONum": "string",
+      "spendbaseTeamId": "string",
+      "spendbaseUserId": "string",
+      "tribeAccountCurrencyISONum": "978",
       "tribeAccountId": 0,
+      "tribeAccountRequestReferenceId": "string",
       "tribeAccountStatus": "A",
-      "tribeCreationStatus": "ERROR",
+      "tribeCreationStatus": "SUCCESS",
       "tribeHolderId": 0
     }
   ]
 }`}</ResponseBlock>
-          </div>
+            </div>
 
-          <Separator />
+            <Separator />
+          </RegionOnly>
 
           {/* Get bank accounts */}
           <div id="get-bank-accounts" className="space-y-4">
@@ -609,28 +709,14 @@ export function AccountsContent() {
             <ScopeBadge scope="accountsRead" />
             <h2 className="text-2xl font-semibold">Get a list of bank accounts</h2>
             <p className="text-muted-foreground leading-relaxed">
-              The response includes bank accounts list for specific currencies with ledger IDs and balances.
+              The response is a JSON array of bank accounts (one per currency) with ledger IDs and balances.
+              The <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> of each entry is the{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">ledgerId</code> /{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">ledgerBankAccountId</code> used by the other
+              account routes. Fields with zero/empty values may be omitted.
             </p>
-            <ResponseBlock>{`{
-  "payload": [
-    {
-      "createdAt": 0,
-      "credit": true,
-      "currencyISOCode": "string",
-      "freeBalance": 0,
-      "id": "string",
-      "multicurrency": true,
-      "name": "string",
-      "pendingBalance": 0,
-      "ref": "string",
-      "state": "active",
-      "step": "string",
-      "totalBalance": 0,
-      "type": "bank",
-      "updatedAt": 0
-    }
-  ]
-}`}</ResponseBlock>
+            <ResponseBlock>{`[${BANK_ACCOUNT_OBJECT.split("\n").map(l => "  " + l).join("\n").trimStart()}
+]`}</ResponseBlock>
           </div>
 
           <Separator />
@@ -644,22 +730,35 @@ export function AccountsContent() {
             <ScopeBadge scope="accountsWrite" />
             <h2 className="text-2xl font-semibold">Create account</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Responds with the new account name, ID and ledger ID if creation succeeded.
+              Responds with the new account name, ID and ledger ID if creation succeeded.{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">accountLedgerId</code> is the ledger ID of the
+              created account (use it for transfers and the get-account-by-ID route); it is an empty string if the
+              account could not be found in the ledger right after creation.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
                 <Param name="accountName" type="string" required>Name of the new account</Param>
-                <Param name="LedgerBankAccountID" type="string" required>
-                  Account bank ID — pull from the bank accounts list
+                <Param name="ledgerBankAccountId" type="string" required>
+                  Ledger bank account ID — the <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> from
+                  the bank accounts list. Must be non-empty.
                 </Param>
               </div>
             </div>
-            <ResponseBlock status="201 Created">{`{
+            <ResponseBlock>{`{
   "accountLedgerId": "string",
-  "accountName": "string",
-  "id": "string"
+  "accountName": "Marketing",
+  "id": "string",
+  "ledgerAccountId": "string"
 }`}</ResponseBlock>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="text-sm font-medium">400 Bad Request</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li><code className="bg-muted px-1 py-0.5 rounded">ledgerBankAccountId is required</code> — field missing or empty</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">accountName in body is required</code> — field missing</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">invalid request body</code> — body is not valid JSON</li>
+              </ul>
+            </div>
           </div>
 
           <Separator />
@@ -676,10 +775,41 @@ export function AccountsContent() {
               Ledger bank account ID from list of bank accounts as{" "}
               <code className="bg-muted px-1 py-0.5 rounded text-xs">ledgerId</code> path param.
               Responds with the bank account and its master and sub accounts with ledger IDs and card counts.
+              The{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">ref</code> of a sub account is the account{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> returned by create account.
             </p>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+              <EnumValues
+                name="type"
+                values={[
+                  ["bank", "Top-level bank account for one currency. Holds the master and sub accounts."],
+                  ["master", "Main account under the bank account. The default source of funds for sub accounts."],
+                  ["sub", "Sub account created with Create account. Cards are issued on sub accounts."],
+                  ["undefined", "The account type could not be determined."],
+                ]}
+              />
+              <EnumValues
+                name="state"
+                values={[
+                  ["active", "The account is open and can be used."],
+                  ["inactive", "The account is not active yet or has been deactivated."],
+                  ["locked", "The account is temporarily locked. Operations are blocked."],
+                  ["suspended", "The account is suspended by the provider."],
+                  ["closed", "The account is permanently closed."],
+                  ["pending", "The account is being created."],
+                ]}
+              />
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Path Parameters</h3>
+              <div className="space-y-2">
+                <Param name="ledgerId" type="string" required>Ledger bank account ID</Param>
+              </div>
+            </div>
             <ResponseBlock>{`{
-  "bankAccount": ${LEDGER_ACCOUNT_OBJECT.split("\n").map(l => "  " + l).join("\n").trimStart()},
-  "master_accounts": [${LEDGER_ACCOUNT_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}],
+  "bankAccount": ${BANK_ACCOUNT_OBJECT.split("\n").map(l => "  " + l).join("\n").trimStart()},
+  "master_accounts": [${LEDGER_ACCOUNT_OBJECT.replace(`"name": "Marketing"`, `"name": "Main"`).replace(`"type": "sub"`, `"type": "master"`).split("\n").map(l => "    " + l).join("\n").trimStart()}],
   "sub_accounts": [${LEDGER_ACCOUNT_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}]
 }`}</ResponseBlock>
           </div>
@@ -699,10 +829,23 @@ export function AccountsContent() {
               <h3 className="text-lg font-semibold">Path Parameters</h3>
               <div className="space-y-2">
                 <Param name="ledgerId" type="string" required>Ledger bank account ID</Param>
-                <Param name="id" type="string" required>Ledger ID of the account</Param>
+                <Param name="id" type="string" required>
+                  Ledger ID of the account — a master or sub account under <code className="bg-muted px-1 py-0.5 rounded text-xs">ledgerId</code>
+                </Param>
               </div>
             </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Fields with zero/empty values (e.g. <code className="bg-muted px-1 py-0.5 rounded text-xs">cardCount: 0</code>,{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">freeBalance: 0</code>,{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">credit: false</code>) are omitted from the response.
+            </p>
             <ResponseBlock>{LEDGER_ACCOUNT_OBJECT}</ResponseBlock>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="text-sm font-medium">400 Bad Request</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li><code className="bg-muted px-1 py-0.5 rounded">Account not found</code> — no master or sub account with this <code className="bg-muted px-1 py-0.5 rounded">id</code> under <code className="bg-muted px-1 py-0.5 rounded">ledgerId</code></li>
+              </ul>
+            </div>
           </div>
 
           <Separator />
@@ -730,18 +873,17 @@ export function AccountsContent() {
               </div>
             </div>
             <ResponseBlock>{`{
-  "payload": {
-    "message": "string",
-    "status": "string"
-  }
+  "message": "string",
+  "status": "string"
 }`}</ResponseBlock>
             <div className="rounded-lg border border-border bg-card p-4 space-y-2">
               <p className="text-sm font-medium">400 Bad Request — pre-flight validation errors</p>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li><code className="bg-muted px-1 py-0.5 rounded">invalid request params</code> — one of <code className="bg-muted px-1 py-0.5 rounded">amount</code>, <code className="bg-muted px-1 py-0.5 rounded">accountId</code>, <code className="bg-muted px-1 py-0.5 rounded">sourceAccountId</code>, <code className="bg-muted px-1 py-0.5 rounded">currencyISONum</code> is missing</li>
                 <li><code className="bg-muted px-1 py-0.5 rounded">unknown currency</code> — <code className="bg-muted px-1 py-0.5 rounded">currencyISONum</code> is not a recognized ISO 4217 currency</li>
-                <li><code className="bg-muted px-1 py-0.5 rounded">account with requested currency not found</code> — no account matches the requested currency</li>
-                <li><code className="bg-muted px-1 py-0.5 rounded">insufficient funds</code> — source account balance is below the requested amount</li>
-                <li><code className="bg-muted px-1 py-0.5 rounded">account not found</code> — source account could not be located</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">account with requested currency not found</code> — no bank account matches the requested currency</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">account not found</code> — <code className="bg-muted px-1 py-0.5 rounded">sourceAccountId</code> is not a master or sub account of the bank account in that currency</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">insufficient funds</code> — <code className="bg-muted px-1 py-0.5 rounded">amount</code> exceeds the source account&apos;s <code className="bg-muted px-1 py-0.5 rounded">freeBalance</code></li>
               </ul>
             </div>
           </div>
@@ -757,7 +899,9 @@ export function AccountsContent() {
             <ScopeBadge scope="internalTransfersWrite" />
             <h2 className="text-2xl font-semibold">Transfer with note</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Same as transfer money but attaches a note to the transaction.
+              Same as transfer money (same pre-flight validation and 400 errors) but attaches the note to both the
+              debit and the credit transaction of the transfer. The HTTP status mirrors the{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code> field of the response.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
@@ -765,15 +909,22 @@ export function AccountsContent() {
                 <Param name="amount" type="float" required>Transfer amount</Param>
                 <Param name="accountId" type="string" required>Transfer to ledger ID</Param>
                 <Param name="sourceAccountId" type="string" required>Transfer from ledger ID</Param>
-                <Param name="currencyISONum" type="string" required>Currency special numeric code</Param>
-                <Param name="note" type="string" required>Attachment message for the transaction</Param>
+                <Param name="currencyISONum" type="string" required>ISO 4217 numeric currency code (e.g. 978 for EUR)</Param>
+                <Param name="note" type="string">Note to attach to the debit and credit transactions</Param>
               </div>
             </div>
             <ResponseBlock>{`{
-  "code": 0,
-  "message": "string",
-  "status": "string"
+  "message": "Success",
+  "status": "Transfer with note successful",
+  "code": 200
 }`}</ResponseBlock>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="text-sm font-medium">Failure responses (same body shape)</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li><code className="bg-muted px-1 py-0.5 rounded">Transfer funds failed</code> — the transfer itself was rejected; <code className="bg-muted px-1 py-0.5 rounded">code</code>/<code className="bg-muted px-1 py-0.5 rounded">message</code> carry the upstream status and message, no money was moved</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">Transfer successful, but could not attach note to debit transaction</code> (or <code className="bg-muted px-1 py-0.5 rounded">credit</code>) — money was transferred but the note could not be attached; <code className="bg-muted px-1 py-0.5 rounded">code</code> is the upstream error status (500 if unknown)</li>
+              </ul>
+            </div>
           </div>
 
           <Separator />
@@ -787,8 +938,14 @@ export function AccountsContent() {
             <ScopeBadge scope="accountsWrite" />
             <h2 className="text-2xl font-semibold">Rename account</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Responds with the account ID and new name.
+              Responds with the account ID, new name and ledger account ID.
             </p>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Path Parameters</h3>
+              <div className="space-y-2">
+                <Param name="id" type="string" required>Account ID</Param>
+              </div>
+            </div>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
@@ -796,8 +953,9 @@ export function AccountsContent() {
               </div>
             </div>
             <ResponseBlock>{`{
-  "accountName": "string",
-  "id": "string"
+  "accountName": "New Account Name",
+  "id": "string",
+  "ledgerAccountId": "string"
 }`}</ResponseBlock>
           </div>
         </div>
@@ -822,24 +980,19 @@ export function CardsContent() {
           {/* Card status overview */}
           <div id="card-status-overview" className="p-4 bg-muted/50 rounded-lg border border-border">
             <h3 className="text-base font-semibold mb-3">Card Status</h3>
-            <div className="space-y-2 text-sm">
-              {[
+            <EnumValues
+              values={[
                 ["NEW", "The card was created but not activated (not attached to a verified cardholder). Most operations are not available in this status."],
                 ["PENDING", "Internal transitive status when we could not get a response from the provider on the card creation request."],
                 ["DEFAULT", "Common status for an activated card that is ready to be used. Card limit can be set; card can be locked, unlocked, or terminated."],
-                ["CANCELLED_BY_ADMIN", "The card creation was manually cancelled. Most commonly occurs when the card was not activated for 24 hours."],
+                ["CANCELED_BY_ADMIN", "The card creation was manually cancelled. Most commonly occurs when the card was not activated for 24 hours."],
                 ["EXPIRED", "The card reached its expiry date."],
                 ["TERMINATED", "The card was deleted."],
                 ["LOCKED", "Transitive status between DEFAULT and SUSPENDED when card lock is requested."],
                 ["SUSPENDED", "The card was locked (frozen) by the provider."],
                 ["LIMIT_EXCEED", "Unused."],
-              ].map(([status, desc]) => (
-                <div key={status}>
-                  <code className="bg-background px-2 py-1 rounded text-xs font-mono">{status}</code>
-                  <span className="ml-2 text-muted-foreground">— {desc}</span>
-                </div>
-              ))}
-            </div>
+              ]}
+            />
           </div>
 
           <Separator />
@@ -853,21 +1006,50 @@ export function CardsContent() {
             <ScopeBadge scope="cardsWrite" />
             <h2 className="text-2xl font-semibold">Create card</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Responds with a success message if the card was created.
+              Responds with the ID of the created card. <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code>{" "}
+              mirrors the HTTP status of the response and <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code>{" "}
+              holds the HTTP status line. On failure the same shape is returned with the error status in{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code>, the error text in{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code> and an empty{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code>.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
                 <Param name="accountId" type="string" required>Card will be created on the account with the given ID</Param>
-                <Param name="spendbaseUserId" type="string" required>Preferred cardholder identifier. Use this for all new requests.</Param>
-                <Param name="email" type="string">Cardholder email — deprecated. Still accepted as a legacy fallback, but new integrations should send <code className="bg-muted px-1 py-0.5 rounded">spendbaseUserId</code> instead.</Param>
                 <Param name="cardName" type="string" required>Custom name for card</Param>
+                <Param name="spendbaseUserId" type="string">Preferred cardholder identifier. Use this for all new requests.</Param>
+                <Param name="email" type="string">Cardholder email — deprecated. Still accepted as a legacy fallback, but new integrations should send <code className="bg-muted px-1 py-0.5 rounded">spendbaseUserId</code> instead.</Param>
+                <Param name="cardType" type="string">
+                  <EnumValues
+                    values={[
+                      ["VIRTUAL", "Default. A virtual card for online payments and mobile wallets."],
+                      ["PHYSICAL", "A plastic card shipped to the delivery address."],
+                    ]}
+                  />
+                </Param>
                 <Param name="expirationDate" type="string">Custom expiration date for the card</Param>
+                <Param name="limit" type="object">
+                  Initial card limit, same shape as the{" "}
+                  <a href="#set-limit" className="underline">Set limit</a> body:{" "}
+                  <code className="bg-muted px-1 rounded text-xs">type</code> (required),{" "}
+                  <code className="bg-muted px-1 rounded text-xs">amount</code>
+                </Param>
+                <Param name="delivery" type="object">
+                  Delivery address for physical cards:{" "}
+                  <code className="bg-muted px-1 rounded text-xs">addressLine1</code>{" "}
+                  <code className="bg-muted px-1 rounded text-xs">addressLine2</code> (optional){" "}
+                  <code className="bg-muted px-1 rounded text-xs">city</code>{" "}
+                  <code className="bg-muted px-1 rounded text-xs">countryIsoCode</code>{" "}
+                  <code className="bg-muted px-1 rounded text-xs">state</code> (optional){" "}
+                  <code className="bg-muted px-1 rounded text-xs">zipcode</code>
+                </Param>
               </div>
             </div>
             <ResponseBlock>{`{
-  "message": "string",
-  "status": "string"
+  "code": 200,
+  "message": "200 OK",
+  "id": "string"
 }`}</ResponseBlock>
           </div>
 
@@ -882,11 +1064,10 @@ export function CardsContent() {
             <ScopeBadge scope="cardsRead" />
             <h2 className="text-2xl font-semibold">Get card</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns card object with name, ID, currency, account info, etc.
+              Returns the card object (not wrapped) with name, ID, currency, account info, etc. Fields without a
+              value are omitted from the response.
             </p>
-            <ResponseBlock>{`{
-  "payload": ${CARD_OBJECT.split("\n").map(l => "  " + l).join("\n").trimStart()}
-}`}</ResponseBlock>
+            <ResponseBlock>{CARD_OBJECT}</ResponseBlock>
           </div>
 
           <Separator />
@@ -900,19 +1081,24 @@ export function CardsContent() {
             <ScopeBadge scope="cardsRead" />
             <h2 className="text-2xl font-semibold">Get all cards</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns a list of card objects with IDs, names, accounts, currencies info, etc.
+              Returns a page of card objects with IDs, names, accounts, currencies info, etc.{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">cards</code> is always an array (empty when
+              there are no results). Pass <code className="bg-muted px-1 py-0.5 rounded text-xs">nextCursor</code> as{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">cursor</code> to fetch the next page while{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-xs">hasMore</code> is true.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
-                <Param name="cursor" type="string">Cursor returned by the previous page, for cursor-based pagination</Param>
-                <Param name="limit" type="integer">Maximum number of items to return</Param>
+                <Param name="cursor" type="string">Cursor returned by the previous page (<code className="bg-muted px-1 rounded text-xs">nextCursor</code>). Max 512 characters, no control characters.</Param>
+                <Param name="limit" type="integer">Maximum number of items to return, 0–1000. Defaults to 50 when omitted or 0. A non-integer or out-of-range value returns 400.</Param>
               </div>
             </div>
             <ResponseBlock>{`{
-  "payload": {
-    "cards": [${CARD_OBJECT.split("\n").map(l => "      " + l).join("\n").trimStart()}]
-  }
+  "cards": [${CARD_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}],
+  "hasMore": true,
+  "nextCursor": "string",
+  "totalCount": 120
 }`}</ResponseBlock>
           </div>
 
@@ -936,14 +1122,15 @@ export function CardsContent() {
               </div>
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
-                <Param name="cursor" type="string">Cursor returned by the previous page, for cursor-based pagination</Param>
-                <Param name="limit" type="integer">Maximum number of items to return</Param>
+                <Param name="cursor" type="string">Cursor returned by the previous page (<code className="bg-muted px-1 rounded text-xs">nextCursor</code>). Max 512 characters, no control characters.</Param>
+                <Param name="limit" type="integer">Maximum number of items to return, 0–1000. Defaults to 50 when omitted or 0. A non-integer or out-of-range value returns 400.</Param>
               </div>
             </div>
             <ResponseBlock>{`{
-  "payload": {
-    "cards": [${CARD_OBJECT.split("\n").map(l => "      " + l).join("\n").trimStart()}]
-  }
+  "cards": [${CARD_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}],
+  "hasMore": false,
+  "nextCursor": "string",
+  "totalCount": 3
 }`}</ResponseBlock>
           </div>
 
@@ -961,22 +1148,36 @@ export function CardsContent() {
               Returns card financial details including full card number, CVV and billing address.{" "}
               <span className="font-medium">Available for PCI DSS compliant providers only.</span>
             </p>
+            <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <p>
+                PCI DSS compliance is checked before the card is fetched:{" "}
+                <RegionOnly region="us">the team that owns the API key</RegionOnly>
+                <RegionOnly region="eu">
+                  the PCI DSS flag of the <code className="bg-muted px-1 py-0.5 rounded text-xs">External-Token</code>
+                </RegionOnly>{" "}
+                must be marked PCI DSS compliant, otherwise the endpoint returns{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">403</code> with{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "Provider is not PCI DSS compliant and cannot access card details"}`}</code>.
+                Non-compliant integrations should use <a href="#get-card-frame" className="underline">Get card frame</a> instead.
+              </p>
+            </div>
             <ResponseBlock>{`{
-  "payload": {
-    "billingAddress": {
-      "city": "string",
-      "line1": "string",
-      "state": "string",
-      "zip": "string"
-    },
-    "cardNumber": "string",
-    "cardOwner": "string",
-    "cvv": "string",
-    "expirationMonth": "string",
-    "expirationYear": "string",
-    "id": "string",
-    "issuedAt": "string"
-  }
+  "billingAddress": {
+    "city": "string",
+    "line1": "string",
+    "state": "string",
+    "zip": "string"
+  },
+  "cardNumber": "string",
+  "cardOwner": "string",
+  "cvv": "string",
+  "expirationMonth": "string",
+  "expirationYear": "string",
+  "id": "string",
+  "issuedAt": "string",
+  "pin": "string",
+  "userPinSet": true
 }`}</ResponseBlock>
           </div>
 
@@ -991,12 +1192,13 @@ export function CardsContent() {
             <ScopeBadge scope="cardDetailsRead" />
             <h2 className="text-2xl font-semibold">Get card frame</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns a one-time URL with card details and its expiration timestamp. Use the URL to display card
-              details in an iframe without handling sensitive data directly.
+              Returns a short-lived signed URL with card details and its expiration timestamp (RFC 3339). The URL
+              expires 1 minute after it is issued. Use it to display card details in an iframe without handling
+              sensitive data directly. Does not require PCI DSS compliance.
             </p>
             <ResponseBlock>{`{
-  "expiresAt": "string",
-  "url": "string"
+  "url": "string",
+  "expiresAt": "2025-01-15T10:31:00Z"
 }`}</ResponseBlock>
           </div>
 
@@ -1074,14 +1276,20 @@ export function CardsContent() {
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
                 <Param name="type" type="string" required>
-                  Limit type:{" "}
-                  <code className="bg-muted px-1 rounded text-xs">DAILY</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">MONTHLY</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">WEEKLY</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">UNLIMITED</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">FIXED</code>
+                  <EnumValues
+                    values={[
+                      ["DAILY", "Spending cap that resets every day."],
+                      ["WEEKLY", "Spending cap that resets every week."],
+                      ["MONTHLY", "Spending cap that resets every month."],
+                      ["FIXED", "Total spending cap for the card. It does not reset."],
+                      ["UNLIMITED", "No spending cap. amount is not needed."],
+                    ]}
+                  />
                 </Param>
-                <Param name="amount" type="integer" required>Limit value to set</Param>
+                <Param name="amount" type="number">
+                  Limit value to set (decimals allowed). Not needed for{" "}
+                  <code className="bg-muted px-1 rounded text-xs">UNLIMITED</code>.
+                </Param>
               </div>
             </div>
             <ResponseBlock>{`{
@@ -1092,60 +1300,88 @@ export function CardsContent() {
 
           <Separator />
 
-          {/* Add cardholder */}
-          <div id="add-cardholder" className="space-y-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <PostBadge />
-              <code className="text-sm font-mono">/cards/add-cardholder</code>
-            </div>
-            <ScopeBadge scope="cardholdersWrite" />
-            <h2 className="text-2xl font-semibold">Add cardholder</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Creates and validates a new cardholder. The cardholder must be verified before a card can be
-              activated.
-            </p>
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Body Parameters</h3>
-              <div className="space-y-2">
-                <Param name="firstName" type="string" required>First name</Param>
-                <Param name="lastName" type="string" required>Last name</Param>
-                <Param name="middleName" type="string" required>Middle name</Param>
-                <Param name="email" type="string" required>Email address</Param>
-                <Param name="phoneNumber" type="string" required>Phone number</Param>
-                <Param name="dob" type="string" required>Date of birth (e.g. 1990-03-15)</Param>
-                <Param name="address" type="object" required>
-                  Physical address:{" "}
-                  <code className="bg-muted px-1 rounded text-xs">addressLine1</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">addressLine2</code> (optional){" "}
-                  <code className="bg-muted px-1 rounded text-xs">city</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">countryISOCode</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">fullAddress</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">postalCode</code>{" "}
-                  <code className="bg-muted px-1 rounded text-xs">region</code>
-                </Param>
+          <RegionOnly region="eu">
+            {/* Add cardholder */}
+            <div id="add-cardholder" className="space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <PostBadge />
+                <code className="text-sm font-mono">/cards/add-cardholder</code>
               </div>
-            </div>
-            <ResponseBlock>{`{
+              <ScopeBadge scope="cardholdersWrite" />
+              <h2 className="text-2xl font-semibold">Add cardholder</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Creates and validates a new cardholder. The cardholder must be verified before a card can be
+                activated. If a user with this email already exists in your team it is reused; if the email belongs
+                to a user outside your team the request fails with{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>{" "}
+                (<code className="bg-muted px-1 py-0.5 rounded text-xs">user with this email already exists</code>).
+                Invalid bodies return <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> with{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "validation failed: ..."}`}</code>;
+                errors from the card provider are returned with their original status and body.
+              </p>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Body Parameters</h3>
+                <div className="space-y-2">
+                  <Param name="firstName" type="string" required>First name, max 50 characters</Param>
+                  <Param name="lastName" type="string" required>Last name, max 50 characters</Param>
+                  <Param name="middleName" type="string">Middle name, max 50 characters</Param>
+                  <Param name="email" type="string" required>Valid email address, 6–256 characters. Lower-cased before validation.</Param>
+                  <Param name="phoneNumber" type="string" required>
+                    Phone number in E.164 format, e.g. <code className="bg-muted px-1 rounded text-xs">+15551234567</code>
+                  </Param>
+                  <Param name="dob" type="string" required>
+                    Date of birth, <code className="bg-muted px-1 rounded text-xs">YYYY-MM-DD</code> (e.g. 1990-03-15).
+                    Cardholder must be at least 18 years old.
+                  </Param>
+                  <Param name="address" type="object" required>
+                    Physical address. Required:{" "}
+                    <code className="bg-muted px-1 rounded text-xs">countryISOCode</code> (ISO 3166-1 alpha-2, exactly 2
+                    chars),{" "}
+                    <code className="bg-muted px-1 rounded text-xs">region</code>{" "}
+                    <code className="bg-muted px-1 rounded text-xs">city</code>{" "}
+                    <code className="bg-muted px-1 rounded text-xs">postalCode</code>{" "}
+                    <code className="bg-muted px-1 rounded text-xs">addressLine1</code>. Optional:{" "}
+                    <code className="bg-muted px-1 rounded text-xs">addressLine2</code>{" "}
+                    <code className="bg-muted px-1 rounded text-xs">fullAddress</code>. Every text field is max 50
+                    characters.
+                  </Param>
+                </div>
+              </div>
+              <ResponseBlock>{`{
   "id": "string",
   "message": "The cardholder data has been successfully submitted.",
   "status": "Success"
 }`}</ResponseBlock>
-          </div>
-
-          <Separator />
-
-          {/* Get cardholder */}
-          <div id="get-cardholder" className="space-y-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <GetBadge />
-              <code className="text-sm font-mono">/cards/get-cardholder/:id</code>
             </div>
-            <ScopeBadge scope="cardholdersRead" />
-            <h2 className="text-2xl font-semibold">Get cardholder</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Responds with cardholder information.
-            </p>
-            <ResponseBlock>{`{
+
+            <Separator />
+
+            {/* Get cardholder */}
+            <div id="get-cardholder" className="space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <GetBadge />
+                <code className="text-sm font-mono">/cards/get-cardholder/:id</code>
+              </div>
+              <ScopeBadge scope="cardholdersRead" />
+              <h2 className="text-2xl font-semibold">Get cardholder</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Responds with cardholder information. Fields without a value are omitted;{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is always present.
+              </p>
+              <div className="rounded-lg border border-border bg-card p-4">
+                <EnumValues
+                  name="status"
+                  values={[
+                    ["NotVerified", "The cardholder was created, but verification has not started."],
+                    ["PendingVerification", "Verification is in progress."],
+                    ["DocumentsNeeded", "More documents are needed to finish verification."],
+                    ["VerificationFailed", "Verification could not be completed."],
+                    ["Approved", "The cardholder is verified. Cards can be issued to them."],
+                    ["Rejected", "Verification was rejected. Cards cannot be issued to them."],
+                  ]}
+                />
+              </div>
+              <ResponseBlock>{`{
   "city": "string",
   "email": "string",
   "firstName": "string",
@@ -1155,15 +1391,16 @@ export function CardsContent() {
   "phoneNumber": "string",
   "status": "Approved"
 }`}</ResponseBlock>
-          </div>
+            </div>
 
-          <Separator />
+            <Separator />
+          </RegionOnly>
 
           {/* Get team cardholders */}
           <div id="get-team-cardholders" className="space-y-4">
             <div className="flex items-center gap-3 flex-wrap">
               <GetBadge />
-              <code className="text-sm font-mono">/cards-adapter/v1/public/cards/cardholders</code>
+              <code className="text-sm font-mono">/cards/cardholders</code>
             </div>
             <ScopeBadge scope="cardholdersRead" />
             <h2 className="text-2xl font-semibold">Get team cardholders</h2>
@@ -1199,17 +1436,80 @@ export function CardsContent() {
   }
 ]`}</ResponseBlock>
             <div className="rounded-lg border border-border bg-card p-4 space-y-2">
-              <p className="text-sm font-medium">status enum</p>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {["unspecified", "not_verified", "pending_verification", "documents_needed", "verification_failed", "approved", "rejected"].map((s) => (
-                  <code key={s} className="bg-muted px-2 py-0.5 rounded text-xs font-mono">{s}</code>
-                ))}
-              </div>
+              <EnumValues
+                name="status"
+                values={[
+                  ["unspecified", "The status is not set."],
+                  ["not_verified", "The cardholder was created, but verification has not started."],
+                  ["pending_verification", "Verification is in progress."],
+                  ["documents_needed", "More documents are needed to finish verification."],
+                  ["verification_failed", "Verification could not be completed."],
+                  ["approved", "The cardholder is verified. Cards can be issued to them."],
+                  ["rejected", "Verification was rejected. Cards cannot be issued to them."],
+                ]}
+              />
             </div>
           </div>
         </div>
       </div>
     </main>
+  )
+}
+
+function TransactionFieldValues() {
+  return (
+    <div id="transaction-field-values" className="rounded-lg border border-border bg-card p-4 space-y-4">
+      <h3 className="text-base font-semibold">Transaction field values</h3>
+      <p className="text-sm text-muted-foreground">These values apply to the transaction objects returned by every Transactions endpoint.</p>
+      <EnumValues
+        name="type"
+        values={[
+          ["debit", "Money left the account."],
+          ["credit", "Money came into the account."],
+        ]}
+      />
+      <EnumValues
+        name="sourceType"
+        values={[
+          ["Card", "Card transaction, such as a purchase, refund or ATM withdrawal."],
+          ["Bank", "Transfer to or from an external bank account."],
+          ["Internal", "Transfer between accounts within Spendbase."],
+          ["Undefined", "The source could not be classified."],
+        ]}
+      />
+      <EnumValues
+        name="eventType"
+        values={[
+          ["Undefined", "Regular transaction with no special event."],
+          ["Returned", "Funds were returned, such as a card refund or a returned transfer."],
+          ["BalanceAdjustment", "Manual correction of the account balance."],
+          ["Chargeback", "Funds moved because a card transaction was disputed."],
+          ["Exchange", "Currency exchange."],
+          ["Revenue", "Revenue credited to the account, such as cashback."],
+          ["InternalFx", "Currency conversion leg of an internal transfer between currencies."],
+          ["Autopay", "Automatic top-up or payment."],
+        ]}
+      />
+      <EnumValues
+        name="state"
+        values={[
+          ["Pending", "Authorized but not settled yet. The amount may still change."],
+          ["Confirmed", "Settled and final."],
+          ["Rejected", "Declined or failed. No money moved."],
+          ["Unset", "The state has not been set yet."],
+          ["Unknown", "The state could not be determined."],
+        ]}
+      />
+      <EnumValues
+        name="paymentType"
+        values={[
+          ["POS", "Card payment at a merchant, in store or online."],
+          ["ATM", "Cash withdrawal at an ATM."],
+          ["P2P", "Transfer between accounts or people."],
+          ["Undefined", "Not applicable, such as for non-card transactions."],
+        ]}
+      />
+    </div>
   )
 }
 
@@ -1229,7 +1529,10 @@ export function TransactionsContent() {
             <ScopeBadge scope="transactionsRead" />
             <h2 className="text-2xl font-semibold">Get card transactions</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns card transactions list with tx IDs, card IDs, names, amounts, etc.
+              Returns card transactions (<code className="font-mono">type=card</code>) for the specified account, with
+              tx IDs, card IDs, merchant details, amounts, etc. Each transaction carries a <code className="font-mono">cardId</code>{" "}
+              field, which mirrors <code className="font-mono">cardRef</code>. Fields with zero/empty values are omitted from
+              the response.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Path Parameters</h3>
@@ -1238,16 +1541,39 @@ export function TransactionsContent() {
               </div>
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
-                <Param name="from" type="integer (unix timestamp)">Start timestamp — optional</Param>
-                <Param name="to" type="integer (unix timestamp)">End timestamp — optional</Param>
-                <Param name="accountName" type="string">Filter by account name — optional</Param>
-                <Param name="cursor" type="string">Cursor returned by the previous page, for cursor-based pagination</Param>
-                <Param name="limit" type="integer">Maximum number of items to return</Param>
+                <Param name="from" type="integer (unix seconds)">
+                  Start of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  Omitted, <code className="font-mono">0</code> or non-numeric values mean no lower bound.
+                </Param>
+                <Param name="to" type="integer (unix seconds)">
+                  End of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  Omitted, <code className="font-mono">0</code> or non-numeric values mean no upper bound.
+                </Param>
+                <Param name="accountName" type="string">
+                  Keep only transactions whose <code className="font-mono">details.accountName</code> matches exactly
+                  (case-sensitive). Applied to the returned page after pagination, so a page may contain fewer than{" "}
+                  <code className="font-mono">limit</code> items while <code className="font-mono">hasMore</code> is still true.
+                </Param>
+                <Param name="cursor" type="string">
+                  <code className="font-mono">nextCursor</code> from the previous page. Max 512 characters, no control characters.
+                </Param>
+                <Param name="limit" type="integer">
+                  Page size, 0–1000. Defaults to 1000 when omitted or 0. Non-integer, negative or &gt;1000 values return 400.
+                </Param>
               </div>
             </div>
             <ResponseBlock>{`{
-  "transactions": [${TRANSACTION_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}]
+  "transactions": [${indentJson(CARD_TRANSACTION_OBJECT, "    ")}],
+  "hasMore": true,
+  "nextCursor": "eyJpZCI6IjNhNGI1YzZkIn0"
 }`}</ResponseBlock>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              <code className="font-mono">hasMore</code> and <code className="font-mono">nextCursor</code> are omitted on the
+              last page. Invalid pagination params return <code className="font-mono">400</code> with{" "}
+              <code className="font-mono">{`{"error": "limit must not exceed 1000"}`}</code> (or similar); upstream errors
+              are passed through with their status code as <code className="font-mono">{`{"error": "..."}`}</code>.
+            </p>
+            <TransactionFieldValues />
           </div>
 
           <Separator />
@@ -1261,7 +1587,15 @@ export function TransactionsContent() {
             <ScopeBadge scope="transactionsRead" />
             <h2 className="text-2xl font-semibold">Get transactions by account</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns transactions list for the specified account.
+              Returns all transactions (card, bank and internal) for the specified account. Card transactions get an
+              extra string flag: <code className="font-mono">{`"refund": "true"`}</code> when{" "}
+              <code className="font-mono">sourceType</code> is <code className="font-mono">Card</code> and{" "}
+              <code className="font-mono">eventType</code> is <code className="font-mono">Returned</code>, or{" "}
+              <code className="font-mono">{`"reversal": "true"`}</code> when <code className="font-mono">sourceType</code> is{" "}
+              <code className="font-mono">Card</code>, <code className="font-mono">eventType</code> is{" "}
+              <code className="font-mono">Undefined</code> and <code className="font-mono">type</code> is{" "}
+              <code className="font-mono">debit</code>. Both are omitted otherwise. Fields with zero/empty values are
+              omitted from the response.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Path Parameters</h3>
@@ -1270,17 +1604,62 @@ export function TransactionsContent() {
               </div>
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
-                <Param name="from" type="integer (unix timestamp)">Start timestamp — optional</Param>
-                <Param name="to" type="integer (unix timestamp)">End timestamp — optional</Param>
-                <Param name="cursor" type="string">Cursor returned by the previous page, for cursor-based pagination</Param>
-                <Param name="limit" type="integer">Maximum number of items to return</Param>
+                <Param name="from" type="integer (unix seconds)">
+                  Start of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  Omitted, <code className="font-mono">0</code> or non-numeric values mean no lower bound.
+                </Param>
+                <Param name="to" type="integer (unix seconds)">
+                  End of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  Omitted, <code className="font-mono">0</code> or non-numeric values mean no upper bound.
+                </Param>
+                <Param name="bank" type="boolean">
+                  When <code className="font-mono">true</code>, only bank transactions are returned (types{" "}
+                  <code className="font-mono">convert</code>, <code className="font-mono">load</code>,{" "}
+                  <code className="font-mono">sendOut</code>). Defaults to <code className="font-mono">false</code>.
+                </Param>
+                <Param name="cursor" type="string">
+                  <code className="font-mono">nextCursor</code> from the previous page. Max 512 characters, no control characters.
+                </Param>
+                <Param name="limit" type="integer">
+                  Page size, 0–1000. Defaults to 1000 when omitted or 0. Non-integer, negative or &gt;1000 values return 400.
+                </Param>
               </div>
             </div>
             <ResponseBlock>{`{
-  "payload": {
-    "transactions": [${TRANSACTION_OBJECT.split("\n").map(l => "      " + l).join("\n").trimStart()}]
-  }
+  "transactions": [
+    ${indentJson(BANK_TRANSACTION_OBJECT, "    ")},
+    {
+      "account_id": "6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b",
+      "amount": 42.5,
+      "cardRef": "8d3e5a7c-1f2b-4c6d-9e0a-b1c2d3e4f5a6",
+      "createdAt": 1754127600,
+      "currencyISOCode": "USD",
+      "details": {
+        "accountName": "Marketing",
+        "cardName": "Ads card",
+        "merchantName": "Google Ads",
+        "originalTransactionId": "3a4b5c6d-7e8f-4091-a2b3-c4d5e6f7a8b9",
+        "panLastFour": "4242"
+      },
+      "eventType": "Returned",
+      "id": "5e6f7a8b-9c0d-4e1f-a2b3-c4d5e6f7a8b9",
+      "paymentType": "POS",
+      "sourceType": "Card",
+      "state": "Confirmed",
+      "type": "credit",
+      "updatedAt": 1754127660,
+      "refund": "true"
+    }
+  ],
+  "hasMore": true,
+  "nextCursor": "eyJpZCI6IjVlNmY3YThiIn0"
 }`}</ResponseBlock>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              <code className="font-mono">hasMore</code> and <code className="font-mono">nextCursor</code> are omitted on the
+              last page. Invalid pagination params return <code className="font-mono">400</code> with{" "}
+              <code className="font-mono">{`{"error": "..."}`}</code>; upstream errors are passed through with their status
+              code.
+            </p>
           </div>
 
           <Separator />
@@ -1294,7 +1673,15 @@ export function TransactionsContent() {
             <ScopeBadge scope="transactionsRead" />
             <h2 className="text-2xl font-semibold">Get master account transactions</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns transactions list for the specified master account.
+              Returns transactions of the given account where the Master Account is the sender or receiver
+              (<code className="font-mono">details.senderName</code> or <code className="font-mono">details.receiverName</code>{" "}
+              equals <code className="font-mono">Master Account</code>). For internal transfers
+              (<code className="font-mono">sourceType: Internal</code>) only one leg is kept: a{" "}
+              <code className="font-mono">debit</code> whose receiver is the Master Account, or a{" "}
+              <code className="font-mono">credit</code> whose sender is the Master Account. This endpoint is not paginated by the caller — it returns
+              the first upstream page; <code className="font-mono">hasMore</code>, <code className="font-mono">nextCursor</code>{" "}
+              and account <code className="font-mono">balances</code> are passed through from upstream when present.
+              Fields with zero/empty values are omitted from the response.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Path Parameters</h3>
@@ -1303,14 +1690,23 @@ export function TransactionsContent() {
               </div>
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
-                <Param name="from" type="integer (unix timestamp)">Start timestamp — optional</Param>
-                <Param name="to" type="integer (unix timestamp)">End timestamp — optional</Param>
+                <Param name="from" type="integer (unix seconds)">
+                  Start of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  Omitted, <code className="font-mono">0</code> or non-numeric values mean no lower bound.
+                </Param>
+                <Param name="to" type="integer (unix seconds)">
+                  End of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  Omitted, <code className="font-mono">0</code> or non-numeric values mean no upper bound.
+                </Param>
               </div>
             </div>
             <ResponseBlock>{`{
-  "payload": {
-    "transactions": [${TRANSACTION_OBJECT.split("\n").map(l => "      " + l).join("\n").trimStart()}]
-  }
+  "balances": {
+    "freeBalance": 48250.75,
+    "pendingBalance": 120,
+    "totalBalance": 48370.75
+  },
+  "transactions": [${indentJson(BANK_TRANSACTION_OBJECT, "    ")}]
 }`}</ResponseBlock>
           </div>
 
@@ -1324,20 +1720,29 @@ export function TransactionsContent() {
             </div>
             <ScopeBadge scope="transactionsWrite" />
             <h2 className="text-2xl font-semibold">Add note to transaction</h2>
-            <p className="text-muted-foreground leading-relaxed">Attach a note message to a transaction.</p>
+            <p className="text-muted-foreground leading-relaxed">
+              Attach a note message to a transaction. Returns the transaction&apos;s attachment object; fields with
+              empty values (e.g. <code className="font-mono">fileName</code> when no file is attached) are omitted.
+            </p>
             <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Path Parameters</h3>
+              <div className="space-y-2">
+                <Param name="id" type="string" required>Transaction ID (<code className="font-mono">id</code> from the transactions list)</Param>
+              </div>
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
-                <Param name="note" type="string" required>Attachment message for the transaction</Param>
+                <Param name="note" type="string">
+                  Note text to attach to the transaction. Not validated by the API — a missing or empty value is forwarded
+                  upstream as-is. A malformed JSON body returns <code className="font-mono">400</code>{" "}
+                  <code className="font-mono">{`{"error": "invalid request body"}`}</code>.
+                </Param>
               </div>
             </div>
             <ResponseBlock>{`{
-  "payload": {
-    "fileName": "string",
-    "fileURL": "string",
-    "note": "string",
-    "originalFileName": "string"
-  }
+  "fileName": "c1d2e3f4-receipt.pdf",
+  "fileURL": "https://files.spendbase.co/attachments/c1d2e3f4-receipt.pdf",
+  "note": "Q3 ads campaign",
+  "originalFileName": "receipt.pdf"
 }`}</ResponseBlock>
           </div>
         </div>
@@ -1533,6 +1938,23 @@ def webhook():
   receiverName: string;
   timestamp: string;
 }`}</ResponseBlock>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+              <EnumValues
+                name="type"
+                values={[
+                  ["Debit", "Money left the account."],
+                  ["Credit", "Money came into the account."],
+                ]}
+              />
+              <EnumValues
+                name="currencyISOCode"
+                values={[
+                  ["EUR", "Euro"],
+                  ["GBP", "British pound"],
+                  ["USD", "US dollar"],
+                ]}
+              />
+            </div>
           </div>
 
           <Separator />
@@ -1760,6 +2182,15 @@ def webhook():
   transactionId: string;
   timestamp: string;                // UTC RFC 3339
 }`}</ResponseBlock>
+            <div className="rounded-lg border border-border bg-card p-4">
+              <EnumValues
+                name="lifecyclePhase"
+                values={[
+                  ["AUTHORIZATION", "The refund was authorized. Funds are not credited yet."],
+                  ["SETTLEMENT", "The refund was settled. Funds are credited to the account."],
+                ]}
+              />
+            </div>
           </div>
 
         </div>

@@ -5,13 +5,13 @@ import { Search, Menu, X } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { RegionSwitcher, useRegion, type Region } from "@/components/region"
+import { RegionSwitcher, regionPath, useRegion, type Region } from "@/components/region"
 
 const ALL_SECTIONS: { label: string; id: string; group: string; page: string; region?: Region }[] = [
   { label: "Basic Requirements", id: "basic-requirements", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Authentication & TLS", id: "authentication-tls", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Go Signing Example", id: "go-signing-example", group: "Getting Started", page: "/docs/getting-started", region: "us" },
-  { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts", page: "/docs/accounts" },
+  { label: "Get Accounts by Currency", id: "get-accounts-by-currency", group: "Accounts", page: "/docs/accounts", region: "eu" },
   { label: "Get Bank Accounts", id: "get-bank-accounts", group: "Accounts", page: "/docs/accounts" },
   { label: "Create Account", id: "create-account", group: "Accounts", page: "/docs/accounts" },
   { label: "Get Ledger Accounts", id: "get-ledger-accounts", group: "Accounts", page: "/docs/accounts" },
@@ -30,8 +30,8 @@ const ALL_SECTIONS: { label: string; id: string; group: string; page: string; re
   { label: "Unlock Card", id: "unlock-card", group: "Cards", page: "/docs/cards" },
   { label: "Terminate Card", id: "terminate-card", group: "Cards", page: "/docs/cards" },
   { label: "Set Limit", id: "set-limit", group: "Cards", page: "/docs/cards" },
-  { label: "Add Cardholder", id: "add-cardholder", group: "Cards", page: "/docs/cards" },
-  { label: "Get Cardholder", id: "get-cardholder", group: "Cards", page: "/docs/cards" },
+  { label: "Add Cardholder", id: "add-cardholder", group: "Cards", page: "/docs/cards", region: "eu" },
+  { label: "Get Cardholder", id: "get-cardholder", group: "Cards", page: "/docs/cards", region: "eu" },
   { label: "Get Team Cardholders", id: "get-team-cardholders", group: "Cards", page: "/docs/cards" },
   { label: "Get Card Transactions", id: "get-card-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Transactions", id: "get-transactions", group: "Transactions", page: "/docs/transactions" },
@@ -61,7 +61,7 @@ export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
-  const { region } = useRegion()
+  const region = useRegion()
 
   const results = query.trim()
     ? ALL_SECTIONS.filter(
@@ -86,7 +86,8 @@ export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
-  const handleNavigate = (page: string, id: string) => {
+  const handleNavigate = (sectionPage: string, id: string) => {
+    const page = regionPath(region, sectionPage)
     if (pathname === page) {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })
     } else {

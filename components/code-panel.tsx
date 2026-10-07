@@ -59,10 +59,12 @@ function EnvRow({ label, value, copyable, sub }: { label: string; value: string;
   )
 }
 
-const EXAMPLES: { title: string; section: Section; code: string }[] = [
+// region: only shown for that region (endpoints backed by the cards service are EU-only)
+const EXAMPLES: { title: string; section: Section; code: string; region?: Region }[] = [
   {
     title: "Get Accounts by Currency",
     section: "accounts",
+    region: "eu",
     code: `curl --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -209,8 +211,8 @@ const EXAMPLES: { title: string; section: Section; code: string }[] = [
   {
     title: "Get Card Details",
     section: "cards",
-    code: `# Returns 403 for API key auth.
-# Use card-frame instead.
+    code: `# Returns 403 unless your team is PCI DSS compliant.
+# Use card-frame otherwise.
 curl --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -273,6 +275,7 @@ curl --cert client.crt --key client.key \\
   {
     title: "Add Cardholder",
     section: "cards",
+    region: "eu",
     code: `curl -X POST --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -284,11 +287,12 @@ curl --cert client.crt --key client.key \\
     "lastName": "Doe",
     "middleName": "A",
     "email": "john.doe@example.com",
-    "phoneNumber": "+1234567890",
+    "phoneNumber": "+447700900123",
     "dob": "1990-01-15",
     "address": {
       "addressLine1": "1 Main St",
       "city": "London",
+      "region": "Greater London",
       "countryISOCode": "GB",
       "postalCode": "SW1A 1AA"
     }
@@ -298,6 +302,7 @@ curl --cert client.crt --key client.key \\
   {
     title: "Get Cardholder",
     section: "cards",
+    region: "eu",
     code: `curl --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -381,8 +386,8 @@ const AUTH: Record<Region, { default: string; webhooks: string }> = {
 }
 
 export function CodePanel({ section }: { section: Section }) {
-  const { region } = useRegion()
-  const examples = EXAMPLES.filter((e) => e.section === section)
+  const region = useRegion()
+  const examples = EXAMPLES.filter((e) => e.section === section && (!e.region || e.region === region))
 
   return (
     <aside className="hidden xl:block w-[min(480px,38%)] shrink-0 border-l border-border bg-card sticky top-14 h-[calc(100vh-3.5rem)] self-start">

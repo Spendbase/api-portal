@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { ChevronDown, ChevronRight, X } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useRegion, type Region } from "@/components/region"
+import { regionPath, useRegion, type Region } from "@/components/region"
 
 const sections: { title: string; path: string; items: { label: string; id: string; region?: Region }[] }[] = [
   {
@@ -22,7 +22,7 @@ const sections: { title: string; path: string; items: { label: string; id: strin
     title: "Accounts",
     path: "/docs/accounts",
     items: [
-      { label: "Get Accounts by Currency", id: "get-accounts-by-currency" },
+      { label: "Get Accounts by Currency", id: "get-accounts-by-currency", region: "eu" },
       { label: "Get Bank Accounts", id: "get-bank-accounts" },
       { label: "Create Account", id: "create-account" },
       { label: "Get Ledger Accounts", id: "get-ledger-accounts" },
@@ -47,8 +47,8 @@ const sections: { title: string; path: string; items: { label: string; id: strin
       { label: "Unlock Card", id: "unlock-card" },
       { label: "Terminate Card", id: "terminate-card" },
       { label: "Set Limit", id: "set-limit" },
-      { label: "Add Cardholder", id: "add-cardholder" },
-      { label: "Get Cardholder", id: "get-cardholder" },
+      { label: "Add Cardholder", id: "add-cardholder", region: "eu" },
+      { label: "Get Cardholder", id: "get-cardholder", region: "eu" },
       { label: "Get Team Cardholders", id: "get-team-cardholders" },
     ],
   },
@@ -102,7 +102,7 @@ function SidebarNav({
   toggle: (title: string) => void
   onLinkClick?: () => void
 }) {
-  const { region } = useRegion()
+  const region = useRegion()
   const isActive = (sectionPath: string) =>
     pathname === sectionPath || pathname.startsWith(sectionPath + "/")
 
@@ -119,7 +119,8 @@ function SidebarNav({
 
       <nav className="px-3 py-4 space-y-1">
         {sections.map((section) => {
-          const active = isActive(section.path)
+          const sectionPath = regionPath(region, section.path)
+          const active = isActive(sectionPath)
           const open = expanded[section.title]
           return (
             <div key={section.title}>
@@ -146,7 +147,7 @@ function SidebarNav({
                     return (
                       <li key={item.id}>
                         <Link
-                          href={`${section.path}#${item.id}`}
+                          href={`${sectionPath}#${item.id}`}
                           onClick={onLinkClick}
                           className={`flex items-center rounded-md px-2 py-1.5 text-sm transition-colors ${
                             active

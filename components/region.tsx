@@ -1,40 +1,17 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
-export type Region = "us" | "eu"
+import { DEFAULT_REGION, REGIONS, regionPath, type Region } from "@/lib/region"
 
-const REGIONS: { value: Region; label: string }[] = [
-  { value: "us", label: "US" },
-  { value: "eu", label: "EU" },
-]
+export { DEFAULT_REGION, REGIONS, isRegion, regionPath, type Region } from "@/lib/region"
 
-const STORAGE_KEY = "spendbase-docs-region"
+const RegionContext = createContext<Region>(DEFAULT_REGION)
 
-const RegionContext = createContext<{ region: Region; setRegion: (r: Region) => void }>({
-  region: "us",
-  setRegion: () => {},
-})
-
-export function RegionProvider({ children }: { children: React.ReactNode }) {
-  const [region, setRegionState] = useState<Region>("us")
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored === "us" || stored === "eu") setRegionState(stored)
-    } catch {}
-  }, [])
-
-  const setRegion = (r: Region) => {
-    setRegionState(r)
-    try {
-      localStorage.setItem(STORAGE_KEY, r)
-    } catch {}
-  }
-
-  return <RegionContext.Provider value={{ region, setRegion }}>{children}</RegionContext.Provider>
+export function RegionProvider({ region, children }: { region: Region; children: React.ReactNode }) {
+  return <RegionContext.Provider value={region}>{children}</RegionContext.Provider>
 }
 
 export function useRegion() {
@@ -42,12 +19,20 @@ export function useRegion() {
 }
 
 export function RegionOnly({ region, children }: { region: Region; children: React.ReactNode }) {
-  const { region: current } = useRegion()
-  return current === region ? <>{children}</> : null
+  return useRegion() === region ? <>{children}</> : null
 }
 
 export function RegionSwitcher() {
-  const { region, setRegion } = useRegion()
+  const region = useRegion()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  const switchTo = (next: Region) => {
+    if (next === region) return
+    const path = pathname.replace(/^\/docs\/(us|eu)(?=\/|$)/, `/docs/${next}`)
+    router.push(path + window.location.hash)
+  }
+
   return (
     <div role="radiogroup" aria-label="API region" className="inline-flex shrink-0 rounded-md border border-border p-0.5">
       {REGIONS.map((r) => (
@@ -60,11 +45,20 @@ export function RegionSwitcher() {
             "px-2.5 py-1 text-xs font-medium rounded-sm transition-colors",
             region === r.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
           )}
-          onClick={() => setRegion(r.value)}
+          onClick={() => switchTo(r.value)}
         >
           {r.label}
         </button>
       ))}
     </div>
   )
+}
+
+// Old region-less URLs (/docs/cards#get-card) -> default region, keeping the anchor.
+export function LegacyRedirect({ to }: { to: string }) {
+  const router = useRouter()
+  useEffect(() => {
+    router.replace(regionPath(DEFAULT_REGION, to) + window.location.hash)
+  }, [router, to])
+  return null
 }
