@@ -1,8 +1,10 @@
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { ResponseBlock } from "@/components/response-block"
 import { RegionLink, RegionOnly } from "@/components/region"
+import { PageNav } from "@/components/page-nav"
 
 function GetBadge() {
   return (
@@ -43,10 +45,17 @@ function ScopeBadge({ scope }: { scope: string }) {
   )
 }
 
-function Note({ children }: { children: React.ReactNode }) {
+function Note({ warning, children }: { warning?: boolean; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
-      <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+    <div
+      className={cn(
+        "flex items-start gap-2 rounded-lg border p-3 text-sm",
+        warning
+          ? "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200"
+          : "border-border bg-muted/50 text-muted-foreground",
+      )}
+    >
+      <AlertCircle className={cn("h-4 w-4 mt-0.5 shrink-0", warning && "text-amber-600 dark:text-amber-400")} />
       <div className="space-y-1">{children}</div>
     </div>
   )
@@ -106,7 +115,7 @@ const CARD_OBJECT = `{
   "currencyISOCode": "EUR",
   "id": "string",
   "issuedAt": "string",
-  "ledgerAccountId": "string",
+  "ledgerAccountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
   "limit": {
     "activatedAt": "string",
     "affectedFrom": "string",
@@ -138,7 +147,7 @@ const CARD_OBJECT = `{
 }`
 
 const CARD_TRANSACTION_OBJECT = `{
-  "account_id": "6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b",
+  "account_id": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
   "amount": 42.5,
   "attachment": {
     "fileName": "c1d2e3f4-receipt.pdf",
@@ -178,7 +187,7 @@ const CARD_TRANSACTION_OBJECT = `{
 }`
 
 const BANK_TRANSACTION_OBJECT = `{
-  "account_id": "6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b",
+  "account_id": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
   "amount": 1500,
   "createdAt": 1753950000,
   "currencyISOCode": "USD",
@@ -207,7 +216,7 @@ const LEDGER_ACCOUNT_OBJECT = `{
   "credit": true,
   "currencyISOCode": "EUR",
   "freeBalance": 1250.5,
-  "id": "string",
+  "id": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
   "multicurrency": false,
   "name": "Marketing",
   "pendingBalance": 49.5,
@@ -224,7 +233,7 @@ const BANK_ACCOUNT_OBJECT = `{
   "credit": true,
   "currencyISOCode": "EUR",
   "freeBalance": 15000,
-  "id": "string",
+  "id": "RVVNV0VVUgA3YmY0YjdmMi03MzI0LTQ4NWEtYTg0My00MDZmMDkyYjViNjE",
   "multicurrency": false,
   "name": "EUR bank account",
   "pendingBalance": 0,
@@ -499,8 +508,6 @@ export function GettingStartedContent() {
             <h2 className="text-3xl font-bold mb-4">Go Signing Example</h2>
             <p className="text-muted-foreground leading-relaxed">
               Full working example that builds the canonical string, signs it with Ed25519, and sends a signed request.
-              This mirrors{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">integration/apikeys/helpers_test.go</code>.
             </p>
             <ResponseBlock status="Go">{`package main
 
@@ -611,6 +618,7 @@ func example() error {
 }`}</ResponseBlock>
           </div>
         </RegionOnly>
+        <PageNav />
       </div>
     </main>
   )
@@ -743,16 +751,18 @@ export function QuickStartContent() {
                 <li>
                   <code className={code}>cardName</code>: a name for the card
                 </li>
+                <li>
+                  <code className={code}>email</code>: the email the Spendbase account was created with
+                </li>
               </ul>
               <p>
-                The card is issued to the owner of the API key: the user the Spendbase account was created with.{" "}
-                <code className={code}>email</code> and <code className={code}>spendbaseUserId</code> are not needed.
                 Set a spending limit with <RegionLink href="/docs/cards#set-limit">Set limit</RegionLink> after the card
                 is created.
               </p>
             </QuickStartStep>
           </RegionOnly>
         </div>
+        <PageNav />
       </div>
     </main>
   )
@@ -898,8 +908,8 @@ export function AccountsContent() {
             <p className="text-muted-foreground leading-relaxed">
               Responds with the new account name, ID and ledger ID if creation succeeded.{" "}
               <code className="bg-muted px-1 py-0.5 rounded text-xs">accountLedgerId</code> is the ledger ID of the
-              created account (use it for transfers and the get-account-by-ID route); it is an empty string if the
-              account could not be found in the ledger right after creation.
+              created account (use it for transfers and Get account by ID). If it is empty, get the ID from Get ledger
+              accounts.
             </p>
             <RegionOnly region="us">
               <Note>
@@ -908,9 +918,7 @@ export function AccountsContent() {
                   return <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> <code className="bg-muted px-1 py-0.5 rounded text-xs">a budget name can be at most 13 characters</code>.
                 </p>
                 <p>
-                  The sub-account is always created under your company&apos;s bank account;{" "}
-                  <code className="bg-muted px-1 py-0.5 rounded text-xs">ledgerBankAccountId</code> only sets its currency. A new sub-account starts with no funds,
-                  so cards on it are declined until the Spendbase team funds it.
+                  A new sub-account starts with no funds, so cards on it are declined until the Spendbase team funds it.
                 </p>
               </Note>
             </RegionOnly>
@@ -924,11 +932,15 @@ export function AccountsContent() {
                 </Param>
               </div>
             </div>
+            <ResponseBlock status="Request body">{`{
+  "accountName": "Marketing",
+  "ledgerBankAccountId": "RVVNV0VVUgA3YmY0YjdmMi03MzI0LTQ4NWEtYTg0My00MDZmMDkyYjViNjE"
+}`}</ResponseBlock>
             <ResponseBlock>{`{
-  "accountLedgerId": "string",
+  "accountLedgerId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
   "accountName": "Marketing",
   "id": "string",
-  "ledgerAccountId": "string"
+  "ledgerAccountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q"
 }`}</ResponseBlock>
             <div className="rounded-lg border border-border bg-card p-4 space-y-2">
               <p className="text-sm font-medium">400 Bad Request</p>
@@ -997,7 +1009,7 @@ export function AccountsContent() {
             </div>
             <ResponseBlock>{`{
   "bankAccount": ${BANK_ACCOUNT_OBJECT.split("\n").map(l => "  " + l).join("\n").trimStart()},
-  "master_accounts": [${LEDGER_ACCOUNT_OBJECT.replace(`"name": "Marketing"`, `"name": "Main"`).replace(`"type": "sub"`, `"type": "master"`).split("\n").map(l => "    " + l).join("\n").trimStart()}],
+  "master_accounts": [${LEDGER_ACCOUNT_OBJECT.replace(`"id": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q"`, `"id": "RVVNV0VVUgAxYzllNGYzYS04YjJkLTRlNmYtOWE3Yy01ZDNiMmUxZjBhOWM"`).replace(`"name": "Marketing"`, `"name": "Main"`).replace(`"type": "sub"`, `"type": "master"`).split("\n").map(l => "    " + l).join("\n").trimStart()}],
   "sub_accounts": [${LEDGER_ACCOUNT_OBJECT.split("\n").map(l => "    " + l).join("\n").trimStart()}]
 }`}</ResponseBlock>
           </div>
@@ -1047,12 +1059,11 @@ export function AccountsContent() {
             <ScopeBadge scope="internalTransfersWrite" />
             <h2 className="text-2xl font-semibold">Transfer money between accounts</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Ledger IDs can be received from the ledger accounts route. The request is validated before processing:
-              currency and available balance on the source account are checked. Responds with a success message if the
-              money was transferred.
+              Ledger IDs can be received from the ledger accounts route. Responds with a success message if the money
+              was transferred.
             </p>
             <RegionOnly region="us">
-              <Note>
+              <Note warning>
                 <p>
                   Not available in the US: the request is always rejected with <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. Transfers between
                   sub-accounts can be made manually: send a request to the Spendbase team in chat.
@@ -1068,12 +1079,18 @@ export function AccountsContent() {
                 <Param name="currencyISONum" type="string" required>ISO 4217 numeric currency code (e.g. 978 for EUR)</Param>
               </div>
             </div>
+            <ResponseBlock status="Request body">{`{
+  "amount": 100,
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "sourceAccountId": "RVVNV0VVUgAxYzllNGYzYS04YjJkLTRlNmYtOWE3Yy01ZDNiMmUxZjBhOWM",
+  "currencyISONum": "978"
+}`}</ResponseBlock>
             <ResponseBlock>{`{
   "message": "string",
   "status": "string"
 }`}</ResponseBlock>
             <div className="rounded-lg border border-border bg-card p-4 space-y-2">
-              <p className="text-sm font-medium">400 Bad Request — pre-flight validation errors</p>
+              <p className="text-sm font-medium">400 Bad Request</p>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                 <li><code className="bg-muted px-1 py-0.5 rounded">invalid request params</code> — one of <code className="bg-muted px-1 py-0.5 rounded">amount</code>, <code className="bg-muted px-1 py-0.5 rounded">accountId</code>, <code className="bg-muted px-1 py-0.5 rounded">sourceAccountId</code>, <code className="bg-muted px-1 py-0.5 rounded">currencyISONum</code> is missing</li>
                 <li><code className="bg-muted px-1 py-0.5 rounded">unknown currency</code> — <code className="bg-muted px-1 py-0.5 rounded">currencyISONum</code> is not a recognized ISO 4217 currency</li>
@@ -1095,12 +1112,11 @@ export function AccountsContent() {
             <ScopeBadge scope="internalTransfersWrite" />
             <h2 className="text-2xl font-semibold">Transfer with note</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Same as transfer money (same pre-flight validation and 400 errors) but attaches the note to both the
-              debit and the credit transaction of the transfer. The HTTP status mirrors the{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code> field of the response.
+              Same as Transfer money (with the same 400 errors), but also attaches the note to both the debit and the
+              credit transaction of the transfer.
             </p>
             <RegionOnly region="us">
-              <Note>
+              <Note warning>
                 <p>
                   Not available in the US: the request is always rejected with <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. Transfers between
                   sub-accounts can be made manually: send a request to the Spendbase team in chat.
@@ -1117,6 +1133,13 @@ export function AccountsContent() {
                 <Param name="note" type="string">Note to attach to the debit and credit transactions</Param>
               </div>
             </div>
+            <ResponseBlock status="Request body">{`{
+  "amount": 100,
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "sourceAccountId": "RVVNV0VVUgAxYzllNGYzYS04YjJkLTRlNmYtOWE3Yy01ZDNiMmUxZjBhOWM",
+  "currencyISONum": "978",
+  "note": "Payment for services"
+}`}</ResponseBlock>
             <ResponseBlock>{`{
   "message": "Success",
   "status": "Transfer with note successful",
@@ -1125,8 +1148,8 @@ export function AccountsContent() {
             <div className="rounded-lg border border-border bg-card p-4 space-y-2">
               <p className="text-sm font-medium">Failure responses (same body shape)</p>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                <li><code className="bg-muted px-1 py-0.5 rounded">Transfer funds failed</code> — the transfer itself was rejected; <code className="bg-muted px-1 py-0.5 rounded">code</code>/<code className="bg-muted px-1 py-0.5 rounded">message</code> carry the upstream status and message, no money was moved</li>
-                <li><code className="bg-muted px-1 py-0.5 rounded">Transfer successful, but could not attach note to debit transaction</code> (or <code className="bg-muted px-1 py-0.5 rounded">credit</code>) — money was transferred but the note could not be attached; <code className="bg-muted px-1 py-0.5 rounded">code</code> is the upstream error status (500 if unknown)</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">Transfer funds failed</code> — the transfer was rejected and no money was moved</li>
+                <li><code className="bg-muted px-1 py-0.5 rounded">Transfer successful, but could not attach note to debit transaction</code> (or <code className="bg-muted px-1 py-0.5 rounded">credit</code>) — money was transferred but the note could not be attached</li>
               </ul>
             </div>
           </div>
@@ -1145,7 +1168,7 @@ export function AccountsContent() {
               Responds with the account ID, new name and ledger account ID.
             </p>
             <RegionOnly region="us">
-              <Note>
+              <Note warning>
                 <p>
                   Not available in the US: a sub-account keeps the name it was created with. The request is always
                   rejected with <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>.
@@ -1164,13 +1187,17 @@ export function AccountsContent() {
                 <Param name="name" type="string" required>New account name</Param>
               </div>
             </div>
+            <ResponseBlock status="Request body">{`{
+  "name": "New Account Name"
+}`}</ResponseBlock>
             <ResponseBlock>{`{
   "accountName": "New Account Name",
   "id": "string",
-  "ledgerAccountId": "string"
+  "ledgerAccountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q"
 }`}</ResponseBlock>
           </div>
         </div>
+        <PageNav />
       </div>
     </main>
   )
@@ -1195,12 +1222,12 @@ export function CardsContent() {
             <EnumValues
               values={[
                 ["NEW", "The card was created but not activated (not attached to a verified cardholder). Most operations are not available in this status."],
-                ["PENDING", "Internal transitive status when we could not get a response from the provider on the card creation request."],
+                ["PENDING", "Card creation is still being confirmed."],
                 ["DEFAULT", "Common status for an activated card that is ready to be used. Card limit can be set; card can be locked, unlocked, or terminated."],
                 ["CANCELED_BY_ADMIN", "The card creation was manually cancelled. Most commonly occurs when the card was not activated for 24 hours."],
                 ["EXPIRED", "The card reached its expiry date."],
                 ["TERMINATED", "The card was deleted."],
-                ["LOCKED", "Transitive status between DEFAULT and SUSPENDED when card lock is requested."],
+                ["LOCKED", "A lock was requested and is being applied."],
                 ["SUSPENDED", "The card was locked (frozen) by the provider."],
                 ["LIMIT_EXCEED", "Unused."],
               ]}
@@ -1218,12 +1245,7 @@ export function CardsContent() {
             <ScopeBadge scope="cardsWrite" />
             <h2 className="text-2xl font-semibold">Create card</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Responds with the ID of the created card. <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code>{" "}
-              mirrors the HTTP status of the response and <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code>{" "}
-              holds the HTTP status line. On failure the same shape is returned with the error status in{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code>, the error text in{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code> and an empty{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code>.
+              Responds with the ID of the created card.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
@@ -1233,24 +1255,25 @@ export function CardsContent() {
                   Custom name for the card.
                   <RegionOnly region="eu">
                     {" "}3–50 characters: Latin letters, digits, spaces and <code className="bg-muted px-1 py-0.5 rounded text-xs">- , . /</code>. Other characters are
-                    rejected by the card provider.
+                    rejected.
                   </RegionOnly>
                   <RegionOnly region="us"> Up to 255 characters.</RegionOnly>
                 </Param>
                 <Param name="spendbaseUserId" type="string">
+                  Spendbase user ID of the cardholder.
                   <RegionOnly region="eu">
-                    Cardholder ID: the <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> returned by{" "}
-                    <a href="#add-cardholder" className="underline">Add cardholder</a>. Either{" "}
-                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is required.
-                  </RegionOnly>
-                  <RegionOnly region="us">Not used in the US: the card is issued to the owner of the API key.</RegionOnly>
+                    {" "}Use the <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> returned by{" "}
+                    <a href="#add-cardholder" className="underline">Add cardholder</a>.
+                  </RegionOnly>{" "}
+                  One of <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is required.
                 </Param>
                 <Param name="email" type="string">
-                  <RegionOnly region="eu">
-                    Cardholder email — deprecated. Still accepted as a legacy fallback, but new integrations should send{" "}
-                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> instead.
-                  </RegionOnly>
-                  <RegionOnly region="us">Not used in the US: the card is issued to the owner of the API key.</RegionOnly>
+                  <RegionOnly region="eu">Cardholder email, used when <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> is not set.</RegionOnly>
+                  <RegionOnly region="us">
+                    Cardholder email: the email the Spendbase account was created with. Used when{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> is not set.
+                  </RegionOnly>{" "}
+                  One of <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is required.
                 </Param>
                 <Param name="limit" type="object">
                   Initial card limit, same shape as the{" "}
@@ -1266,15 +1289,32 @@ export function CardsContent() {
               </div>
             </div>
             <RegionOnly region="eu">
+              <ResponseBlock status="Request body">{`{
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "cardName": "Marketing Card",
+  "spendbaseUserId": "6512bd43-d9ca-4f1e-8c2b-3d4e5f6a7b8c",
+  "limit": {
+    "type": "MONTHLY",
+    "amount": 1000
+  }
+}`}</ResponseBlock>
+            </RegionOnly>
+            <RegionOnly region="us">
+              <ResponseBlock status="Request body">{`{
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "cardName": "Marketing Card",
+  "email": "owner@example.com",
+  "limit": {
+    "type": "MONTHLY",
+    "amount": 1000
+  }
+}`}</ResponseBlock>
+            </RegionOnly>
+            <RegionOnly region="eu">
               <Note>
                 <p>
                   The cardholder&apos;s full name is printed on the card and can be at most 26 characters. A company can
                   have up to 50 cards; terminated cards count towards this limit.
-                </p>
-                <p>
-                  The card currency must be allowed for the company&apos;s country: EUR, GBP or USD in GB, JE, IM, GG and
-                  SH; EUR, USD or PLN in PL; EUR or USD in DE, ES, EE, LV, LT, CY, CZ and RO; EUR only in other EEA
-                  countries.
                 </p>
                 <p>
                   If the cardholder is not approved yet, the card is created with status <code className="bg-muted px-1 py-0.5 rounded text-xs">NEW</code> and has no
@@ -1285,8 +1325,7 @@ export function CardsContent() {
             <RegionOnly region="us">
               <Note>
                 <p>
-                  The card is issued to the owner of the API key, and only that user can read its details. The card
-                  currency is always USD.
+                  The card currency is always USD.
                 </p>
               </Note>
             </RegionOnly>
@@ -1308,7 +1347,7 @@ export function CardsContent() {
             <ScopeBadge scope="cardsRead" />
             <h2 className="text-2xl font-semibold">Get card</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns the card object (not wrapped) with name, ID, currency, account info, etc. Fields without a
+              Returns the card object with name, ID, currency, account info, etc. Fields without a
               value are omitted from the response.
             </p>
             <ResponseBlock>{CARD_OBJECT}</ResponseBlock>
@@ -1395,28 +1434,21 @@ export function CardsContent() {
             <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
               <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
               <p>
-                PCI DSS compliance is checked before the card is fetched:{" "}
-                <RegionOnly region="us">the team that owns the API key</RegionOnly>
-                <RegionOnly region="eu">
-                  the PCI DSS flag of the <code className="bg-muted px-1 py-0.5 rounded text-xs">External-Token</code>
-                </RegionOnly>{" "}
-                must be marked PCI DSS compliant, otherwise the endpoint returns{" "}
+                Your company must be PCI DSS compliant, otherwise the endpoint returns{" "}
                 <code className="bg-muted px-1 py-0.5 rounded text-xs">403</code> with{" "}
                 <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "Provider is not PCI DSS compliant and cannot access card details"}`}</code>.
                 Non-compliant integrations should use <a href="#get-card-frame" className="underline">Get card frame</a> instead.
               </p>
             </div>
             <Note>
-              <p>
-                Only the card&apos;s owner can read its details; other users, including company admins, get{" "}
-                <code className="bg-muted px-1 py-0.5 rounded text-xs">403</code>.
-                <RegionOnly region="eu">
-                  {" "}A card with status <code className="bg-muted px-1 py-0.5 rounded text-xs">NEW</code> returns empty card number, CVV and expiry.
-                </RegionOnly>
-                <RegionOnly region="us">
-                  {" "}A terminated card returns an empty card number and CVV.
-                </RegionOnly>
-              </p>
+              <RegionOnly region="eu">
+                <p>
+                  A card with status <code className="bg-muted px-1 py-0.5 rounded text-xs">NEW</code> returns empty card number, CVV and expiry.
+                </p>
+              </RegionOnly>
+              <RegionOnly region="us">
+                <p>A terminated card returns an empty card number and CVV.</p>
+              </RegionOnly>
             </Note>
             <ResponseBlock>{`{
   "billingAddress": {
@@ -1448,7 +1480,7 @@ export function CardsContent() {
             <p className="text-muted-foreground leading-relaxed">
               Returns a short-lived signed URL with card details and its expiration timestamp (RFC 3339). The URL
               expires 1 minute after it is issued. Use it to display card details in an iframe without handling
-              sensitive data directly. Does not require PCI DSS compliance. Only the card&apos;s owner can open it.
+              sensitive data directly. Does not require PCI DSS compliance.
             </p>
             <ResponseBlock>{`{
   "url": "string",
@@ -1590,21 +1622,26 @@ export function CardsContent() {
                 </Param>
               </div>
             </div>
-            <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
-              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-              <RegionOnly region="us">
+            <ResponseBlock status="Request body">{`{
+  "type": "MONTHLY",
+  "amount": 1000
+}`}</ResponseBlock>
+            <RegionOnly region="us">
+              <Note warning>
                 <p>
                   Setting or updating a limit resets its usage. Only transactions made after the limit is set count
                   towards it.
                 </p>
-              </RegionOnly>
-              <RegionOnly region="eu">
+              </Note>
+            </RegionOnly>
+            <RegionOnly region="eu">
+              <Note>
                 <p>
                   All transactions within the current limit period count towards the limit, including those made before
                   the limit was set or changed.
                 </p>
-              </RegionOnly>
-            </div>
+              </Note>
+            </RegionOnly>
             <Note>
               <p>
                 Only cards with status <code className="bg-muted px-1 py-0.5 rounded text-xs">DEFAULT</code> can get a limit: other statuses return{" "}
@@ -1642,14 +1679,11 @@ export function CardsContent() {
               <ScopeBadge scope="cardholdersWrite" />
               <h2 className="text-2xl font-semibold">Add cardholder</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Creates and validates a new cardholder. The cardholder must be verified before a card can be
-                activated. If a user with this email already exists in your team it is reused; if the email belongs
-                to a user outside your team the request fails with{" "}
-                <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>{" "}
+                Creates a new cardholder. The cardholder must be verified before a card can be activated. An email that
+                belongs to a user of another company returns <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>{" "}
                 (<code className="bg-muted px-1 py-0.5 rounded text-xs">user with this email already exists</code>).
                 Invalid bodies return <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> with{" "}
-                <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "validation failed: ..."}`}</code>;
-                errors from the card provider are returned with their original status and body.
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "validation failed: ..."}`}</code>.
               </p>
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Body Parameters</h3>
@@ -1657,7 +1691,7 @@ export function CardsContent() {
                   <Param name="firstName" type="string" required>First name, max 50 characters</Param>
                   <Param name="lastName" type="string" required>Last name, max 50 characters</Param>
                   <Param name="middleName" type="string">Middle name, max 50 characters</Param>
-                  <Param name="email" type="string" required>Valid email address, 6–256 characters. Lower-cased before validation.</Param>
+                  <Param name="email" type="string" required>Valid email address, 6–256 characters.</Param>
                   <Param name="phoneNumber" type="string" required>
                     Phone number in E.164 format, e.g. <code className="bg-muted px-1 rounded text-xs">+15551234567</code>
                   </Param>
@@ -1679,6 +1713,21 @@ export function CardsContent() {
                   </Param>
                 </div>
               </div>
+              <ResponseBlock status="Request body">{`{
+  "firstName": "John",
+  "lastName": "Doe",
+  "middleName": "A",
+  "email": "john.doe@example.com",
+  "phoneNumber": "+447700900123",
+  "dob": "1990-01-15",
+  "address": {
+    "addressLine1": "1 Main St",
+    "city": "London",
+    "region": "Greater London",
+    "countryISOCode": "GB",
+    "postalCode": "SW1A 1AA"
+  }
+}`}</ResponseBlock>
               <ResponseBlock>{`{
   "id": "string",
   "message": "The cardholder data has been successfully submitted.",
@@ -1737,15 +1786,7 @@ export function CardsContent() {
             <ScopeBadge scope="cardholdersRead" />
             <h2 className="text-2xl font-semibold">Get team cardholders</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns all cardholders belonging to the team. Team is resolved from the{" "}
-              <RegionOnly region="us">authenticated API key</RegionOnly>
-              <RegionOnly region="eu">
-                <code className="bg-muted px-1 py-0.5 rounded text-xs">External-Token</code>
-              </RegionOnly>
-              . No path or query parameters.
-              <RegionOnly region="us">
-                {" "}Not paginated: a company with more than 1000 cardholders gets <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
-              </RegionOnly>
+              Returns all cardholders of your company.
             </p>
             <ResponseBlock>{`[
   {
@@ -1786,6 +1827,7 @@ export function CardsContent() {
             </div>
           </div>
         </div>
+        <PageNav />
       </div>
     </main>
   )
@@ -1864,10 +1906,9 @@ export function TransactionsContent() {
             <ScopeBadge scope="transactionsRead" />
             <h2 className="text-2xl font-semibold">Get card transactions</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns card transactions (<code className="font-mono">type=card</code>) for the specified account, with
-              tx IDs, card IDs, merchant details, amounts, etc. Each transaction carries a <code className="font-mono">cardId</code>{" "}
-              field, which mirrors <code className="font-mono">cardRef</code>. Fields with zero/empty values are omitted from
-              the response.
+              Returns card transactions for the specified account, with tx IDs, card IDs, merchant details, amounts,
+              etc. <code className="font-mono">cardId</code> has the same value as <code className="font-mono">cardRef</code>.
+              Fields with zero/empty values are omitted from the response.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Path Parameters</h3>
@@ -1877,17 +1918,17 @@ export function TransactionsContent() {
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
                 <Param name="from" type="integer (unix seconds)">
-                  Start of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  Start of the period. Only the date (UTC) is used; the time of day is ignored.
                   Omitted, <code className="font-mono">0</code> or non-numeric values mean no lower bound.
                 </Param>
                 <Param name="to" type="integer (unix seconds)">
-                  End of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  End of the period. Only the date (UTC) is used; the time of day is ignored.
                   Omitted, <code className="font-mono">0</code> or non-numeric values mean no upper bound.
                 </Param>
                 <Param name="accountName" type="string">
                   Keep only transactions whose <code className="font-mono">details.accountName</code> matches exactly
-                  (case-sensitive). Applied to the returned page after pagination, so a page may contain fewer than{" "}
-                  <code className="font-mono">limit</code> items while <code className="font-mono">hasMore</code> is still true.
+                  (case-sensitive). A page may contain fewer than <code className="font-mono">limit</code> items while{" "}
+                  <code className="font-mono">hasMore</code> is still true.
                 </Param>
                 <Param name="cursor" type="string">
                   <code className="font-mono">nextCursor</code> from the previous page. Max 512 characters, no control characters.
@@ -1905,8 +1946,8 @@ export function TransactionsContent() {
             <p className="text-sm text-muted-foreground leading-relaxed">
               <code className="font-mono">hasMore</code> and <code className="font-mono">nextCursor</code> are omitted on the
               last page. Invalid pagination params return <code className="font-mono">400</code> with{" "}
-              <code className="font-mono">{`{"error": "limit must not exceed 1000"}`}</code> (or similar); upstream errors
-              are passed through with their status code as <code className="font-mono">{`{"error": "..."}`}</code>.
+              <code className="font-mono">{`{"error": "limit must not exceed 1000"}`}</code> (or similar). Other errors
+              return <code className="font-mono">{`{"error": "..."}`}</code> with the matching status code.
             </p>
             <TransactionFieldValues />
           </div>
@@ -1922,15 +1963,10 @@ export function TransactionsContent() {
             <ScopeBadge scope="transactionsRead" />
             <h2 className="text-2xl font-semibold">Get transactions by account</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns all transactions (card, bank and internal) for the specified account. Card transactions get an
-              extra string flag: <code className="font-mono">{`"refund": "true"`}</code> when{" "}
-              <code className="font-mono">sourceType</code> is <code className="font-mono">Card</code> and{" "}
-              <code className="font-mono">eventType</code> is <code className="font-mono">Returned</code>, or{" "}
-              <code className="font-mono">{`"reversal": "true"`}</code> when <code className="font-mono">sourceType</code> is{" "}
-              <code className="font-mono">Card</code>, <code className="font-mono">eventType</code> is{" "}
-              <code className="font-mono">Undefined</code> and <code className="font-mono">type</code> is{" "}
-              <code className="font-mono">debit</code>. Both are omitted otherwise. Fields with zero/empty values are
-              omitted from the response.
+              Returns all transactions (card, bank and internal) for the specified account. Card refunds carry{" "}
+              <code className="font-mono">{`"refund": "true"`}</code> and card reversals carry{" "}
+              <code className="font-mono">{`"reversal": "true"`}</code>; both are omitted otherwise. Fields with
+              zero/empty values are omitted from the response.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Path Parameters</h3>
@@ -1940,11 +1976,11 @@ export function TransactionsContent() {
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
                 <Param name="from" type="integer (unix seconds)">
-                  Start of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  Start of the period. Only the date (UTC) is used; the time of day is ignored.
                   Omitted, <code className="font-mono">0</code> or non-numeric values mean no lower bound.
                 </Param>
                 <Param name="to" type="integer (unix seconds)">
-                  End of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  End of the period. Only the date (UTC) is used; the time of day is ignored.
                   Omitted, <code className="font-mono">0</code> or non-numeric values mean no upper bound.
                 </Param>
                 <Param name="bank" type="boolean">
@@ -1964,7 +2000,7 @@ export function TransactionsContent() {
   "transactions": [
     ${indentJson(BANK_TRANSACTION_OBJECT, "    ")},
     {
-      "account_id": "6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b",
+      "account_id": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
       "amount": 42.5,
       "cardRef": "8d3e5a7c-1f2b-4c6d-9e0a-b1c2d3e4f5a6",
       "createdAt": 1754127600,
@@ -1992,8 +2028,8 @@ export function TransactionsContent() {
             <p className="text-sm text-muted-foreground leading-relaxed">
               <code className="font-mono">hasMore</code> and <code className="font-mono">nextCursor</code> are omitted on the
               last page. Invalid pagination params return <code className="font-mono">400</code> with{" "}
-              <code className="font-mono">{`{"error": "..."}`}</code>; upstream errors are passed through with their status
-              code.
+              <code className="font-mono">{`{"error": "..."}`}</code>. Other errors return the same shape with the matching
+              status code.
             </p>
           </div>
 
@@ -2008,18 +2044,12 @@ export function TransactionsContent() {
             <ScopeBadge scope="transactionsRead" />
             <h2 className="text-2xl font-semibold">Get master account transactions</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns transactions of the given account where the Master Account is the sender or receiver
-              (<code className="font-mono">details.senderName</code> or <code className="font-mono">details.receiverName</code>{" "}
-              equals <code className="font-mono">Master Account</code>). For internal transfers
-              (<code className="font-mono">sourceType: Internal</code>) only one leg is kept: a{" "}
-              <code className="font-mono">debit</code> whose receiver is the Master Account, or a{" "}
-              <code className="font-mono">credit</code> whose sender is the Master Account. This endpoint is not paginated: it returns
-              all matching transactions; account <code className="font-mono">balances</code> are passed through from
-              upstream when present.
-              Fields with zero/empty values are omitted from the response.
+              Returns transactions between the given account and the master account. Not paginated: all matching
+              transactions are returned, together with the account <code className="font-mono">balances</code> when
+              available. Fields with zero/empty values are omitted from the response.
             </p>
             <RegionOnly region="us">
-              <Note>
+              <Note warning>
                 <p>US accounts have no master account, so this endpoint returns an empty list.</p>
               </Note>
             </RegionOnly>
@@ -2031,11 +2061,11 @@ export function TransactionsContent() {
               <h3 className="text-lg font-semibold">Query Parameters</h3>
               <div className="space-y-2">
                 <Param name="from" type="integer (unix seconds)">
-                  Start of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  Start of the period. Only the date (UTC) is used; the time of day is ignored.
                   Omitted, <code className="font-mono">0</code> or non-numeric values mean no lower bound.
                 </Param>
                 <Param name="to" type="integer (unix seconds)">
-                  End of the period. Converted to a UTC calendar date (YYYY-MM-DD), so the time-of-day part is ignored.
+                  End of the period. Only the date (UTC) is used; the time of day is ignored.
                   Omitted, <code className="font-mono">0</code> or non-numeric values mean no upper bound.
                 </Param>
               </div>
@@ -2072,12 +2102,15 @@ export function TransactionsContent() {
               <h3 className="text-lg font-semibold">Body Parameters</h3>
               <div className="space-y-2">
                 <Param name="note" type="string">
-                  Note text to attach to the transaction. Not validated by the API — a missing or empty value is forwarded
-                  upstream as-is. A malformed JSON body returns <code className="font-mono">400</code>{" "}
+                  Note text to attach to the transaction. A missing or empty value clears the existing note. A malformed
+                  JSON body returns <code className="font-mono">400</code>{" "}
                   <code className="font-mono">{`{"error": "invalid request body"}`}</code>.
                 </Param>
               </div>
             </div>
+            <ResponseBlock status="Request body">{`{
+  "note": "Team lunch with client"
+}`}</ResponseBlock>
             <ResponseBlock>{`{
   "fileName": "c1d2e3f4-receipt.pdf",
   "fileURL": "https://files.spendbase.co/attachments/c1d2e3f4-receipt.pdf",
@@ -2086,6 +2119,7 @@ export function TransactionsContent() {
 }`}</ResponseBlock>
           </div>
         </div>
+        <PageNav />
       </div>
     </main>
   )
@@ -3081,6 +3115,7 @@ def webhook():
           </RegionOnly>
 
         </div>
+        <PageNav />
       </div>
     </main>
   )

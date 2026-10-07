@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Separator } from "@/components/ui/separator"
 import { RegionOnly } from "@/components/region"
+import { PageNav } from "@/components/page-nav"
 
 export const metadata: Metadata = {
   title: "Versioning — Spendbase API",
@@ -277,6 +278,7 @@ export default function VersioningPage() {
             <li>New error responses apply only to requests that would have failed regardless.</li>
           </ul>
         </section>
+        <PageNav />
       </div>
     </main>
   )

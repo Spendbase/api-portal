@@ -170,11 +170,12 @@ const EXAMPLES: { title: string; section: Section; code: string; region?: Region
   -H "Content-Type: application/json" \\
   -d '{"accountId": "$ACCOUNT_ID",
        "cardName": "Marketing Card",
-       "spendbaseUserId": "$CARDHOLDER_ID"}' \\
+       "spendbaseUserId": "$CARDHOLDER_ID",
+       "limit": {"type": "MONTHLY", "amount": 1000}}' \\
   $BASE_URL/cards/card`,
   },
   {
-    // US: the card is issued to the API key owner, so no cardholder field
+    // US: the cardholder is identified by the email the Spendbase account was created with
     title: "Create Card",
     section: "cards",
     region: "us",
@@ -185,7 +186,9 @@ const EXAMPLES: { title: string; section: Section; code: string; region?: Region
   -H "X-Nonce: $NONCE" \\
   -H "Content-Type: application/json" \\
   -d '{"accountId": "$ACCOUNT_ID",
-       "cardName": "Marketing Card"}' \\
+       "cardName": "Marketing Card",
+       "email": "$ACCOUNT_OWNER_EMAIL",
+       "limit": {"type": "MONTHLY", "amount": 1000}}' \\
   $BASE_URL/cards/card`,
   },
   {

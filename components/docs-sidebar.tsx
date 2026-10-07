@@ -8,7 +8,7 @@ import { ChevronDown, ChevronRight, X } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { regionPath, useRegion, type Region } from "@/components/region"
 
-const sections: { title: string; path: string; items: { label: string; id: string; region?: Region }[] }[] = [
+export const DOCS_SECTIONS: { title: string; path: string; items: { label: string; id: string; region?: Region }[] }[] = [
   {
     title: "Getting Started",
     path: "/docs/getting-started",
@@ -130,7 +130,7 @@ function SidebarNav({
       </div>
 
       <nav className="px-3 py-4 space-y-1">
-        {sections.map((section) => {
+        {DOCS_SECTIONS.map((section) => {
           const sectionPath = regionPath(region, section.path)
           const active = isActive(sectionPath)
           const open = expanded[section.title]
@@ -200,7 +200,7 @@ function SidebarNav({
 export function DocsSidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname()
   const [expanded, setExpanded] = useState<Record<string, boolean>>(
-    Object.fromEntries(sections.map((s) => [s.title, true]))
+    Object.fromEntries(DOCS_SECTIONS.map((s) => [s.title, true]))
   )
 
   const toggle = (title: string) =>
