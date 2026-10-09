@@ -1054,9 +1054,9 @@ export function AccountsContent() {
               <Note>
                 <p>
                   In the US this moves money between two of your sub-accounts. The bank confirms the transfer, which
-                  usually takes a few seconds; the response comes within about 8 seconds, and its 
-                  <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is <code className="bg-muted px-1 py-0.5 rounded text-xs">success</code> (the money has moved) or 
-                  <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code> (the transfer is still being completed and finishes on its own; 
+                  usually takes a few seconds; the response comes within about 8 seconds, and its{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is <code className="bg-muted px-1 py-0.5 rounded text-xs">success</code> (the money has moved) or{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code> (the transfer is still being completed and finishes on its own;{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code> carries a reference).
                 </p>
                 <p>
@@ -1067,7 +1067,7 @@ export function AccountsContent() {
               <Note warning>
                 <p>
                   Do not retry a transfer that answered <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code>: a retry is a second transfer. Its
-                  result arrives as two 
+                  result arrives as two{" "}
                   <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks (one per
                   sub-account) and in the sub-accounts&apos; balances.
                 </p>
@@ -1146,7 +1146,7 @@ export function AccountsContent() {
                 <p>
                   In the US a successful response means the note was attached to both sides of the transfer, not that
                   the transfer has completed: it may still be in progress and completes on its own. Check the
-                  sub-accounts&apos; balances or the 
+                  sub-accounts&apos; balances or the{" "}
                   <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks for the
                   result. If the transfer has not reached the ledger by the end of the call, the note may not be
                   attached.
