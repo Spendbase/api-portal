@@ -680,11 +680,12 @@ export function QuickStartContent() {
             <RegionOnly region="us">
               <p>
                 In the US a sub-account name can be at most 13 characters, and a new sub-account starts with no funds:
-                cards on it are declined until you fund it.
+                cards on it are declined until the Spendbase team funds it.
               </p>
               <p>
-                Fund it with <RegionLink href="/docs/accounts#transfer-money">Transfer money</RegionLink> (rate
-                limit: 5 requests per minute, 30 requests per hour).
+                Once sub-accounts are funded, you can move money between them yourself with{" "}
+                <RegionLink href="/docs/accounts#transfer-money">Transfer money</RegionLink> (rate limit: 5 requests
+                per minute, 30 requests per hour).
               </p>
             </RegionOnly>
           </QuickStartStep>
@@ -905,7 +906,7 @@ export function AccountsContent() {
                   return <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> <code className="bg-muted px-1 py-0.5 rounded text-xs">a budget name can be at most 13 characters</code>.
                 </p>
                 <p>
-                  A new sub-account starts with no funds, so cards on it are declined until you fund it.
+                  A new sub-account starts with no funds, so cards on it are declined until the Spendbase team funds it.
                 </p>
               </Note>
             </RegionOnly>
@@ -1050,12 +1051,36 @@ export function AccountsContent() {
               was transferred.
             </p>
             <RegionOnly region="us">
-              <Note warning>
+              <Note>
+                <p>
+                  In the US this moves money between two of your sub-accounts. The bank confirms the transfer, which
+                  usually takes a few seconds; the response comes within about 8 seconds, and its 
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is <code className="bg-muted px-1 py-0.5 rounded text-xs">success</code> (the money has moved) or 
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code> (the transfer is still being completed and finishes on its own; 
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code> carries a reference).
+                </p>
                 <p>
                   Rate limit: 5 requests per minute, 30 requests per hour. Above that the API returns{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
                 </p>
               </Note>
+              <Note warning>
+                <p>
+                  Do not retry a transfer that answered <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code>: a retry is a second transfer. Its
+                  result arrives as two 
+                  <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks (one per
+                  sub-account) and in the sub-accounts&apos; balances.
+                </p>
+              </Note>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>Both accounts must be active sub-accounts of your company.</li>
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">amount</code> may have at most 2 decimal places; it is never rounded. Only USD (
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">currencyISONum</code> <code className="bg-muted px-1 py-0.5 rounded text-xs">840</code>) is accepted.
+                </li>
+                <li>An account ID that is not one of your sub-accounts is refused and nothing moves.</li>
+                <li>A company may attempt at most 5 transfers per minute and 30 per hour; refused attempts count too.</li>
+              </ul>
             </RegionOnly>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
@@ -1063,7 +1088,9 @@ export function AccountsContent() {
                 <Param name="amount" type="float" required>Transfer amount</Param>
                 <Param name="accountId" type="string" required>Transfer to ledger ID</Param>
                 <Param name="sourceAccountId" type="string" required>Transfer from ledger ID</Param>
-                <Param name="currencyISONum" type="string" required>ISO 4217 numeric currency code (e.g. 978 for EUR)</Param>
+                <Param name="currencyISONum" type="string" required>
+                  ISO 4217 numeric currency code (e.g. 978 for EUR; 840 for USD in the US)
+                </Param>
               </div>
             </div>
             <ResponseBlock status="Request body">{`{
@@ -1086,6 +1113,18 @@ export function AccountsContent() {
                 <li><code className="bg-muted px-1 py-0.5 rounded">insufficient funds</code> — <code className="bg-muted px-1 py-0.5 rounded">amount</code> exceeds the source account&apos;s <code className="bg-muted px-1 py-0.5 rounded">freeBalance</code></li>
               </ul>
             </div>
+            <RegionOnly region="us">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="text-sm font-medium">US — the reason is in <code className="bg-muted px-1 py-0.5 rounded">error</code></p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li><code className="bg-muted px-1 py-0.5 rounded">400</code> — the transfer cannot be made as asked and nothing changed: for example the source sub-account does not have enough to spend, a sub-account is locked, <code className="bg-muted px-1 py-0.5 rounded">amount</code> has more than 2 decimal places, or an account ID is unknown. A sub-account that is busy with another transfer also answers <code className="bg-muted px-1 py-0.5 rounded">400</code>; try again a few seconds later. A transfer the bank refused part-way is undone automatically and also answers <code className="bg-muted px-1 py-0.5 rounded">400</code>, saying both sub-accounts are as they were.</li>
+                  <li><code className="bg-muted px-1 py-0.5 rounded">404</code> — <code className="bg-muted px-1 py-0.5 rounded">source account not found</code> / <code className="bg-muted px-1 py-0.5 rounded">destination account not found</code></li>
+                  <li><code className="bg-muted px-1 py-0.5 rounded">409</code> — the transfer stopped part-way; our team has been alerted and will complete or undo it. Do not retry: both sub-accounts stay unavailable for transfers until it is resolved. The message carries a reference to quote to support.</li>
+                  <li><code className="bg-muted px-1 py-0.5 rounded">429</code> — too many transfers for your company; the message says how many seconds to wait</li>
+                  <li><code className="bg-muted px-1 py-0.5 rounded">503</code> — transfers are temporarily unavailable and nothing changed; try again shortly</li>
+                </ul>
+              </div>
+            </RegionOnly>
           </div>
 
           <Separator />
@@ -1104,6 +1143,14 @@ export function AccountsContent() {
             </p>
             <RegionOnly region="us">
               <Note warning>
+                <p>
+                  In the US a successful response means the note was attached to both sides of the transfer, not that
+                  the transfer has completed: it may still be in progress and completes on its own. Check the
+                  sub-accounts&apos; balances or the 
+                  <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks for the
+                  result. If the transfer has not reached the ledger by the end of the call, the note may not be
+                  attached.
+                </p>
                 <p>
                   Rate limit: 5 requests per minute, 30 requests per hour. Above that the API returns{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
