@@ -462,6 +462,11 @@ export function GettingStartedContent() {
                 <code className="bg-muted px-1 py-0.5 rounded">429</code> can also come from the card provider when it
                 rate-limits requests.
               </li>
+              <RegionOnly region="us">
+                <li>
+                  Transfer money, Transfer with note: 5 requests per minute, 30 requests per hour.
+                </li>
+              </RegionOnly>
               <li>
                 Write requests are not idempotent and there is no idempotency key. If a request times out, check the
                 result (e.g. list the cards or transactions) before retrying, otherwise a retry can create a second card
@@ -679,7 +684,8 @@ export function QuickStartContent() {
               </p>
               <p>
                 Once sub-accounts are funded, you can move money between them yourself with{" "}
-                <RegionLink href="/docs/accounts#transfer-money">Transfer money</RegionLink>.
+                <RegionLink href="/docs/accounts#transfer-money">Transfer money</RegionLink> (rate limit: 5 requests
+                per minute, 30 requests per hour).
               </p>
             </RegionOnly>
           </QuickStartStep>
@@ -1048,16 +1054,20 @@ export function AccountsContent() {
               <Note>
                 <p>
                   In the US this moves money between two of your sub-accounts. The bank confirms the transfer, which
-                  usually takes a few seconds; the response comes within about 8 seconds, and its 
-                  <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is <code className="bg-muted px-1 py-0.5 rounded text-xs">success</code> (the money has moved) or 
-                  <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code> (the transfer is still being completed and finishes on its own; 
+                  usually takes a few seconds; the response comes within about 8 seconds, and its{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is <code className="bg-muted px-1 py-0.5 rounded text-xs">success</code> (the money has moved) or{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code> (the transfer is still being completed and finishes on its own;{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code> carries a reference).
+                </p>
+                <p>
+                  Rate limit: 5 requests per minute, 30 requests per hour. Above that the API returns{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
                 </p>
               </Note>
               <Note warning>
                 <p>
                   Do not retry a transfer that answered <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code>: a retry is a second transfer. Its
-                  result arrives as two 
+                  result arrives as two{" "}
                   <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks (one per
                   sub-account) and in the sub-accounts&apos; balances.
                 </p>
@@ -1136,10 +1146,14 @@ export function AccountsContent() {
                 <p>
                   In the US a successful response means the note was attached to both sides of the transfer, not that
                   the transfer has completed: it may still be in progress and completes on its own. Check the
-                  sub-accounts&apos; balances or the 
+                  sub-accounts&apos; balances or the{" "}
                   <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks for the
                   result. If the transfer has not reached the ledger by the end of the call, the note may not be
                   attached.
+                </p>
+                <p>
+                  Rate limit: 5 requests per minute, 30 requests per hour. Above that the API returns{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
                 </p>
               </Note>
             </RegionOnly>
