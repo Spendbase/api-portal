@@ -1068,7 +1068,7 @@ export function AccountsContent() {
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">amount</code> may have at most 2 decimal places; it is never rounded. Only USD (
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">currencyISONum</code> <code className="bg-muted px-1 py-0.5 rounded text-xs">840</code>) is accepted.
                 </li>
-                <li>An account ID that is not yours is answered exactly like one that does not exist.</li>
+                <li>An account ID that is not one of your sub-accounts is refused and nothing moves.</li>
                 <li>A company may attempt at most 5 transfers per minute and 30 per hour; refused attempts count too.</li>
               </ul>
             </RegionOnly>
@@ -1107,7 +1107,7 @@ export function AccountsContent() {
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
                 <p className="text-sm font-medium">US — the reason is in <code className="bg-muted px-1 py-0.5 rounded">error</code></p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                  <li><code className="bg-muted px-1 py-0.5 rounded">400</code> — the transfer cannot be made as asked and nothing changed: for example the source sub-account does not have enough to spend, a sub-account is locked, or <code className="bg-muted px-1 py-0.5 rounded">amount</code> has more than 2 decimal places. A transfer the bank refused part-way is undone automatically and also answers <code className="bg-muted px-1 py-0.5 rounded">400</code>, saying both sub-accounts are as they were.</li>
+                  <li><code className="bg-muted px-1 py-0.5 rounded">400</code> — the transfer cannot be made as asked and nothing changed: for example the source sub-account does not have enough to spend, a sub-account is locked, <code className="bg-muted px-1 py-0.5 rounded">amount</code> has more than 2 decimal places, or an account ID is unknown. A sub-account that is busy with another transfer also answers <code className="bg-muted px-1 py-0.5 rounded">400</code>; try again a few seconds later. A transfer the bank refused part-way is undone automatically and also answers <code className="bg-muted px-1 py-0.5 rounded">400</code>, saying both sub-accounts are as they were.</li>
                   <li><code className="bg-muted px-1 py-0.5 rounded">404</code> — <code className="bg-muted px-1 py-0.5 rounded">source account not found</code> / <code className="bg-muted px-1 py-0.5 rounded">destination account not found</code></li>
                   <li><code className="bg-muted px-1 py-0.5 rounded">409</code> — the transfer stopped part-way; our team has been alerted and will complete or undo it. Do not retry: both sub-accounts stay unavailable for transfers until it is resolved. The message carries a reference to quote to support.</li>
                   <li><code className="bg-muted px-1 py-0.5 rounded">429</code> — too many transfers for your company; the message says how many seconds to wait</li>
@@ -1134,9 +1134,12 @@ export function AccountsContent() {
             <RegionOnly region="us">
               <Note warning>
                 <p>
-                  In the US the note can be attached only to a transfer that completed within the call. A transfer
-                  that answers <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code> completes on its own, but the note may not be attached to
-                  it.
+                  In the US a successful response means the note was attached to both sides of the transfer, not that
+                  the transfer has completed: it may still be in progress and completes on its own. Check the
+                  sub-accounts&apos; balances or the 
+                  <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks for the
+                  result. If the transfer has not reached the ledger by the end of the call, the note may not be
+                  attached.
                 </p>
               </Note>
             </RegionOnly>
