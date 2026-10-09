@@ -462,6 +462,12 @@ export function GettingStartedContent() {
                 <code className="bg-muted px-1 py-0.5 rounded">429</code> can also come from the card provider when it
                 rate-limits requests.
               </li>
+              <RegionOnly region="us">
+                <li>
+                  Transfers between accounts (Transfer money and Transfer with note) have a separate limit: 5 requests
+                  per minute and 30 requests per hour.
+                </li>
+              </RegionOnly>
               <li>
                 Write requests are not idempotent and there is no idempotency key. If a request times out, check the
                 result (e.g. list the cards or transactions) before retrying, otherwise a retry can create a second card
@@ -675,12 +681,12 @@ export function QuickStartContent() {
             <RegionOnly region="us">
               <p>
                 In the US a sub-account name can be at most 13 characters, and a new sub-account starts with no funds:
-                cards on it are declined until the Spendbase team funds it.
+                cards on it are declined until you fund it.
               </p>
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
-                The API for transfers between sub-accounts is not available in the US yet. Transfers can be made
-                manually: send a request to the Spendbase team in chat.
-              </div>
+              <p>
+                Fund it with <RegionLink href="/docs/accounts#transfer-money">Transfer money</RegionLink>. In the US
+                transfers have their own rate limit: 5 requests per minute and 30 requests per hour.
+              </p>
             </RegionOnly>
           </QuickStartStep>
 
@@ -900,7 +906,7 @@ export function AccountsContent() {
                   return <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> <code className="bg-muted px-1 py-0.5 rounded text-xs">a budget name can be at most 13 characters</code>.
                 </p>
                 <p>
-                  A new sub-account starts with no funds, so cards on it are declined until the Spendbase team funds it.
+                  A new sub-account starts with no funds, so cards on it are declined until you fund it.
                 </p>
               </Note>
             </RegionOnly>
@@ -1047,8 +1053,8 @@ export function AccountsContent() {
             <RegionOnly region="us">
               <Note warning>
                 <p>
-                  Not available in the US: the request is always rejected with <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. Transfers between
-                  sub-accounts can be made manually: send a request to the Spendbase team in chat.
+                  In the US this endpoint has its own rate limit: 5 requests per minute and 30 requests per hour. Above
+                  that the API returns <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
                 </p>
               </Note>
             </RegionOnly>
@@ -1100,8 +1106,8 @@ export function AccountsContent() {
             <RegionOnly region="us">
               <Note warning>
                 <p>
-                  Not available in the US: the request is always rejected with <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. Transfers between
-                  sub-accounts can be made manually: send a request to the Spendbase team in chat.
+                  In the US this endpoint has its own rate limit: 5 requests per minute and 30 requests per hour. Above
+                  that the API returns <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
                 </p>
               </Note>
             </RegionOnly>
