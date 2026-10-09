@@ -464,8 +464,7 @@ export function GettingStartedContent() {
               </li>
               <RegionOnly region="us">
                 <li>
-                  Transfers between accounts (Transfer money and Transfer with note) have a separate limit: 5 requests
-                  per minute and 30 requests per hour.
+                  Transfer money, Transfer with note: 5 requests per minute, 30 requests per hour.
                 </li>
               </RegionOnly>
               <li>
@@ -684,8 +683,8 @@ export function QuickStartContent() {
                 cards on it are declined until you fund it.
               </p>
               <p>
-                Fund it with <RegionLink href="/docs/accounts#transfer-money">Transfer money</RegionLink>. In the US
-                transfers have their own rate limit: 5 requests per minute and 30 requests per hour.
+                Fund it with <RegionLink href="/docs/accounts#transfer-money">Transfer money</RegionLink> (rate
+                limit: 5 requests per minute, 30 requests per hour).
               </p>
             </RegionOnly>
           </QuickStartStep>
@@ -1053,8 +1052,7 @@ export function AccountsContent() {
             <RegionOnly region="us">
               <Note warning>
                 <p>
-                  In the US this endpoint has its own rate limit: 5 requests per minute and 30 requests per hour. Above
-                  that the API returns <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
+                  Rate limit: 5 requests per minute, 30 requests per hour.
                 </p>
               </Note>
             </RegionOnly>
@@ -1106,8 +1104,7 @@ export function AccountsContent() {
             <RegionOnly region="us">
               <Note warning>
                 <p>
-                  In the US this endpoint has its own rate limit: 5 requests per minute and 30 requests per hour. Above
-                  that the API returns <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
+                  Rate limit: 5 requests per minute, 30 requests per hour.
                 </p>
               </Note>
             </RegionOnly>
