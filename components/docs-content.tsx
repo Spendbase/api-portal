@@ -1052,7 +1052,8 @@ export function AccountsContent() {
             <RegionOnly region="us">
               <Note warning>
                 <p>
-                  Rate limit: 5 requests per minute, 30 requests per hour.
+                  Rate limit: 5 requests per minute, 30 requests per hour. Above that the API returns{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
                 </p>
               </Note>
             </RegionOnly>
@@ -1104,7 +1105,8 @@ export function AccountsContent() {
             <RegionOnly region="us">
               <Note warning>
                 <p>
-                  Rate limit: 5 requests per minute, 30 requests per hour.
+                  Rate limit: 5 requests per minute, 30 requests per hour. Above that the API returns{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">429</code>.
                 </p>
               </Note>
             </RegionOnly>
