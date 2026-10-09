@@ -2494,8 +2494,6 @@ const US_CARD_LIFECYCLE_PAYLOAD = `{
   cardId: string;                        // card ID, as returned by Get Card
   cardName: string | null;
   panLastFour: string | null;
-  expYear: number | null;
-  expMonth: number | null;
   accountId: string | null;              // ledger account ID of the card's account
   holderId: string | null;               // cardholder record ID (not the user ID in Get Card's cardHolder.id); null if none
   currencyISONum: string | null;         // ISO 4217 numeric, e.g. "840"
@@ -2590,8 +2588,7 @@ function UsWebhookEvents() {
               <code className={code}>holderId</code>: the card has no cardholder record.
             </li>
             <li>
-              <code className={code}>accountId</code>, <code className={code}>expYear</code>,{" "}
-              <code className={code}>expMonth</code>, <code className={code}>cardName</code>,{" "}
+              <code className={code}>accountId</code>, <code className={code}>cardName</code>,{" "}
               <code className={code}>panLastFour</code>: rare, when the card record is missing that value.
             </li>
           </ul>
