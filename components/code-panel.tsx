@@ -5,6 +5,7 @@ import { Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useRegion, type Region } from "@/components/region"
+import { cn } from "@/lib/utils"
 
 type Section = "getting-started" | "quick-start" | "accounts" | "cards" | "transactions" | "webhooks"
 
@@ -382,9 +383,11 @@ curl --cert client.crt --key client.key \\
   },
 ]
 
-// EU still uses legacy External-Token auth: swap API key signing headers for a single token header.
-function toRegion(code: string, region: Region) {
-  if (region === "us") return code
+type AuthMethod = "api-key" | "api-token"
+
+// Examples are written for API key auth. For an API token (EU only), swap the signing headers for External-Token.
+function withAuth(code: string, auth: AuthMethod) {
+  if (auth === "api-key") return code
   return code
     .replace(/^# .*API key.*\n(# .*\n)?/, "")
     .replace(
@@ -399,21 +402,54 @@ const AUTH: Record<Region, { default: string; webhooks: string }> = {
     webhooks: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce)",
   },
   eu: {
-    default: "External-Token + TLS Certificates",
-    webhooks: "External-Token + TLS Certificates",
+    default: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce) or External-Token, + TLS Certificates",
+    webhooks: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce) or External-Token",
   },
+}
+
+function AuthToggle({ value, onChange }: { value: AuthMethod; onChange: (v: AuthMethod) => void }) {
+  const options: { value: AuthMethod; label: string }[] = [
+    { value: "api-key", label: "API key" },
+    { value: "api-token", label: "API token" },
+  ]
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Authentication</span>
+      <div role="radiogroup" aria-label="Authentication method" className="inline-flex rounded-md border border-border p-0.5">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={value === o.value}
+            onClick={() => onChange(o.value)}
+            className={cn(
+              "px-2.5 py-1 text-xs font-medium rounded-sm transition-colors",
+              value === o.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export function CodePanel({ section }: { section: Section }) {
   const region = useRegion()
+  // EU supports both API keys and legacy API tokens; US uses API keys only.
+  const [authChoice, setAuthChoice] = useState<AuthMethod>("api-key")
+  const auth: AuthMethod = region === "eu" ? authChoice : "api-key"
   const examples = EXAMPLES.filter((e) => e.section === section && (!e.region || e.region === region))
 
   return (
     <aside className="hidden xl:block w-[min(480px,38%)] shrink-0 border-l border-border bg-card sticky top-14 h-[calc(100vh-3.5rem)] self-start">
       <ScrollArea className="h-full">
         <div className="p-6 space-y-6">
+          {region === "eu" && examples.length > 0 && <AuthToggle value={authChoice} onChange={setAuthChoice} />}
           {examples.map((ex) => (
-            <CurlBlock key={ex.title} title={ex.title} code={toRegion(ex.code, region)} />
+            <CurlBlock key={ex.title} title={ex.title} code={withAuth(ex.code, auth)} />
           ))}
 
           <div className="space-y-3">

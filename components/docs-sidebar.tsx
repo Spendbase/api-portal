@@ -15,7 +15,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
     items: [
       { label: "Basic Requirements", id: "basic-requirements" },
       { label: "Authentication & TLS", id: "authentication-tls" },
-      { label: "Go Signing Example", id: "go-signing-example", region: "us" },
+      { label: "Go Signing Example", id: "go-signing-example" },
     ],
   },
   {
