@@ -37,11 +37,9 @@ function PatchBadge() {
 
 function ScopeBadge({ scope }: { scope: string }) {
   return (
-    <RegionOnly region="us">
-      <span className="inline-flex items-center gap-1 rounded border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-mono text-violet-700 dark:text-violet-300">
-        <span className="opacity-70">scope:</span> {scope}
-      </span>
-    </RegionOnly>
+    <span className="inline-flex items-center gap-1 rounded border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-mono text-violet-700 dark:text-violet-300">
+      <span className="opacity-70">scope:</span> {scope}
+    </span>
   )
 }
 
@@ -254,9 +252,8 @@ export function GettingStartedContent() {
           <h1 className="text-4xl font-bold tracking-tight text-balance">Spendbase Integration API</h1>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
             Connect your applications to Spendbase for managing accounts, virtual cards, and transactions
-            programmatically with{" "}
-            <RegionOnly region="us">API key + Ed25519 signature authentication and TLS certificate authentication.</RegionOnly>
-            <RegionOnly region="eu">secure TLS certificate authentication.</RegionOnly>
+            programmatically with API key + Ed25519 signature authentication and TLS certificate authentication.
+            <RegionOnly region="eu"> Existing integrations can keep using an API token (External-Token).</RegionOnly>
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
@@ -349,46 +346,42 @@ export function GettingStartedContent() {
             </div>
           </div>
 
-          <RegionOnly region="us">
-            <div>
-              <h3 className="text-xl font-semibold mb-3">3. Create an API Key</h3>
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                API keys are used to authenticate all requests. To create one:
+          <div>
+            <h3 className="text-xl font-semibold mb-3">3. Create an API Key</h3>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              API keys are used to authenticate all requests. To create one:
+            </p>
+            <ol className="space-y-2 text-muted-foreground">
+              <li className="flex gap-2">
+                <span className="font-semibold text-foreground shrink-0">1.</span>
+                Log in to{" "}
+                <code className="text-xs bg-muted px-1 py-0.5 rounded">app.spendbase.co</code>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-foreground shrink-0">2.</span>
+                Navigate to <strong>Money</strong> → <strong>Settings</strong> → <strong>API Keys</strong>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-foreground shrink-0">3.</span>
+                Click <strong>Create API Key</strong>, choose scopes, and save your key
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-foreground shrink-0">4.</span>
+                Generate an Ed25519 key pair and register the public key with the API key
+              </li>
+            </ol>
+            <div className="mt-4 p-3 rounded-lg border border-amber-500/20 bg-amber-500/10">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                The API key secret is shown only once at creation. Store it securely — it cannot be retrieved again.
               </p>
-              <ol className="space-y-2 text-muted-foreground">
-                <li className="flex gap-2">
-                  <span className="font-semibold text-foreground shrink-0">1.</span>
-                  Log in to{" "}
-                  <code className="text-xs bg-muted px-1 py-0.5 rounded">app.spendbase.co</code>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-foreground shrink-0">2.</span>
-                  Navigate to <strong>Money</strong> → <strong>Settings</strong> → <strong>API Keys</strong>
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-foreground shrink-0">3.</span>
-                  Click <strong>Create API Key</strong>, choose scopes, and save your key
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-semibold text-foreground shrink-0">4.</span>
-                  Generate an Ed25519 key pair and register the public key with the API key
-                </li>
-              </ol>
-              <div className="mt-4 p-3 rounded-lg border border-amber-500/20 bg-amber-500/10">
-                <p className="text-sm text-amber-800 dark:text-amber-200">
-                  The API key secret is shown only once at creation. Store it securely — it cannot be retrieved again.
-                </p>
-              </div>
             </div>
-          </RegionOnly>
+          </div>
           <RegionOnly region="eu">
-            <div>
-              <h3 className="text-xl font-semibold mb-3">3. External Token</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                An external token is required for API authentication. We will provide the external token in reply to
-                the email.
-              </p>
-            </div>
+            <p className="text-muted-foreground leading-relaxed">
+              Already integrated with an API token (<code className="bg-muted px-1 py-0.5 rounded">External-Token</code>)?
+              It is still supported; see <a href="#authentication-tls" className="underline">Authentication</a> below.
+              New integrations should use an API key.
+            </p>
           </RegionOnly>
         </div>
 
@@ -398,46 +391,44 @@ export function GettingStartedContent() {
         <div id="authentication-tls" className="space-y-6">
           <h2 className="text-3xl font-bold mb-4">Integration</h2>
 
-          <RegionOnly region="us">
-            <div>
-              <h3 className="text-xl font-semibold mb-3">Authentication</h3>
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                Every request must be signed with your Ed25519 private key. Include these headers:
-              </p>
-              <div className="p-4 bg-muted rounded-lg border border-border space-y-1.5">
-                <div><code className="text-sm font-mono text-primary">X-Api-Key</code><span className="text-sm text-muted-foreground ml-2">— your issued API key, e.g. <code className="bg-background px-1 rounded">api_&lt;hex&gt;</code></span></div>
-                <div><code className="text-sm font-mono text-primary">X-Signature</code><span className="text-sm text-muted-foreground ml-2">— base64-encoded Ed25519 signature over the canonical string</span></div>
-                <div><code className="text-sm font-mono text-primary">X-Timestamp</code><span className="text-sm text-muted-foreground ml-2">— Unix timestamp in milliseconds</span></div>
-                <div><code className="text-sm font-mono text-primary">X-Nonce</code><span className="text-sm text-muted-foreground ml-2">— unique value per request (e.g. UUID v4). Reusing returns <code className="bg-background px-1 rounded text-xs">401</code></span></div>
-                <div><code className="text-sm font-mono text-primary">Content-Type: application/json</code><span className="text-sm text-muted-foreground ml-2">— required when request has a body</span></div>
-              </div>
-
-              <h4 className="text-base font-semibold mt-5 mb-2">String to Sign</h4>
-              <p className="text-sm text-muted-foreground mb-2">Build the exact string then sign it with Ed25519:</p>
-              <div className="p-4 bg-muted rounded-lg border border-border font-mono text-xs leading-relaxed">
-                HTTP_METHOD + &quot;\n&quot; +<br/>
-                REQUEST_PATH + &quot;\n&quot; +<br/>
-                CANONICAL_QUERY_STRING + &quot;\n&quot; +<br/>
-                SHA256_HEX(BODY) + &quot;\n&quot; +<br/>
-                X_TIMESTAMP + &quot;\n&quot; +<br/>
-                X_NONCE
-              </div>
-              <ul className="mt-3 text-sm text-muted-foreground list-disc list-inside space-y-1">
-                <li><code className="bg-muted px-1 py-0.5 rounded">HTTP_METHOD</code>: uppercase, e.g. <code className="bg-muted px-1 py-0.5 rounded">GET</code>, <code className="bg-muted px-1 py-0.5 rounded">POST</code></li>
-                <li><code className="bg-muted px-1 py-0.5 rounded">REQUEST_PATH</code>: full path including base, e.g. <code className="bg-muted px-1 py-0.5 rounded">/cards-adapter/v1/public/accounts/bank-accounts</code></li>
-                <li><code className="bg-muted px-1 py-0.5 rounded">CANONICAL_QUERY_STRING</code>: keys sorted lexicographically, values URL-escaped, joined as <code className="bg-muted px-1 py-0.5 rounded">key=value&amp;key=value</code>. Empty when no query.</li>
-                <li><code className="bg-muted px-1 py-0.5 rounded">SHA256_HEX(BODY)</code>: hex-encoded SHA-256 of raw body bytes. Empty body: <code className="bg-muted px-1 py-0.5 rounded text-xs">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</code></li>
-              </ul>
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Authentication</h3>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              Every request must be signed with your Ed25519 private key. Include these headers:
+            </p>
+            <div className="p-4 bg-muted rounded-lg border border-border space-y-1.5">
+              <div><code className="text-sm font-mono text-primary">X-Api-Key</code><span className="text-sm text-muted-foreground ml-2">— your issued API key, e.g. <code className="bg-background px-1 rounded">api_&lt;hex&gt;</code></span></div>
+              <div><code className="text-sm font-mono text-primary">X-Signature</code><span className="text-sm text-muted-foreground ml-2">— base64-encoded Ed25519 signature over the canonical string</span></div>
+              <div><code className="text-sm font-mono text-primary">X-Timestamp</code><span className="text-sm text-muted-foreground ml-2">— Unix timestamp in milliseconds</span></div>
+              <div><code className="text-sm font-mono text-primary">X-Nonce</code><span className="text-sm text-muted-foreground ml-2">— unique value per request (e.g. UUID v4). Reusing returns <code className="bg-background px-1 rounded text-xs">401</code></span></div>
+              <div><code className="text-sm font-mono text-primary">Content-Type: application/json</code><span className="text-sm text-muted-foreground ml-2">— required when request has a body</span></div>
             </div>
-          </RegionOnly>
+
+            <h4 className="text-base font-semibold mt-5 mb-2">String to Sign</h4>
+            <p className="text-sm text-muted-foreground mb-2">Build the exact string then sign it with Ed25519:</p>
+            <div className="p-4 bg-muted rounded-lg border border-border font-mono text-xs leading-relaxed">
+              HTTP_METHOD + &quot;\n&quot; +<br/>
+              REQUEST_PATH + &quot;\n&quot; +<br/>
+              CANONICAL_QUERY_STRING + &quot;\n&quot; +<br/>
+              SHA256_HEX(BODY) + &quot;\n&quot; +<br/>
+              X_TIMESTAMP + &quot;\n&quot; +<br/>
+              X_NONCE
+            </div>
+            <ul className="mt-3 text-sm text-muted-foreground list-disc list-inside space-y-1">
+              <li><code className="bg-muted px-1 py-0.5 rounded">HTTP_METHOD</code>: uppercase, e.g. <code className="bg-muted px-1 py-0.5 rounded">GET</code>, <code className="bg-muted px-1 py-0.5 rounded">POST</code></li>
+              <li><code className="bg-muted px-1 py-0.5 rounded">REQUEST_PATH</code>: full path including base, e.g. <code className="bg-muted px-1 py-0.5 rounded">/cards-adapter/v1/public/accounts/bank-accounts</code></li>
+              <li><code className="bg-muted px-1 py-0.5 rounded">CANONICAL_QUERY_STRING</code>: keys sorted lexicographically, values URL-escaped, joined as <code className="bg-muted px-1 py-0.5 rounded">key=value&amp;key=value</code>. Empty when no query.</li>
+              <li><code className="bg-muted px-1 py-0.5 rounded">SHA256_HEX(BODY)</code>: hex-encoded SHA-256 of raw body bytes. Empty body: <code className="bg-muted px-1 py-0.5 rounded text-xs">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</code></li>
+            </ul>
+          </div>
           <RegionOnly region="eu">
             <div>
-              <h3 className="text-xl font-semibold mb-3">Authentication</h3>
+              <h3 className="text-xl font-semibold mb-3">Alternative: API token</h3>
               <p className="text-muted-foreground leading-relaxed">
-                All requests should include the{" "}
-                <code className="bg-muted px-1 py-0.5 rounded">External-Token</code> header for authentication and{" "}
-                <code className="bg-muted px-1 py-0.5 rounded">Content-Type: application/json</code> if a body is
-                provided.
+                Integrations that received an API token from Spendbase can keep using it instead of an API key. Send it
+                in the <code className="bg-muted px-1 py-0.5 rounded">External-Token</code> header (no signing headers
+                needed), plus <code className="bg-muted px-1 py-0.5 rounded">Content-Type: application/json</code> if a
+                body is provided. Scopes apply to API keys only.
               </p>
               <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
                 <p className="text-sm font-medium mb-2">Authentication Header</p>
@@ -483,33 +474,26 @@ export function GettingStartedContent() {
             <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
-                <RegionOnly region="us">Keep your credentials secure</RegionOnly>
-                <RegionOnly region="eu">Keep your certificates and tokens secure</RegionOnly>
+                Keep your credentials secure
               </p>
               <p className="mt-1 text-sm text-orange-800 dark:text-orange-200">
-                <RegionOnly region="us">
-                  Do not share your private key (<code className="bg-orange-100 dark:bg-orange-900/50 px-1 rounded">client.key</code>), Ed25519 private key, or API key in publicly accessible areas such as
-                  GitHub, client-side code, or any other public spaces.
-                </RegionOnly>
-                <RegionOnly region="eu">
-                  Do not share your private key (client.key) or external token in publicly accessible areas such as
-                  GitHub, client-side code, or any other public spaces.
-                </RegionOnly>
+                Do not share your private key (<code className="bg-orange-100 dark:bg-orange-900/50 px-1 rounded">client.key</code>), Ed25519 private key, API key
+                <RegionOnly region="eu"> or API token</RegionOnly> in publicly accessible areas such as GitHub,
+                client-side code, or any other public spaces.
               </p>
             </div>
           </div>
         </div>
 
-        <RegionOnly region="us">
-          <Separator />
+        <Separator />
 
-          {/* Go signing example */}
-          <div id="go-signing-example" className="space-y-6">
-            <h2 className="text-3xl font-bold mb-4">Go Signing Example</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Full working example that builds the canonical string, signs it with Ed25519, and sends a signed request.
-            </p>
-            <ResponseBlock status="Go">{`package main
+        {/* Go signing example */}
+        <div id="go-signing-example" className="space-y-6">
+          <h2 className="text-3xl font-bold mb-4">Go Signing Example</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            Full working example that builds the canonical string, signs it with Ed25519, and sends a signed request.
+          </p>
+          <ResponseBlock status="Go">{`package main
 
 import (
     "bytes"
@@ -543,7 +527,7 @@ func buildStringToSign(method, path, rawQuery string, body []byte, timestamp, no
         vals := values[k]
         sort.Strings(vals)
         for _, v := range vals {
-            parts = append(parts, url.QueryEscape(k)+"="+url.QueryEscape(v))
+          parts = append(parts, url.QueryEscape(k)+"="+url.QueryEscape(v))
         }
     }
 
@@ -616,8 +600,7 @@ func example() error {
     defer resp.Body.Close()
     return nil
 }`}</ResponseBlock>
-          </div>
-        </RegionOnly>
+        </div>
         <PageNav />
       </div>
     </main>
@@ -647,9 +630,8 @@ export function QuickStartContent() {
           <h1 className="text-4xl font-bold tracking-tight">Quick Start</h1>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
             The steps to go from a new integration to your first card. Complete{" "}
-            <RegionLink href="/docs/getting-started">Getting Started</RegionLink> first: you need TLS certificates and
-            <RegionOnly region="us"> an API key</RegionOnly>
-            <RegionOnly region="eu"> an external token</RegionOnly> to call the API.
+            <RegionLink href="/docs/getting-started">Getting Started</RegionLink> first: you need TLS certificates and an
+            API key<RegionOnly region="eu"> (or an existing API token)</RegionOnly> to call the API.
           </p>
         </div>
 
@@ -2512,8 +2494,6 @@ const US_CARD_LIFECYCLE_PAYLOAD = `{
   cardId: string;                        // card ID, as returned by Get Card
   cardName: string | null;
   panLastFour: string | null;
-  expYear: number | null;
-  expMonth: number | null;
   accountId: string | null;              // ledger account ID of the card's account
   holderId: string | null;               // cardholder record ID (not the user ID in Get Card's cardHolder.id); null if none
   currencyISONum: string | null;         // ISO 4217 numeric, e.g. "840"
@@ -2608,8 +2588,7 @@ function UsWebhookEvents() {
               <code className={code}>holderId</code>: the card has no cardholder record.
             </li>
             <li>
-              <code className={code}>accountId</code>, <code className={code}>expYear</code>,{" "}
-              <code className={code}>expMonth</code>, <code className={code}>cardName</code>,{" "}
+              <code className={code}>accountId</code>, <code className={code}>cardName</code>,{" "}
               <code className={code}>panLastFour</code>: rare, when the card record is missing that value.
             </li>
           </ul>
