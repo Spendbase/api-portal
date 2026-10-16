@@ -1322,8 +1322,11 @@ export function CardsContent() {
                 </Param>
                 <RegionOnly region="eu">
                   <Param name="expirationDate" type="string (RFC 3339)">
-                    Custom card expiry date, e.g. <code className="bg-muted px-1 py-0.5 rounded text-xs">2028-12-31T23:59:59Z</code>.
-                    Only the month and year are used: the card expires at the end of that month. Must be in the future;
+                    Custom card expiry date in UTC (ending in <code className="bg-muted px-1 py-0.5 rounded text-xs">Z</code>), e.g.{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">2028-12-31T23:59:59Z</code>. Only the month and year are
+                    used: the card expires at the end of that month. Values with another offset are converted to UTC
+                    first, so <code className="bg-muted px-1 py-0.5 rounded text-xs">2028-12-01T00:00:00+02:00</code> gives an
+                    11/2028 expiry. Must be in the future;
                     a past date or a value that is not RFC 3339 returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>.
                     When omitted, the card gets the default validity period.
                   </Param>
