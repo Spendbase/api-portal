@@ -64,6 +64,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Get Card Transactions", id: "get-card-transactions" },
       { label: "Get Transactions", id: "get-transactions" },
       { label: "Get Master Transactions", id: "get-master-transactions" },
+      { label: "Get Transaction Details", id: "get-transaction-details" },
       { label: "Add Note to Transaction", id: "add-note-to-tx" },
     ],
   },

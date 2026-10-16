@@ -37,6 +37,7 @@ const ALL_SECTIONS: { label: string; id: string; group: string; page: string; re
   { label: "Get Card Transactions", id: "get-card-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Transactions", id: "get-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Master Transactions", id: "get-master-transactions", group: "Transactions", page: "/docs/transactions" },
+  { label: "Get Transaction Details", id: "get-transaction-details", group: "Transactions", page: "/docs/transactions" },
   { label: "Add Note to Transaction", id: "add-note-to-tx", group: "Transactions", page: "/docs/transactions" },
   { label: "Verifying Signatures", id: "verify-signature", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Webhook Delivery", id: "webhook-delivery", group: "Webhooks", page: "/docs/webhooks" },

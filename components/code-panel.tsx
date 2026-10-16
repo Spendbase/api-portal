@@ -172,7 +172,8 @@ const EXAMPLES: { title: string; section: Section; code: string; region?: Region
   -d '{"accountId": "$ACCOUNT_ID",
        "cardName": "Marketing Card",
        "spendbaseUserId": "$CARDHOLDER_ID",
-       "limit": {"type": "MONTHLY", "amount": 1000}}' \\
+       "limit": {"type": "MONTHLY", "amount": 1000},
+       "expirationDate": "2028-12-31T23:59:59Z"}' \\
   $BASE_URL/cards/card`,
   },
   {
@@ -368,6 +369,16 @@ curl --cert client.crt --key client.key \\
   -d "from=1753864397" \\
   -d "to=1754042551" \\
   $BASE_URL/transactions/master-transactions/$LEDGER_ID`,
+  },
+  {
+    title: "Get Transaction Details",
+    section: "transactions",
+    code: `curl --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/transactions/transaction/$TRANSACTION_ID`,
   },
   {
     title: "Add Note to Transaction",

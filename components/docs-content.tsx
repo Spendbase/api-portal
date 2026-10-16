@@ -1320,6 +1320,14 @@ export function CardsContent() {
                     card.
                   </RegionOnly>
                 </Param>
+                <RegionOnly region="eu">
+                  <Param name="expirationDate" type="string (RFC 3339)">
+                    Custom card expiry date, e.g. <code className="bg-muted px-1 py-0.5 rounded text-xs">2028-12-31T23:59:59Z</code>.
+                    Only the month and year are used: the card expires at the end of that month. Must be in the future;
+                    a past date or a value that is not RFC 3339 returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>.
+                    When omitted, the card gets the default validity period.
+                  </Param>
+                </RegionOnly>
               </div>
             </div>
             <RegionOnly region="eu">
@@ -1330,7 +1338,8 @@ export function CardsContent() {
   "limit": {
     "type": "MONTHLY",
     "amount": 1000
-  }
+  },
+  "expirationDate": "2028-12-31T23:59:59Z"
 }`}</ResponseBlock>
             </RegionOnly>
             <RegionOnly region="us">
@@ -2112,6 +2121,40 @@ export function TransactionsContent() {
   },
   "transactions": [${indentJson(BANK_TRANSACTION_OBJECT, "    ")}]
 }`}</ResponseBlock>
+          </div>
+
+          <Separator />
+
+          {/* Get transaction details */}
+          <div id="get-transaction-details" className="space-y-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              <GetBadge />
+              <code className="text-sm font-mono">/transactions/transaction/:id</code>
+            </div>
+            <ScopeBadge scope="transactionsRead" />
+            <h2 className="text-2xl font-semibold">Get transaction details</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Returns a single transaction by its ID, including the card it was made with
+              (<code className="font-mono">cardRef</code>), merchant details and the attached note or receipt. Use it to
+              look up the card behind a transaction you received from a webhook or a transactions list. Unlike the list
+              endpoints, the response has no <code className="font-mono">cardId</code> field; use{" "}
+              <code className="font-mono">cardRef</code> with <RegionLink href="/docs/cards#get-card">Get card</RegionLink>{" "}
+              to fetch the card itself. Fields with
+              zero/empty values are omitted from the response.
+            </p>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Path Parameters</h3>
+              <div className="space-y-2">
+                <Param name="id" type="string" required>Transaction ID (<code className="font-mono">id</code> from the transactions list)</Param>
+              </div>
+            </div>
+            <ResponseBlock>{`{
+  "transaction": ${indentJson(CARD_TRANSACTION_OBJECT.replace(/,\n  "cardId": "[^"]*"/, ""), "  ")}
+}`}</ResponseBlock>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              An unknown transaction ID returns <code className="font-mono">{`{"error": "..."}`}</code> with the matching
+              status code.
+            </p>
           </div>
 
           <Separator />
