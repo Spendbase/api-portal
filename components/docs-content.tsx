@@ -1936,6 +1936,64 @@ function TransactionFieldValues() {
   )
 }
 
+// details.originalTransactionId is only set by the EU card provider, so the US example omits it.
+const transactionsByAccountExample = (eu: boolean) => `{
+  "transactions": [
+    ${indentJson(BANK_TRANSACTION_OBJECT, "    ")},
+    {
+      "account_id": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+      "amount": 42.5,
+      "cardRef": "8d3e5a7c-1f2b-4c6d-9e0a-b1c2d3e4f5a6",
+      "createdAt": 1754127600,
+      "currencyISOCode": "USD",
+      "details": {
+        "accountName": "Marketing",
+        "cardName": "Ads card",
+        "merchantName": "Google Ads",${eu ? `
+        "originalTransactionId": "3a4b5c6d-7e8f-4091-a2b3-c4d5e6f7a8b9",` : ""}
+        "panLastFour": "4242"
+      },
+      "eventType": "Returned",
+      "id": "5e6f7a8b-9c0d-4e1f-a2b3-c4d5e6f7a8b9",
+      "paymentType": "POS",
+      "sourceType": "Card",
+      "state": "Confirmed",
+      "type": "credit",
+      "updatedAt": 1754127660,
+      "refund": "true"
+    }
+  ],
+  "hasMore": true,
+  "nextCursor": "eyJpZCI6IjVlNmY3YThiIn0"
+}`
+
+function EuOnlyTransactionFields() {
+  return (
+    <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+      <RegionOnly region="eu">
+        <p>Card transactions can also include two fields in <code className="font-mono">details</code>:</p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>
+            <code className="font-mono">isReversed</code> (boolean): <code className="font-mono">true</code> when the
+            transaction was reversed, and on the reversal entry itself. Omitted otherwise.
+          </li>
+          <li>
+            <code className="font-mono">originalTransactionId</code> (string): on a reversal or refund, the{" "}
+            <code className="font-mono">id</code> of the original transaction. Omitted otherwise.
+          </li>
+        </ul>
+      </RegionOnly>
+      <RegionOnly region="us">
+        <p>
+          <code className="font-mono">details.isReversed</code> and{" "}
+          <code className="font-mono">details.originalTransactionId</code> are only returned for EU accounts. US
+          transactions never include them.
+        </p>
+      </RegionOnly>
+    </div>
+  )
+}
+
 export function TransactionsContent() {
   return (
     <main className="flex-1 min-w-0 py-12 px-6 lg:px-12">
@@ -1995,6 +2053,7 @@ export function TransactionsContent() {
               <code className="font-mono">{`{"error": "limit must not exceed 1000"}`}</code> (or similar). Other errors
               return <code className="font-mono">{`{"error": "..."}`}</code> with the matching status code.
             </p>
+            <EuOnlyTransactionFields />
             <TransactionFieldValues />
           </div>
 
@@ -2042,35 +2101,13 @@ export function TransactionsContent() {
                 </Param>
               </div>
             </div>
-            <ResponseBlock>{`{
-  "transactions": [
-    ${indentJson(BANK_TRANSACTION_OBJECT, "    ")},
-    {
-      "account_id": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
-      "amount": 42.5,
-      "cardRef": "8d3e5a7c-1f2b-4c6d-9e0a-b1c2d3e4f5a6",
-      "createdAt": 1754127600,
-      "currencyISOCode": "USD",
-      "details": {
-        "accountName": "Marketing",
-        "cardName": "Ads card",
-        "merchantName": "Google Ads",
-        "originalTransactionId": "3a4b5c6d-7e8f-4091-a2b3-c4d5e6f7a8b9",
-        "panLastFour": "4242"
-      },
-      "eventType": "Returned",
-      "id": "5e6f7a8b-9c0d-4e1f-a2b3-c4d5e6f7a8b9",
-      "paymentType": "POS",
-      "sourceType": "Card",
-      "state": "Confirmed",
-      "type": "credit",
-      "updatedAt": 1754127660,
-      "refund": "true"
-    }
-  ],
-  "hasMore": true,
-  "nextCursor": "eyJpZCI6IjVlNmY3YThiIn0"
-}`}</ResponseBlock>
+            <RegionOnly region="eu">
+              <ResponseBlock>{transactionsByAccountExample(true)}</ResponseBlock>
+            </RegionOnly>
+            <RegionOnly region="us">
+              <ResponseBlock>{transactionsByAccountExample(false)}</ResponseBlock>
+            </RegionOnly>
+            <EuOnlyTransactionFields />
             <p className="text-sm text-muted-foreground leading-relaxed">
               <code className="font-mono">hasMore</code> and <code className="font-mono">nextCursor</code> are omitted on the
               last page. Invalid pagination params return <code className="font-mono">400</code> with{" "}
@@ -2158,6 +2195,7 @@ export function TransactionsContent() {
               An unknown transaction ID returns <code className="font-mono">{`{"error": "..."}`}</code> with the matching
               status code.
             </p>
+            <EuOnlyTransactionFields />
           </div>
 
           <Separator />
