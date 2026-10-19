@@ -18,8 +18,11 @@ export default function VersioningPage() {
         <RegionOnly region="us">
           <div id="2026-10-19" />
           <section id="us-webhook-updates-2026-10" className="space-y-4">
-            <h2 className="text-2xl font-semibold">Webhooks - event ID, budget transfer outcome</h2>
+            <h2 className="text-2xl font-semibold">US only: Webhooks - event ID, budget transfer outcome</h2>
             <p className="text-muted-foreground">Version date: 2026-10-19</p>
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to US accounts only. EU webhooks and the EU Cards API are not affected.
+            </p>
             <div className="space-y-3">
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
                 <p className="font-semibold text-sm">All webhooks</p>
