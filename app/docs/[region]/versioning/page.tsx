@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Separator } from "@/components/ui/separator"
-import { RegionOnly } from "@/components/region"
+import { RegionLink, RegionOnly } from "@/components/region"
 import { PageNav } from "@/components/page-nav"
 
 export const metadata: Metadata = {
@@ -16,6 +16,68 @@ export default function VersioningPage() {
         </div>
 
         <RegionOnly region="us">
+          <div id="2026-10-19" />
+          <section id="us-webhook-updates-2026-10" className="space-y-4">
+            <h2 className="text-2xl font-semibold">US only: Webhooks - event ID, budget transfer outcome</h2>
+            <p className="text-muted-foreground">Version date: 2026-10-19</p>
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to US accounts only. EU webhooks and the EU Cards API are not affected.
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">All webhooks</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    Added <code className="bg-muted px-1 py-0.5 rounded">eventId</code> to every event. Use it to drop
+                    repeat deliveries (see <RegionLink href="/docs/webhooks#webhook-delivery">Delivery</RegionLink>).
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Card events</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/webhooks#card-authorization">Card Authorization</RegionLink>: added{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">authorisationType</code>.
+                  </li>
+                  <li>
+                    <RegionLink href="/docs/webhooks#card-blocked">Card Blocked</RegionLink>: a card locked, unlocked
+                    and locked again now sends the second lock too.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Transfers between budgets</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    New event{" "}
+                    <RegionLink href="/docs/webhooks#budget-transfer-failed">Budget Transfer Failed</RegionLink>: sent
+                    when a transfer does not complete. Before, nothing was sent.
+                  </li>
+                  <li>
+                    <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink>: added{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">transferId</code>.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Cards API</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/cards#terminate-card">Terminate card</RegionLink>: repeating the call on a
+                    terminated card now succeeds. A refused lock, unlock or terminate returns a plain message with no
+                    bank wording.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              If your webhook parser rejects unknown event types or unknown keys, update it before this release.
+            </p>
+          </section>
+
+          <Separator />
+
           <div id="2026-09-03" />
           <section id="api-keys-authentication" className="space-y-4">
             <h2 className="text-2xl font-semibold">API Key Authentication</h2>

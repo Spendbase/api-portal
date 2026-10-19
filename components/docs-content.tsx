@@ -1069,7 +1069,10 @@ export function AccountsContent() {
                   Do not retry a transfer that answered <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code>: a retry is a second transfer. Its
                   result arrives as two{" "}
                   <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks (one per
-                  sub-account) and in the sub-accounts&apos; balances.
+                  sub-account) when it completes, or one{" "}
+                  <RegionLink href="/docs/webhooks#budget-transfer-failed">Budget Transfer Failed</RegionLink> webhook
+                  when it does not. Both carry a <code className="bg-muted px-1 py-0.5 rounded text-xs">transferId</code> equal to the reference in{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code>.
                 </p>
               </Note>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
@@ -1147,8 +1150,9 @@ export function AccountsContent() {
                   In the US a successful response means the note was attached to both sides of the transfer, not that
                   the transfer has completed: it may still be in progress and completes on its own. Check the
                   sub-accounts&apos; balances or the{" "}
-                  <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks for the
-                  result. If the transfer has not reached the ledger by the end of the call, the note may not be
+                  <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> or{" "}
+                  <RegionLink href="/docs/webhooks#budget-transfer-failed">Budget Transfer Failed</RegionLink> webhooks
+                  for the result. If the transfer has not reached the ledger by the end of the call, the note may not be
                   attached.
                 </p>
                 <p>
@@ -1320,6 +1324,17 @@ export function CardsContent() {
                     card.
                   </RegionOnly>
                 </Param>
+                <RegionOnly region="eu">
+                  <Param name="expirationDate" type="string (RFC 3339)">
+                    Custom card expiry date in UTC (ending in <code className="bg-muted px-1 py-0.5 rounded text-xs">Z</code>), e.g.{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">2028-12-31T23:59:59Z</code>. Only the month and year are
+                    used: the card expires at the end of that month. Values with another offset are converted to UTC
+                    first, so <code className="bg-muted px-1 py-0.5 rounded text-xs">2028-12-01T00:00:00+02:00</code> gives an
+                    11/2028 expiry. Must be in the future;
+                    a past date or a value that is not RFC 3339 returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>.
+                    When omitted, the card gets the default validity period.
+                  </Param>
+                </RegionOnly>
               </div>
             </div>
             <RegionOnly region="eu">
@@ -1330,7 +1345,8 @@ export function CardsContent() {
   "limit": {
     "type": "MONTHLY",
     "amount": 1000
-  }
+  },
+  "expirationDate": "2028-12-31T23:59:59Z"
 }`}</ResponseBlock>
             </RegionOnly>
             <RegionOnly region="us">
@@ -1598,12 +1614,29 @@ export function CardsContent() {
             <p className="text-muted-foreground leading-relaxed">
               No required body. Permanently closes the card — this action cannot be undone.
             </p>
-            <Note>
-              <p>
-                Terminating an already terminated card returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. A terminated card cannot be locked
-                or unlocked.
-              </p>
-            </Note>
+            <RegionOnly region="eu">
+              <Note>
+                <p>
+                  Terminating an already terminated card returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. A terminated card cannot be locked
+                  or unlocked.
+                </p>
+              </Note>
+            </RegionOnly>
+            <RegionOnly region="us">
+              <Note>
+                <p>
+                  Terminating an already terminated card succeeds without changes, so a repeated call is safe. A
+                  terminated card cannot be locked or unlocked.
+                </p>
+                <p>
+                  When the card&apos;s state does not allow a lock, unlock or terminate, the API returns{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> with a plain message such as{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">the card cannot be terminated in its current state</code> (or{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">locked</code> /{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">unlocked</code>).
+                </p>
+              </Note>
+            </RegionOnly>
             <ResponseBlock>{`{
   "message": "Card status was successfully changed.",
   "status": "Success"
@@ -1924,6 +1957,64 @@ function TransactionFieldValues() {
   )
 }
 
+// details.originalTransactionId is only set by the EU card provider, so the US example omits it.
+const transactionsByAccountExample = (eu: boolean) => `{
+  "transactions": [
+    ${indentJson(BANK_TRANSACTION_OBJECT, "    ")},
+    {
+      "account_id": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+      "amount": 42.5,
+      "cardRef": "8d3e5a7c-1f2b-4c6d-9e0a-b1c2d3e4f5a6",
+      "createdAt": 1754127600,
+      "currencyISOCode": "USD",
+      "details": {
+        "accountName": "Marketing",
+        "cardName": "Ads card",
+        "merchantName": "Google Ads",${eu ? `
+        "originalTransactionId": "3a4b5c6d-7e8f-4091-a2b3-c4d5e6f7a8b9",` : ""}
+        "panLastFour": "4242"
+      },
+      "eventType": "Returned",
+      "id": "5e6f7a8b-9c0d-4e1f-a2b3-c4d5e6f7a8b9",
+      "paymentType": "POS",
+      "sourceType": "Card",
+      "state": "Confirmed",
+      "type": "credit",
+      "updatedAt": 1754127660,
+      "refund": "true"
+    }
+  ],
+  "hasMore": true,
+  "nextCursor": "eyJpZCI6IjVlNmY3YThiIn0"
+}`
+
+function EuOnlyTransactionFields() {
+  return (
+    <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+      <RegionOnly region="eu">
+        <p>Card transactions can also include two fields in <code className="font-mono">details</code>:</p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>
+            <code className="font-mono">isReversed</code> (boolean): <code className="font-mono">true</code> when the
+            transaction was reversed, and on the reversal entry itself. Omitted otherwise.
+          </li>
+          <li>
+            <code className="font-mono">originalTransactionId</code> (string): on a reversal or refund, the{" "}
+            <code className="font-mono">id</code> of the original transaction. Omitted otherwise.
+          </li>
+        </ul>
+      </RegionOnly>
+      <RegionOnly region="us">
+        <p>
+          <code className="font-mono">details.isReversed</code> and{" "}
+          <code className="font-mono">details.originalTransactionId</code> are only returned for EU accounts. US
+          transactions never include them.
+        </p>
+      </RegionOnly>
+    </div>
+  )
+}
+
 export function TransactionsContent() {
   return (
     <main className="flex-1 min-w-0 py-12 px-6 lg:px-12">
@@ -1983,6 +2074,7 @@ export function TransactionsContent() {
               <code className="font-mono">{`{"error": "limit must not exceed 1000"}`}</code> (or similar). Other errors
               return <code className="font-mono">{`{"error": "..."}`}</code> with the matching status code.
             </p>
+            <EuOnlyTransactionFields />
             <TransactionFieldValues />
           </div>
 
@@ -2030,35 +2122,13 @@ export function TransactionsContent() {
                 </Param>
               </div>
             </div>
-            <ResponseBlock>{`{
-  "transactions": [
-    ${indentJson(BANK_TRANSACTION_OBJECT, "    ")},
-    {
-      "account_id": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
-      "amount": 42.5,
-      "cardRef": "8d3e5a7c-1f2b-4c6d-9e0a-b1c2d3e4f5a6",
-      "createdAt": 1754127600,
-      "currencyISOCode": "USD",
-      "details": {
-        "accountName": "Marketing",
-        "cardName": "Ads card",
-        "merchantName": "Google Ads",
-        "originalTransactionId": "3a4b5c6d-7e8f-4091-a2b3-c4d5e6f7a8b9",
-        "panLastFour": "4242"
-      },
-      "eventType": "Returned",
-      "id": "5e6f7a8b-9c0d-4e1f-a2b3-c4d5e6f7a8b9",
-      "paymentType": "POS",
-      "sourceType": "Card",
-      "state": "Confirmed",
-      "type": "credit",
-      "updatedAt": 1754127660,
-      "refund": "true"
-    }
-  ],
-  "hasMore": true,
-  "nextCursor": "eyJpZCI6IjVlNmY3YThiIn0"
-}`}</ResponseBlock>
+            <RegionOnly region="eu">
+              <ResponseBlock>{transactionsByAccountExample(true)}</ResponseBlock>
+            </RegionOnly>
+            <RegionOnly region="us">
+              <ResponseBlock>{transactionsByAccountExample(false)}</ResponseBlock>
+            </RegionOnly>
+            <EuOnlyTransactionFields />
             <p className="text-sm text-muted-foreground leading-relaxed">
               <code className="font-mono">hasMore</code> and <code className="font-mono">nextCursor</code> are omitted on the
               last page. Invalid pagination params return <code className="font-mono">400</code> with{" "}
@@ -2116,6 +2186,41 @@ export function TransactionsContent() {
 
           <Separator />
 
+          {/* Get transaction details */}
+          <div id="get-transaction-details" className="space-y-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              <GetBadge />
+              <code className="text-sm font-mono">/transactions/transaction/:id</code>
+            </div>
+            <ScopeBadge scope="transactionsRead" />
+            <h2 className="text-2xl font-semibold">Get transaction details</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Returns a single transaction by its ID, including the card it was made with
+              (<code className="font-mono">cardRef</code>), merchant details and the attached note or receipt. Use it to
+              look up the card behind a transaction you received from a webhook or a transactions list. Unlike the list
+              endpoints, the response has no <code className="font-mono">cardId</code> field; use{" "}
+              <code className="font-mono">cardRef</code> with <RegionLink href="/docs/cards#get-card">Get card</RegionLink>{" "}
+              to fetch the card itself. Fields with
+              zero/empty values are omitted from the response.
+            </p>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Path Parameters</h3>
+              <div className="space-y-2">
+                <Param name="id" type="string" required>Transaction ID (<code className="font-mono">id</code> from the transactions list)</Param>
+              </div>
+            </div>
+            <ResponseBlock>{`{
+  "transaction": ${indentJson(CARD_TRANSACTION_OBJECT.replace(/,\n  "cardId": "[^"]*"/, ""), "  ")}
+}`}</ResponseBlock>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              An unknown transaction ID returns <code className="font-mono">{`{"error": "..."}`}</code> with the matching
+              status code.
+            </p>
+            <EuOnlyTransactionFields />
+          </div>
+
+          <Separator />
+
           {/* Add note */}
           <div id="add-note-to-tx" className="space-y-4">
             <div className="flex items-center gap-3 flex-wrap">
@@ -2161,6 +2266,60 @@ export function TransactionsContent() {
 
 // EU webhooks are produced by cards-tribe and delivered by the webhooks service:
 // X-Event-Group / X-Event-Type are passed through verbatim, so the values are PascalCase.
+// EU webhooks are produced by cards-tribe (internal/service/webhook/payloads.go, card_lifecycle.go).
+const EU_CARD_LIFECYCLE_PAYLOAD = `{
+  cardId: string;                        // Spendbase card ID
+  cardName: string | null;
+  panLastFour: string | null;            // null while the card is pending
+  accountId: string | null;              // ledger account ID of the card's account; null while the card is pending
+  holderId: string | null;               // cardholder record ID
+  currencyISONum: string | null;         // ISO 4217 numeric, e.g. "978"
+  cardStatus: SpendbaseCardStatus;       // status after the change
+  previousStatus: SpendbaseCardStatus | null;  // status before the change; null on Card Created
+  initiatedBy: 'product' | 'bank' | null;      // who made the change; null on Card Created
+  reason: BlockReason | null;            // Card Blocked only; null on every other event
+  timestamp: string;                     // UTC RFC 3339
+
+  // Deprecated, still sent:
+  card_id: string;                       // use cardId
+  card_name: string;                     // use cardName
+  pan_last_four?: string;                // Card Created only; "" while pending. Use panLastFour
+  status?: 'DEFAULT';                    // Card Created only; always "DEFAULT". Use cardStatus
+}`
+
+function EuCardLifecycleValues() {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+      <EnumValues
+        name="cardStatus / previousStatus"
+        values={[
+          ["NEW", "Issued but not activated yet: the cardholder is not verified."],
+          ["DEFAULT", "Active and ready to use."],
+          ["LOCKED", "Locked through Spendbase (API or app)."],
+          ["SUSPENDED", "Put on hold by the issuing bank."],
+          ["TERMINATED", "Permanently closed."],
+          ["EXPIRED", "Past its expiry date. Can appear as previousStatus."],
+        ]}
+      />
+      <EnumValues
+        name="initiatedBy"
+        values={[
+          ["product", "The change was requested through Spendbase: the API or the app."],
+          ["bank", "The issuing bank changed the card itself, e.g. a risk hold or a closure you did not request."],
+        ]}
+      />
+      <EnumValues
+        name="reason"
+        values={[
+          ["CUSTOMER_REQUEST", "The company or the cardholder asked for the block. Always the reason for a lock made through Spendbase."],
+          ["LOST_OR_STOLEN", "The card was reported lost or stolen."],
+          ["ISSUER_REVIEW", "The issuing bank put the card on hold for any other reason. Details are not shared."],
+        ]}
+      />
+    </div>
+  )
+}
+
 function EuWebhookEvents() {
   const code = "px-1.5 py-0.5 rounded bg-muted font-mono text-sm"
   return (
@@ -2205,20 +2364,59 @@ function EuWebhookEvents() {
 
       <Separator />
 
+      {/* Card lifecycle events */}
+      <div id="eu-card-lifecycle" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card lifecycle events</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Card Created, Card Blocked, Card Unblocked and Card Terminated share one payload. It matches the US card
+          payload, plus <code className={code}>reason</code> and the deprecated snake_case keys. Values that are not known are sent as <code className={code}>null</code>, never as an empty string. An event
+          is sent only when the card status actually changes, so repeating a lock on a locked card sends nothing.
+        </p>
+        <ResponseBlock status="Payload">{EU_CARD_LIFECYCLE_PAYLOAD}</ResponseBlock>
+        <EuCardLifecycleValues />
+        <Note warning>
+          <p>
+            <code className={code}>card_id</code> and <code className={code}>card_name</code> (all four events) and{" "}
+            <code className={code}>pan_last_four</code> and <code className={code}>status</code> (Card Created only) are
+            deprecated. They are still sent with their previous values, but will be removed. Use{" "}
+            <code className={code}>cardId</code>, <code className={code}>cardName</code>,{" "}
+            <code className={code}>panLastFour</code> and <code className={code}>cardStatus</code> instead. The
+            deprecated <code className={code}>status</code> is always <code className={code}>DEFAULT</code>, even for a
+            pending card; <code className={code}>cardStatus</code> carries the real status.
+          </p>
+        </Note>
+      </div>
+
+      <Separator />
+
       {/* Card Created */}
       <div id="card-created" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Created</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired once when a card is issued. If the cardholder is not verified yet, the card is saved as pending and{" "}
-          <code className={code}>pan_last_four</code> is empty. No second event is sent when the card is activated later.
+          Fired once when a card is issued. If the cardholder is not verified yet, the card is created with{" "}
+          <code className={code}>cardStatus</code> <code className={code}>NEW</code>, and{" "}
+          <code className={code}>panLastFour</code> and <code className={code}>accountId</code> are{" "}
+          <code className={code}>null</code>. No second event is sent when the card is activated later.{" "}
+          <code className={code}>previousStatus</code>, <code className={code}>initiatedBy</code> and{" "}
+          <code className={code}>reason</code> are always <code className={code}>null</code>.
         </p>
         <WebhookHeaders group="Card" type="CardIssue" />
-        <ResponseBlock status="Payload">{`{
-  card_id: string;        // Spendbase card ID
-  card_name: string;
-  pan_last_four: string;  // "" while the card is pending
-  status: 'DEFAULT';      // always "DEFAULT", even for a pending card
-  timestamp: string;      // UTC RFC 3339
+        <ResponseBlock status="Example">{`{
+  "cardId": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+  "cardName": "Marketing Card",
+  "panLastFour": "4242",
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "holderId": "0d1e2f3a-4b5c-4d6e-8f7a-9b0c1d2e3f4a",
+  "currencyISONum": "978",
+  "cardStatus": "DEFAULT",
+  "previousStatus": null,
+  "initiatedBy": null,
+  "reason": null,
+  "timestamp": "2026-10-07T12:34:56Z",
+  "card_id": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+  "card_name": "Marketing Card",
+  "pan_last_four": "4242",
+  "status": "DEFAULT"
 }`}</ResponseBlock>
       </div>
 
@@ -2228,14 +2426,42 @@ function EuWebhookEvents() {
       <div id="card-blocked" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Blocked</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired when a card is locked through the API or the Spendbase app. Unlocking a card does not send a webhook.
+          Fired when a card moves to <code className={code}>LOCKED</code> or <code className={code}>SUSPENDED</code>:
+          either it was locked through the API or the Spendbase app (<code className={code}>initiatedBy</code>{" "}
+          <code className={code}>product</code>, <code className={code}>reason</code>{" "}
+          <code className={code}>CUSTOMER_REQUEST</code>), or the issuing bank put it on hold, e.g. a risk check (
+          <code className={code}>initiatedBy</code> <code className={code}>bank</code>). <code className={code}>reason</code>{" "}
+          is set only on this event.
         </p>
         <WebhookHeaders group="Card" type="CardBlock" />
-        <ResponseBlock status="Payload">{`{
-  card_id: string;    // Spendbase card ID
-  card_name: string;
-  timestamp: string;  // UTC RFC 3339
+        <ResponseBlock status="Example">{`{
+  "cardId": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+  "cardName": "Marketing Card",
+  "panLastFour": "4242",
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "holderId": "0d1e2f3a-4b5c-4d6e-8f7a-9b0c1d2e3f4a",
+  "currencyISONum": "978",
+  "cardStatus": "SUSPENDED",
+  "previousStatus": "DEFAULT",
+  "initiatedBy": "bank",
+  "reason": "ISSUER_REVIEW",
+  "timestamp": "2026-10-07T12:34:56Z",
+  "card_id": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+  "card_name": "Marketing Card"
 }`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Card Unblocked */}
+      <div id="card-unblocked" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Unblocked</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a <code className={code}>LOCKED</code> or <code className={code}>SUSPENDED</code> card becomes{" "}
+          <code className={code}>DEFAULT</code> again: unlocked through the API or the app, or reactivated by the
+          issuing bank. Activating a <code className={code}>NEW</code> card does not send this event.
+        </p>
+        <WebhookHeaders group="Card" type="CardUnblock" />
       </div>
 
       <Separator />
@@ -2244,14 +2470,10 @@ function EuWebhookEvents() {
       <div id="card-terminated" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Terminated</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired when a card is permanently terminated, including pending cards that were never activated.
+          Fired when a card is permanently terminated through the API or the app, or by the issuing bank. This includes
+          pending cards that were never activated.
         </p>
         <WebhookHeaders group="Card" type="CardTerminate" />
-        <ResponseBlock status="Payload">{`{
-  card_id: string;    // Spendbase card ID
-  card_name: string;
-  timestamp: string;  // UTC RFC 3339
-}`}</ResponseBlock>
       </div>
 
       <Separator />
@@ -2334,6 +2556,45 @@ function EuWebhookEvents() {
   transactionId: string;
   timestamp: string;                // UTC RFC 3339
 }`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Authorization Expired */}
+      <div id="authorization-expired" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Authorization Expired</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a pending authorization is released without being settled. The held amount is available on the
+          account again, and no Card Settlement follows for this transaction. It is sent once per authorization, either
+          when the issuer reports the expiry or when the authorization passes its validity date. Not sent for
+          zero-amount card verifications.
+        </p>
+        <WebhookHeaders group="Card" type="AuthorizationExpired" />
+        <ResponseBlock status="Payload">{`{
+  lifecyclePhase: 'AUTHORIZATION';
+  transactionId: string;                    // same as the original Card Authorization
+  cardId: string;                           // Spendbase card ID
+  cardName: string | null;
+  panLastFour: string | null;
+  accountName: string | null;               // sub-account name
+  merchantName: string | null;
+  mccCode: string | null;
+  merchantAmount: string;                   // decimal string, merchant currency, always positive
+  merchantCurrencyISOCode: string | null;   // ISO 4217 numeric
+  billingAmount: string;                    // decimal string, released hold in billing currency, incl. fees
+  billingCurrencyIson: string | null;       // ISO 4217 numeric
+  expiredBy: 'ISSUER' | 'SYSTEM';           // see values below
+  timestamp: string;                        // UTC RFC 3339
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="expiredBy"
+            values={[
+              ["ISSUER", "The issuing bank reported that the authorization expired."],
+              ["SYSTEM", "The authorization passed its validity date without being settled, and Spendbase released it."],
+            ]}
+          />
+        </div>
       </div>
 
       <Separator />
@@ -2425,7 +2686,9 @@ function EuWebhookEvents() {
       <div id="card-decline" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Decline</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired once when a card transaction (including a refund) is declined.
+          Fired once when a card transaction (including a refund) is declined. An authorization that expires without
+          being settled is not a decline: it is sent as{" "}
+          <a href="#authorization-expired" className="underline">Authorization Expired</a>.
         </p>
         <WebhookHeaders group="Card" type="Decline" />
         <ResponseBlock status="Payload">{`{
@@ -2553,6 +2816,7 @@ const US_CARD_LIFECYCLE_PAYLOAD = `{
   previousStatus: SpendbaseCardStatus | null;  // status before the change; null on Card Created
   initiatedBy: 'product' | 'bank' | null;      // who made the change; null on Card Created
   timestamp: string;                     // UTC RFC 3339
+  eventId: string;                       // unique per event, same on every redelivery; see Delivery
 }`
 
 function UsCardLifecycleValues() {
@@ -2600,8 +2864,12 @@ function UsWebhookEvents() {
             with exponential backoff (1s up to 30s).
           </li>
           <li>
-            Each occurrence produces one event, but a retried delivery can reach you more than once. Payloads carry no
-            event ID, so make your handler idempotent.
+            Delivery is at-least-once: the same event can reach you more than once, from our retries or from the bank
+            re-sending its notification. Every payload carries an <code className={code}>eventId</code> (a UUID). All
+            deliveries of one event share it, and two different events never do (not even the Authorization and
+            Settlement of one purchase, or two locks of the same card). Drop any event whose{" "}
+            <code className={code}>eventId</code> you have already processed, and keep processed IDs for at least 30
+            days: a re-sent event can arrive days later. Treat it as opaque.
           </li>
           <li>Events are not guaranteed to arrive in order. JSON field order is not guaranteed either.</li>
           <li>
@@ -2643,7 +2911,15 @@ function UsWebhookEvents() {
               <code className={code}>accountId</code>, <code className={code}>cardName</code>,{" "}
               <code className={code}>panLastFour</code>: rare, when the card record is missing that value.
             </li>
+            <li>
+              <code className={code}>transferId</code> on Balance Adjusted: the adjustment was made by Spendbase, not by
+              a transfer between your budgets.
+            </li>
           </ul>
+          <p className="text-sm text-muted-foreground">
+            <code className={code}>eventId</code>, <code className={code}>authorisationType</code> and every Budget
+            Transfer Failed field are never <code className={code}>null</code>.
+          </p>
         </div>
       </div>
 
@@ -2663,7 +2939,9 @@ function UsWebhookEvents() {
       <div id="card-blocked" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Blocked</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired when a card is locked through Spendbase or put on hold by the issuing bank.
+          Fired when a card is locked through Spendbase or put on hold by the issuing bank. Every lock and unlock is
+          sent, each with its own <code className={code}>eventId</code>, including a card locked, unlocked and locked
+          again.
         </p>
         <WebhookHeaders group="Card" type="CardBlock" />
         <ResponseBlock status="Payload">{US_CARD_LIFECYCLE_PAYLOAD}</ResponseBlock>
@@ -2719,8 +2997,26 @@ function UsWebhookEvents() {
   cardName: string | null;
   merchantCategory: string | null;
   mccCode: string | null;
+  authorisationType: string;               // see values below; never null
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <EnumValues
+            name="authorisationType"
+            values={[
+              ["Normal authorization", "No more specific type applies. Most authorizations, including hotel and car-rental pre-authorizations."],
+              ["Authorize advice", "The bank reports an authorization that was already decided, e.g. a $0 card check by Google or Apple. Takes precedence over every other value."],
+              ["Account funding", "The payment funds another account."],
+              ["Recurring", "The merchant marked the payment as recurring. Many subscription charges are not marked this way and arrive as Normal authorization."],
+            ]}
+          />
+          <p className="text-sm text-muted-foreground">
+            US cards send only these four values. A refund authorization is sent as a{" "}
+            <a href="#card-refund" className="underline">Card Refund</a> event, and a second authorization on the same
+            transaction carries its own type, usually <code className={code}>Normal authorization</code>.
+          </p>
+        </div>
       </div>
 
       <Separator />
@@ -2749,6 +3045,7 @@ function UsWebhookEvents() {
   panLastFour: string | null;
   transactionId: string;
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -2773,6 +3070,7 @@ function UsWebhookEvents() {
   panLastFour: string | null;
   transactionId: string;
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -2817,6 +3115,7 @@ function UsWebhookEvents() {
   panLastFour: string | null;
   transactionId: string;
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -2844,6 +3143,7 @@ function UsWebhookEvents() {
   panLastFour: string | null;
   transactionId: string;
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -2872,6 +3172,7 @@ function UsWebhookEvents() {
   currencyISOCode: 'USD';
   direction: 'in';
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -2891,6 +3192,7 @@ function UsWebhookEvents() {
   currencyISOCode: 'USD';
   direction: 'out';
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -2908,7 +3210,9 @@ function UsWebhookEvents() {
             money moved between two of your accounts. You receive <strong>two</strong> events:{" "}
             <code className={code}>direction: &apos;out&apos;</code> for the source account and{" "}
             <code className={code}>direction: &apos;in&apos;</code> for the destination, both with{" "}
-            <code className={code}>reason: &apos;Transfer between budgets&apos;</code>.
+            <code className={code}>reason: &apos;Transfer between budgets&apos;</code> and the transfer&apos;s{" "}
+            <code className={code}>transferId</code>. A transfer that does not complete sends one{" "}
+            <a href="#budget-transfer-failed" className="underline">Budget Transfer Failed</a> instead.
           </li>
         </ul>
         <WebhookHeaders group="Account" type="BalanceAdjusted" />
@@ -2919,7 +3223,9 @@ function UsWebhookEvents() {
   currencyISOCode: 'USD';
   direction: 'in' | 'out';     // from this account's point of view
   reason: string | null;       // human-readable reason
+  transferId: string | null;   // the transfer's reference, as returned by Transfer money; null for an adjustment by Spendbase
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -2930,6 +3236,73 @@ function UsWebhookEvents() {
             ]}
           />
         </div>
+      </div>
+
+      <Separator />
+
+      {/* Budget Transfer Failed */}
+      <div id="budget-transfer-failed" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Budget Transfer Failed</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a transfer you started between two of your sub-accounts ends <strong>without moving the money</strong>.
+          Both sub-accounts are as they were before the transfer. A transfer that completes sends two{" "}
+          <a href="#balance-adjusted" className="underline">Balance Adjusted</a> events instead, so every transfer you
+          start ends in exactly one of the two. <RegionLink href="/docs/accounts#transfer-money">Transfer money</RegionLink>{" "}
+          often answers <code className={code}>in_progress</code> before the transfer has ended: this event, or the
+          Balance Adjusted pair, tells you the result.
+        </p>
+        <WebhookHeaders group="Account" type="BudgetTransferFailed" />
+        <ResponseBlock status="Payload">{`{
+  transferId: string;            // the reference Transfer money returned
+  sourceAccountId: string;       // ledger account ID the money was to leave
+  destinationAccountId: string;  // ledger account ID the money was to reach
+  amount: string;                // the amount you asked to move; decimal string, always positive
+  currencyISOCode: 'USD';
+  outcome: 'failed' | 'reversed';
+  reasonCode: string;            // see values below; branch on this
+  reason: string;                // short explanation for display; wording may change
+  timestamp: string;             // when the transfer ended, UTC RFC 3339
+  eventId: string;               // unique per event, same on every redelivery; see Delivery
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+          <EnumValues
+            name="outcome"
+            values={[
+              ["failed", "The transfer was refused at its first step. Nothing changed."],
+              ["reversed", "Part of the transfer had happened and was undone. Both sub-accounts are as they were."],
+            ]}
+          />
+          <EnumValues
+            name="reasonCode"
+            values={[
+              ["source_refused", "The bank refused, or could not complete, taking the money out of the source sub-account."],
+              ["insufficient_funds", "The source sub-account did not have enough money when the transfer was recorded, so it was undone."],
+              ["destination_refused", "The bank refused, or could not complete, adding the money to the destination sub-account."],
+              ["undone_by_support", "The transfer stopped part-way and our team undid it."],
+              ["not_completed", "Any other reason. Nothing moved."],
+            ]}
+          />
+        </div>
+        <Note>
+          <p>It is <strong>not</strong> sent:</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>
+              while a transfer that stopped part-way waits for our team (Transfer money answered{" "}
+              <code className={code}>409</code>, or <code className={code}>in_progress</code> and the transfer then
+              stopped). Nothing is sent until our team completes it (two Balance Adjusted) or undoes it (this event,{" "}
+              <code className={code}>undone_by_support</code>);
+            </li>
+            <li>
+              for a request Transfer money refused at once (not enough to spend, a sub-account busy or locked, a
+              sub-account not ready). No transfer was started, and the API&apos;s answer is the result;
+            </li>
+            <li>for a transfer Spendbase made on your behalf that did not complete.</li>
+          </ul>
+          <p>
+            It <strong>is</strong> sent even when Transfer money already said in its answer that the transfer failed or
+            was undone. Deduplicate on <code className={code}>transferId</code>.
+          </p>
+        </Note>
       </div>
 
       <Separator />
@@ -2946,6 +3319,7 @@ function UsWebhookEvents() {
   accountName: string | null;
   currencyISOCode: 'USD';
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -2963,6 +3337,7 @@ function UsWebhookEvents() {
   accountName: string | null;
   currencyISOCode: 'USD';
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
