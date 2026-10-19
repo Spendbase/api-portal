@@ -2245,6 +2245,60 @@ export function TransactionsContent() {
 
 // EU webhooks are produced by cards-tribe and delivered by the webhooks service:
 // X-Event-Group / X-Event-Type are passed through verbatim, so the values are PascalCase.
+// EU webhooks are produced by cards-tribe (internal/service/webhook/payloads.go, card_lifecycle.go).
+const EU_CARD_LIFECYCLE_PAYLOAD = `{
+  cardId: string;                        // Spendbase card ID
+  cardName: string | null;
+  panLastFour: string | null;            // null while the card is pending
+  accountId: string | null;              // ledger account ID of the card's account; null while the card is pending
+  holderId: string | null;               // cardholder record ID
+  currencyISONum: string | null;         // ISO 4217 numeric, e.g. "978"
+  cardStatus: SpendbaseCardStatus;       // status after the change
+  previousStatus: SpendbaseCardStatus | null;  // status before the change; null on Card Created
+  initiatedBy: 'product' | 'bank' | null;      // who made the change; null on Card Created
+  reason: BlockReason | null;            // Card Blocked only; null on every other event
+  timestamp: string;                     // UTC RFC 3339
+
+  // Deprecated, still sent:
+  card_id: string;                       // use cardId
+  card_name: string;                     // use cardName
+  pan_last_four?: string;                // Card Created only; "" while pending. Use panLastFour
+  status?: 'DEFAULT';                    // Card Created only; always "DEFAULT". Use cardStatus
+}`
+
+function EuCardLifecycleValues() {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+      <EnumValues
+        name="cardStatus / previousStatus"
+        values={[
+          ["NEW", "Issued but not activated yet: the cardholder is not verified."],
+          ["DEFAULT", "Active and ready to use."],
+          ["LOCKED", "Locked through Spendbase (API or app)."],
+          ["SUSPENDED", "Put on hold by the issuing bank."],
+          ["TERMINATED", "Permanently closed."],
+          ["EXPIRED", "Past its expiry date. Can appear as previousStatus."],
+        ]}
+      />
+      <EnumValues
+        name="initiatedBy"
+        values={[
+          ["product", "The change was requested through Spendbase: the API or the app."],
+          ["bank", "The issuing bank changed the card itself, e.g. a risk hold or a closure you did not request."],
+        ]}
+      />
+      <EnumValues
+        name="reason"
+        values={[
+          ["CUSTOMER_REQUEST", "The company or the cardholder asked for the block. Always the reason for a lock made through Spendbase."],
+          ["LOST_OR_STOLEN", "The card was reported lost or stolen."],
+          ["ISSUER_REVIEW", "The issuing bank put the card on hold for any other reason. Details are not shared."],
+        ]}
+      />
+    </div>
+  )
+}
+
 function EuWebhookEvents() {
   const code = "px-1.5 py-0.5 rounded bg-muted font-mono text-sm"
   return (
@@ -2289,20 +2343,59 @@ function EuWebhookEvents() {
 
       <Separator />
 
+      {/* Card lifecycle events */}
+      <div id="eu-card-lifecycle" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card lifecycle events</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Card Created, Card Blocked, Card Unblocked and Card Terminated share one payload. It matches the US card
+          payload, plus <code className={code}>reason</code> and the deprecated snake_case keys. Values that are not known are sent as <code className={code}>null</code>, never as an empty string. An event
+          is sent only when the card status actually changes, so repeating a lock on a locked card sends nothing.
+        </p>
+        <ResponseBlock status="Payload">{EU_CARD_LIFECYCLE_PAYLOAD}</ResponseBlock>
+        <EuCardLifecycleValues />
+        <Note warning>
+          <p>
+            <code className={code}>card_id</code> and <code className={code}>card_name</code> (all four events) and{" "}
+            <code className={code}>pan_last_four</code> and <code className={code}>status</code> (Card Created only) are
+            deprecated. They are still sent with their previous values, but will be removed. Use{" "}
+            <code className={code}>cardId</code>, <code className={code}>cardName</code>,{" "}
+            <code className={code}>panLastFour</code> and <code className={code}>cardStatus</code> instead. The
+            deprecated <code className={code}>status</code> is always <code className={code}>DEFAULT</code>, even for a
+            pending card; <code className={code}>cardStatus</code> carries the real status.
+          </p>
+        </Note>
+      </div>
+
+      <Separator />
+
       {/* Card Created */}
       <div id="card-created" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Created</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired once when a card is issued. If the cardholder is not verified yet, the card is saved as pending and{" "}
-          <code className={code}>pan_last_four</code> is empty. No second event is sent when the card is activated later.
+          Fired once when a card is issued. If the cardholder is not verified yet, the card is created with{" "}
+          <code className={code}>cardStatus</code> <code className={code}>NEW</code>, and{" "}
+          <code className={code}>panLastFour</code> and <code className={code}>accountId</code> are{" "}
+          <code className={code}>null</code>. No second event is sent when the card is activated later.{" "}
+          <code className={code}>previousStatus</code>, <code className={code}>initiatedBy</code> and{" "}
+          <code className={code}>reason</code> are always <code className={code}>null</code>.
         </p>
         <WebhookHeaders group="Card" type="CardIssue" />
-        <ResponseBlock status="Payload">{`{
-  card_id: string;        // Spendbase card ID
-  card_name: string;
-  pan_last_four: string;  // "" while the card is pending
-  status: 'DEFAULT';      // always "DEFAULT", even for a pending card
-  timestamp: string;      // UTC RFC 3339
+        <ResponseBlock status="Example">{`{
+  "cardId": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+  "cardName": "Marketing Card",
+  "panLastFour": "4242",
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "holderId": "0d1e2f3a-4b5c-4d6e-8f7a-9b0c1d2e3f4a",
+  "currencyISONum": "978",
+  "cardStatus": "DEFAULT",
+  "previousStatus": null,
+  "initiatedBy": null,
+  "reason": null,
+  "timestamp": "2026-10-07T12:34:56Z",
+  "card_id": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+  "card_name": "Marketing Card",
+  "pan_last_four": "4242",
+  "status": "DEFAULT"
 }`}</ResponseBlock>
       </div>
 
@@ -2312,14 +2405,42 @@ function EuWebhookEvents() {
       <div id="card-blocked" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Blocked</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired when a card is locked through the API or the Spendbase app. Unlocking a card does not send a webhook.
+          Fired when a card moves to <code className={code}>LOCKED</code> or <code className={code}>SUSPENDED</code>:
+          either it was locked through the API or the Spendbase app (<code className={code}>initiatedBy</code>{" "}
+          <code className={code}>product</code>, <code className={code}>reason</code>{" "}
+          <code className={code}>CUSTOMER_REQUEST</code>), or the issuing bank put it on hold, e.g. a risk check (
+          <code className={code}>initiatedBy</code> <code className={code}>bank</code>). <code className={code}>reason</code>{" "}
+          is set only on this event.
         </p>
         <WebhookHeaders group="Card" type="CardBlock" />
-        <ResponseBlock status="Payload">{`{
-  card_id: string;    // Spendbase card ID
-  card_name: string;
-  timestamp: string;  // UTC RFC 3339
+        <ResponseBlock status="Example">{`{
+  "cardId": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+  "cardName": "Marketing Card",
+  "panLastFour": "4242",
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "holderId": "0d1e2f3a-4b5c-4d6e-8f7a-9b0c1d2e3f4a",
+  "currencyISONum": "978",
+  "cardStatus": "SUSPENDED",
+  "previousStatus": "DEFAULT",
+  "initiatedBy": "bank",
+  "reason": "ISSUER_REVIEW",
+  "timestamp": "2026-10-07T12:34:56Z",
+  "card_id": "6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f",
+  "card_name": "Marketing Card"
 }`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Card Unblocked */}
+      <div id="card-unblocked" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Unblocked</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a <code className={code}>LOCKED</code> or <code className={code}>SUSPENDED</code> card becomes{" "}
+          <code className={code}>DEFAULT</code> again: unlocked through the API or the app, or reactivated by the
+          issuing bank. Activating a <code className={code}>NEW</code> card does not send this event.
+        </p>
+        <WebhookHeaders group="Card" type="CardUnblock" />
       </div>
 
       <Separator />
@@ -2328,14 +2449,10 @@ function EuWebhookEvents() {
       <div id="card-terminated" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Terminated</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired when a card is permanently terminated, including pending cards that were never activated.
+          Fired when a card is permanently terminated through the API or the app, or by the issuing bank. This includes
+          pending cards that were never activated.
         </p>
         <WebhookHeaders group="Card" type="CardTerminate" />
-        <ResponseBlock status="Payload">{`{
-  card_id: string;    // Spendbase card ID
-  card_name: string;
-  timestamp: string;  // UTC RFC 3339
-}`}</ResponseBlock>
       </div>
 
       <Separator />
@@ -2418,6 +2535,45 @@ function EuWebhookEvents() {
   transactionId: string;
   timestamp: string;                // UTC RFC 3339
 }`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* Authorization Expired */}
+      <div id="authorization-expired" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Authorization Expired</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a pending authorization is released without being settled. The held amount is available on the
+          account again, and no Card Settlement follows for this transaction. It is sent once per authorization, either
+          when the issuer reports the expiry or when the authorization passes its validity date. Not sent for
+          zero-amount card verifications.
+        </p>
+        <WebhookHeaders group="Card" type="AuthorizationExpired" />
+        <ResponseBlock status="Payload">{`{
+  lifecyclePhase: 'AUTHORIZATION';
+  transactionId: string;                    // same as the original Card Authorization
+  cardId: string;                           // Spendbase card ID
+  cardName: string | null;
+  panLastFour: string | null;
+  accountName: string | null;               // sub-account name
+  merchantName: string | null;
+  mccCode: string | null;
+  merchantAmount: string;                   // decimal string, merchant currency, always positive
+  merchantCurrencyISOCode: string | null;   // ISO 4217 numeric
+  billingAmount: string;                    // decimal string, released hold in billing currency, incl. fees
+  billingCurrencyIson: string | null;       // ISO 4217 numeric
+  expiredBy: 'ISSUER' | 'SYSTEM';           // see values below
+  timestamp: string;                        // UTC RFC 3339
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="expiredBy"
+            values={[
+              ["ISSUER", "The issuing bank reported that the authorization expired."],
+              ["SYSTEM", "The authorization passed its validity date without being settled, and Spendbase released it."],
+            ]}
+          />
+        </div>
       </div>
 
       <Separator />
@@ -2509,7 +2665,9 @@ function EuWebhookEvents() {
       <div id="card-decline" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Decline</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired once when a card transaction (including a refund) is declined.
+          Fired once when a card transaction (including a refund) is declined. An authorization that expires without
+          being settled is not a decline: it is sent as{" "}
+          <a href="#authorization-expired" className="underline">Authorization Expired</a>.
         </p>
         <WebhookHeaders group="Card" type="Decline" />
         <ResponseBlock status="Payload">{`{
