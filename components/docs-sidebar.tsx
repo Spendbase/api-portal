@@ -90,6 +90,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Account Funded", id: "account-funded", region: "us" },
       { label: "Account Withdrawn", id: "account-withdrawn", region: "us" },
       { label: "Balance Adjusted", id: "balance-adjusted", region: "us" },
+      { label: "Budget Transfer Failed", id: "budget-transfer-failed", region: "us" },
       { label: "Account Provisioned", id: "account-provisioned", region: "us" },
       { label: "Account Created", id: "account-created", region: "us" },
     ],
@@ -99,6 +100,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
     path: "/docs/versioning",
     items: [
       { label: "Release Notes", id: "release-notes" },
+      { label: "2026-10-19", id: "2026-10-19", region: "us" },
       { label: "2026-09-03", id: "2026-09-03", region: "us" },
       { label: "2026-08-13", id: "2026-08-13" },
       { label: "2026-06-25", id: "2026-06-25" },

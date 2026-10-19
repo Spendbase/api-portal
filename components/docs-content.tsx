@@ -1069,7 +1069,10 @@ export function AccountsContent() {
                   Do not retry a transfer that answered <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code>: a retry is a second transfer. Its
                   result arrives as two{" "}
                   <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks (one per
-                  sub-account) and in the sub-accounts&apos; balances.
+                  sub-account) when it completes, or one{" "}
+                  <RegionLink href="/docs/webhooks#budget-transfer-failed">Budget Transfer Failed</RegionLink> webhook
+                  when it does not. Both carry a <code className="bg-muted px-1 py-0.5 rounded text-xs">transferId</code> equal to the reference in{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code>.
                 </p>
               </Note>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
@@ -1147,8 +1150,9 @@ export function AccountsContent() {
                   In the US a successful response means the note was attached to both sides of the transfer, not that
                   the transfer has completed: it may still be in progress and completes on its own. Check the
                   sub-accounts&apos; balances or the{" "}
-                  <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks for the
-                  result. If the transfer has not reached the ledger by the end of the call, the note may not be
+                  <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> or{" "}
+                  <RegionLink href="/docs/webhooks#budget-transfer-failed">Budget Transfer Failed</RegionLink> webhooks
+                  for the result. If the transfer has not reached the ledger by the end of the call, the note may not be
                   attached.
                 </p>
                 <p>
@@ -1610,12 +1614,29 @@ export function CardsContent() {
             <p className="text-muted-foreground leading-relaxed">
               No required body. Permanently closes the card — this action cannot be undone.
             </p>
-            <Note>
-              <p>
-                Terminating an already terminated card returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. A terminated card cannot be locked
-                or unlocked.
-              </p>
-            </Note>
+            <RegionOnly region="eu">
+              <Note>
+                <p>
+                  Terminating an already terminated card returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. A terminated card cannot be locked
+                  or unlocked.
+                </p>
+              </Note>
+            </RegionOnly>
+            <RegionOnly region="us">
+              <Note>
+                <p>
+                  Terminating an already terminated card succeeds without changes, so a repeated call is safe. A
+                  terminated card cannot be locked or unlocked.
+                </p>
+                <p>
+                  When the card&apos;s state does not allow a lock, unlock or terminate, the API returns{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> with a plain message such as{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">the card cannot be terminated in its current state</code> (or{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">locked</code> /{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">unlocked</code>).
+                </p>
+              </Note>
+            </RegionOnly>
             <ResponseBlock>{`{
   "message": "Card status was successfully changed.",
   "status": "Success"
@@ -2795,6 +2816,7 @@ const US_CARD_LIFECYCLE_PAYLOAD = `{
   previousStatus: SpendbaseCardStatus | null;  // status before the change; null on Card Created
   initiatedBy: 'product' | 'bank' | null;      // who made the change; null on Card Created
   timestamp: string;                     // UTC RFC 3339
+  eventId: string;                       // unique per event, same on every redelivery; see Delivery
 }`
 
 function UsCardLifecycleValues() {
@@ -2842,8 +2864,12 @@ function UsWebhookEvents() {
             with exponential backoff (1s up to 30s).
           </li>
           <li>
-            Each occurrence produces one event, but a retried delivery can reach you more than once. Payloads carry no
-            event ID, so make your handler idempotent.
+            Delivery is at-least-once: the same event can reach you more than once, from our retries or from the bank
+            re-sending its notification. Every payload carries an <code className={code}>eventId</code> (a UUID). All
+            deliveries of one event share it, and two different events never do (not even the Authorization and
+            Settlement of one purchase, or two locks of the same card). Drop any event whose{" "}
+            <code className={code}>eventId</code> you have already processed, and keep processed IDs for at least 30
+            days: a re-sent event can arrive days later. Treat it as opaque.
           </li>
           <li>Events are not guaranteed to arrive in order. JSON field order is not guaranteed either.</li>
           <li>
@@ -2885,7 +2911,15 @@ function UsWebhookEvents() {
               <code className={code}>accountId</code>, <code className={code}>cardName</code>,{" "}
               <code className={code}>panLastFour</code>: rare, when the card record is missing that value.
             </li>
+            <li>
+              <code className={code}>transferId</code> on Balance Adjusted: the adjustment was made by Spendbase, not by
+              a transfer between your budgets.
+            </li>
           </ul>
+          <p className="text-sm text-muted-foreground">
+            <code className={code}>eventId</code>, <code className={code}>authorisationType</code> and every Budget
+            Transfer Failed field are never <code className={code}>null</code>.
+          </p>
         </div>
       </div>
 
@@ -2905,7 +2939,9 @@ function UsWebhookEvents() {
       <div id="card-blocked" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Blocked</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired when a card is locked through Spendbase or put on hold by the issuing bank.
+          Fired when a card is locked through Spendbase or put on hold by the issuing bank. Every lock and unlock is
+          sent, each with its own <code className={code}>eventId</code>, including a card locked, unlocked and locked
+          again.
         </p>
         <WebhookHeaders group="Card" type="CardBlock" />
         <ResponseBlock status="Payload">{US_CARD_LIFECYCLE_PAYLOAD}</ResponseBlock>
@@ -2961,8 +2997,26 @@ function UsWebhookEvents() {
   cardName: string | null;
   merchantCategory: string | null;
   mccCode: string | null;
+  authorisationType: string;               // see values below; never null
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <EnumValues
+            name="authorisationType"
+            values={[
+              ["Normal authorization", "No more specific type applies. Most authorizations, including hotel and car-rental pre-authorizations."],
+              ["Authorize advice", "The bank reports an authorization that was already decided, e.g. a $0 card check by Google or Apple. Takes precedence over every other value."],
+              ["Account funding", "The payment funds another account."],
+              ["Recurring", "The merchant marked the payment as recurring. Many subscription charges are not marked this way and arrive as Normal authorization."],
+            ]}
+          />
+          <p className="text-sm text-muted-foreground">
+            US cards send only these four values. A refund authorization is sent as a{" "}
+            <a href="#card-refund" className="underline">Card Refund</a> event, and a second authorization on the same
+            transaction carries its own type, usually <code className={code}>Normal authorization</code>.
+          </p>
+        </div>
       </div>
 
       <Separator />
@@ -2991,6 +3045,7 @@ function UsWebhookEvents() {
   panLastFour: string | null;
   transactionId: string;
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -3015,6 +3070,7 @@ function UsWebhookEvents() {
   panLastFour: string | null;
   transactionId: string;
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -3059,6 +3115,7 @@ function UsWebhookEvents() {
   panLastFour: string | null;
   transactionId: string;
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -3086,6 +3143,7 @@ function UsWebhookEvents() {
   panLastFour: string | null;
   transactionId: string;
   timestamp: string;                       // UTC RFC 3339
+  eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -3114,6 +3172,7 @@ function UsWebhookEvents() {
   currencyISOCode: 'USD';
   direction: 'in';
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -3133,6 +3192,7 @@ function UsWebhookEvents() {
   currencyISOCode: 'USD';
   direction: 'out';
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -3150,7 +3210,9 @@ function UsWebhookEvents() {
             money moved between two of your accounts. You receive <strong>two</strong> events:{" "}
             <code className={code}>direction: &apos;out&apos;</code> for the source account and{" "}
             <code className={code}>direction: &apos;in&apos;</code> for the destination, both with{" "}
-            <code className={code}>reason: &apos;Transfer between budgets&apos;</code>.
+            <code className={code}>reason: &apos;Transfer between budgets&apos;</code> and the transfer&apos;s{" "}
+            <code className={code}>transferId</code>. A transfer that does not complete sends one{" "}
+            <a href="#budget-transfer-failed" className="underline">Budget Transfer Failed</a> instead.
           </li>
         </ul>
         <WebhookHeaders group="Account" type="BalanceAdjusted" />
@@ -3161,7 +3223,9 @@ function UsWebhookEvents() {
   currencyISOCode: 'USD';
   direction: 'in' | 'out';     // from this account's point of view
   reason: string | null;       // human-readable reason
+  transferId: string | null;   // the transfer's reference, as returned by Transfer money; null for an adjustment by Spendbase
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -3172,6 +3236,73 @@ function UsWebhookEvents() {
             ]}
           />
         </div>
+      </div>
+
+      <Separator />
+
+      {/* Budget Transfer Failed */}
+      <div id="budget-transfer-failed" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Budget Transfer Failed</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a transfer you started between two of your sub-accounts ends <strong>without moving the money</strong>.
+          Both sub-accounts are as they were before the transfer. A transfer that completes sends two{" "}
+          <a href="#balance-adjusted" className="underline">Balance Adjusted</a> events instead, so every transfer you
+          start ends in exactly one of the two. <RegionLink href="/docs/accounts#transfer-money">Transfer money</RegionLink>{" "}
+          often answers <code className={code}>in_progress</code> before the transfer has ended: this event, or the
+          Balance Adjusted pair, tells you the result.
+        </p>
+        <WebhookHeaders group="Account" type="BudgetTransferFailed" />
+        <ResponseBlock status="Payload">{`{
+  transferId: string;            // the reference Transfer money returned
+  sourceAccountId: string;       // ledger account ID the money was to leave
+  destinationAccountId: string;  // ledger account ID the money was to reach
+  amount: string;                // the amount you asked to move; decimal string, always positive
+  currencyISOCode: 'USD';
+  outcome: 'failed' | 'reversed';
+  reasonCode: string;            // see values below; branch on this
+  reason: string;                // short explanation for display; wording may change
+  timestamp: string;             // when the transfer ended, UTC RFC 3339
+  eventId: string;               // unique per event, same on every redelivery; see Delivery
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+          <EnumValues
+            name="outcome"
+            values={[
+              ["failed", "The transfer was refused at its first step. Nothing changed."],
+              ["reversed", "Part of the transfer had happened and was undone. Both sub-accounts are as they were."],
+            ]}
+          />
+          <EnumValues
+            name="reasonCode"
+            values={[
+              ["source_refused", "The bank refused, or could not complete, taking the money out of the source sub-account."],
+              ["insufficient_funds", "The source sub-account did not have enough money when the transfer was recorded, so it was undone."],
+              ["destination_refused", "The bank refused, or could not complete, adding the money to the destination sub-account."],
+              ["undone_by_support", "The transfer stopped part-way and our team undid it."],
+              ["not_completed", "Any other reason. Nothing moved."],
+            ]}
+          />
+        </div>
+        <Note>
+          <p>It is <strong>not</strong> sent:</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>
+              while a transfer that stopped part-way waits for our team (Transfer money answered{" "}
+              <code className={code}>409</code>, or <code className={code}>in_progress</code> and the transfer then
+              stopped). Nothing is sent until our team completes it (two Balance Adjusted) or undoes it (this event,{" "}
+              <code className={code}>undone_by_support</code>);
+            </li>
+            <li>
+              for a request Transfer money refused at once (not enough to spend, a sub-account busy or locked, a
+              sub-account not ready). No transfer was started, and the API&apos;s answer is the result;
+            </li>
+            <li>for a transfer Spendbase made on your behalf that did not complete.</li>
+          </ul>
+          <p>
+            It <strong>is</strong> sent even when Transfer money already said in its answer that the transfer failed or
+            was undone. Deduplicate on <code className={code}>transferId</code>.
+          </p>
+        </Note>
       </div>
 
       <Separator />
@@ -3188,6 +3319,7 @@ function UsWebhookEvents() {
   accountName: string | null;
   currencyISOCode: 'USD';
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -3205,6 +3337,7 @@ function UsWebhookEvents() {
   accountName: string | null;
   currencyISOCode: 'USD';
   timestamp: string;           // UTC RFC 3339
+  eventId: string;             // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
