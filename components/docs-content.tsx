@@ -2331,7 +2331,8 @@ function EuWebhookEvents() {
         <h2 className="text-2xl font-semibold">Delivery</h2>
         <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed">
           <li>
-            All events belong to the <code className={code}>Card</code> group. The event is identified by the{" "}
+            Card events belong to the <code className={code}>Card</code> group, Internal Transfer to the{" "}
+            <code className={code}>bank</code> group. The event is identified by the{" "}
             <code className={code}>X-Event-Type</code> header.
           </li>
           <li>
@@ -2798,6 +2799,61 @@ function EuWebhookEvents() {
             ]}
           />
         </div>
+      </div>
+
+      <Separator />
+
+      {/* Internal Transfer (bank group) */}
+      <div id="internal-transfer" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Internal Transfer</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a{" "}
+          <RegionLink href="/docs/accounts#transfer-money">transfer between your own accounts</RegionLink> (master to
+          sub-account, sub-account to master, or between sub-accounts) is completed. Each transfer sends two events: a{" "}
+          <code className={code}>debit</code> for the money leaving the source account, then a{" "}
+          <code className={code}>credit</code> for the money arriving on the destination account. Both carry the same{" "}
+          <code className={code}>externalTransactionId</code>, a Spendbase transfer ID.
+        </p>
+        <WebhookHeaders group="bank" type="internal" />
+        <ResponseBlock status="Payload">{`{
+  state: 'confirmed';
+  type: 'debit' | 'credit';
+  amount: number;                   // JSON number in major units, e.g. 100 or 12.5
+  currencyISOCode: string;          // ISO 4217 alphabetic, e.g. "EUR"
+  paymentType: 'p2p';
+  externalTransactionId: string;    // transfer ID, same on both events
+  senderName: string;               // source account name; "" for a master account
+  receiverName: string;             // destination account name; "" for a master account
+  timestamp: string;                // UTC ISO 8601 with milliseconds
+}`}</ResponseBlock>
+        <ResponseBlock status="Example">{`{
+  "state": "confirmed",
+  "type": "debit",
+  "amount": 100,
+  "currencyISOCode": "EUR",
+  "paymentType": "p2p",
+  "externalTransactionId": "3b0f6a2e-8c1d-4e5f-9a7b-6c2d1e0f4a8b",
+  "senderName": "",
+  "receiverName": "Marketing",
+  "timestamp": "2026-10-07T12:34:56.789Z"
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="type"
+            values={[
+              ["debit", "Money left the source account (senderName)."],
+              ["credit", "Money arrived on the destination account (receiverName)."],
+            ]}
+          />
+        </div>
+        <Note>
+          <p>
+            Unlike the card events, the header values are lowercase, <code className={code}>amount</code> is a number
+            rather than a decimal string, and the currency is the alphabetic code. The same event can arrive more than
+            once (a retry may repeat the <code className={code}>debit</code>), so deduplicate on{" "}
+            <code className={code}>externalTransactionId</code> + <code className={code}>type</code>.
+          </p>
+        </Note>
       </div>
     </>
   )

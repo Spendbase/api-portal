@@ -54,6 +54,7 @@ const ALL_SECTIONS: { label: string; id: string; group: string; page: string; re
   { label: "Card Decline", id: "card-decline", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Reversal", id: "card-reversal", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Refund", id: "card-refund", group: "Webhooks", page: "/docs/webhooks" },
+  { label: "Internal Transfer", id: "internal-transfer", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
   { label: "Account Funded", id: "account-funded", group: "Webhooks", page: "/docs/webhooks", region: "us" },
   { label: "Account Withdrawn", id: "account-withdrawn", group: "Webhooks", page: "/docs/webhooks", region: "us" },
   { label: "Balance Adjusted", id: "balance-adjusted", group: "Webhooks", page: "/docs/webhooks", region: "us" },
