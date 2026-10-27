@@ -87,6 +87,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Card Decline", id: "card-decline" },
       { label: "Card Reversal", id: "card-reversal" },
       { label: "Card Refund", id: "card-refund" },
+      { label: "Internal Transfer", id: "internal-transfer", region: "eu" },
       { label: "Account Funded", id: "account-funded", region: "us" },
       { label: "Account Withdrawn", id: "account-withdrawn", region: "us" },
       { label: "Balance Adjusted", id: "balance-adjusted", region: "us" },
