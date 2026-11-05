@@ -367,8 +367,10 @@ export function GettingStartedContent() {
               </li>
               <li className="flex gap-2">
                 <span className="font-semibold text-foreground shrink-0">4.</span>
-                Save the API key (<code className="text-xs bg-muted px-1 py-0.5 rounded">api_…</code>) and the
-                base64-encoded Ed25519 private key generated for it — you&apos;ll use the private key to sign requests
+                <span>
+                  Save the API key (<code className="text-xs bg-muted px-1 py-0.5 rounded">api_…</code>) and its Ed25519
+                  private key
+                </span>
               </li>
             </ol>
             <div className="mt-4 p-3 rounded-lg border border-amber-500/20 bg-amber-500/10">
