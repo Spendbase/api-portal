@@ -363,16 +363,18 @@ export function GettingStartedContent() {
               </li>
               <li className="flex gap-2">
                 <span className="font-semibold text-foreground shrink-0">3.</span>
-                Click <strong>Create API Key</strong>, choose scopes, and save your key
+                Click <strong>Create API Key</strong> and choose scopes
               </li>
               <li className="flex gap-2">
                 <span className="font-semibold text-foreground shrink-0">4.</span>
-                Generate an Ed25519 key pair and register the public key with the API key
+                Save the API key (<code className="text-xs bg-muted px-1 py-0.5 rounded">api_…</code>) and the
+                base64-encoded Ed25519 private key generated for it — you&apos;ll use the private key to sign requests
               </li>
             </ol>
             <div className="mt-4 p-3 rounded-lg border border-amber-500/20 bg-amber-500/10">
               <p className="text-sm text-amber-800 dark:text-amber-200">
-                The API key secret is shown only once at creation. Store it securely — it cannot be retrieved again.
+                The private key is shown only once at creation and is not stored by Spendbase. Store it securely — it
+                cannot be retrieved again. If it is lost, create a new API key.
               </p>
             </div>
           </div>
@@ -503,7 +505,6 @@ export function GettingStartedContent() {
 import (
     "bytes"
     "crypto/ed25519"
-    "crypto/rand"
     "crypto/sha256"
     "encoding/base64"
     "encoding/hex"
@@ -511,6 +512,7 @@ import (
     "io"
     "net/http"
     "net/url"
+    "os"
     "sort"
     "strconv"
     "strings"
@@ -580,16 +582,19 @@ func signedRequest(baseURL, apiKey string, privateKey ed25519.PrivateKey, method
 }
 
 func example() error {
-    publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+    // The base64-encoded private key you received when creating the API key.
+    raw, err := base64.StdEncoding.DecodeString(os.Getenv("SPENDBASE_API_PRIVATE_KEY"))
     if err != nil {
         return err
     }
-    _ = publicKey // register this public key when creating your API key
+    if len(raw) != ed25519.PrivateKeySize {
+        return fmt.Errorf("private key must be %d bytes, got %d", ed25519.PrivateKeySize, len(raw))
+    }
 
     req, err := signedRequest(
         "https://gw.dev.spendbase.co/cards-adapter/v1",
         "api_<hex>",
-        privateKey,
+        ed25519.PrivateKey(raw),
         "GET",
         "/public/accounts/bank-accounts",
         nil,
