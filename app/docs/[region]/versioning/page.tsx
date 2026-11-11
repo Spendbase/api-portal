@@ -15,6 +15,70 @@ export default function VersioningPage() {
           <h1 className="text-4xl font-bold tracking-tight">Cards API - Changelog</h1>
         </div>
 
+        <RegionOnly region="eu">
+          <div id="2026-11-11" />
+          <section id="eu-decline-fee" className="space-y-4">
+            <h2 className="text-2xl font-semibold">EU only: Decline Fee</h2>
+            <p className="text-muted-foreground">Version date: 2026-11-11</p>
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to EU accounts only. The US Cards API and US webhooks are not affected.
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Transactions</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    Added <code className="bg-muted px-1 py-0.5 rounded">declineFee</code> to the transactions returned by{" "}
+                    <RegionLink href="/docs/transactions#get-card-transactions">Get card transactions</RegionLink>,{" "}
+                    <RegionLink href="/docs/transactions#get-transactions">Get transactions</RegionLink>,{" "}
+                    <RegionLink href="/docs/transactions#get-master-transactions">Get master transactions</RegionLink>{" "}
+                    and <RegionLink href="/docs/transactions#get-transaction-details">Get transaction details</RegionLink>.
+                    Present only on a declined card transaction whose decline fee was billed, and only when the decline
+                    fee is enabled for the company.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Decline Account</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    New endpoints <RegionLink href="/docs/accounts#get-decline-account">GET /decline-account</RegionLink>,{" "}
+                    <RegionLink href="/docs/accounts#get-decline-account-entries">GET /decline-account/entries</RegionLink>{" "}
+                    and <RegionLink href="/docs/accounts#get-decline-rate">GET /decline-account/decline-rate</RegionLink>.
+                  </li>
+                  <li>
+                    The existing <code className="bg-muted px-1 py-0.5 rounded">accountsRead</code> scope grants access to them. No new scope is needed.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Webhooks</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/webhooks#card-decline">Card Decline</RegionLink>: added{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">rejectReasons</code>. <code className="bg-muted px-1 py-0.5 rounded">rejectReason</code> is unchanged.
+                  </li>
+                  <li>
+                    New <code className="bg-muted px-1 py-0.5 rounded">DeclineFee</code> event group with four events:{" "}
+                    <RegionLink href="/docs/webhooks#decline-fee-charged">DeclineFeeCharged</RegionLink>,{" "}
+                    <RegionLink href="/docs/webhooks#billed-status-changed">BilledStatusChanged</RegionLink>,{" "}
+                    <RegionLink href="/docs/webhooks#decline-account-top-up">DeclineAccountTopUp</RegionLink> and{" "}
+                    <RegionLink href="/docs/webhooks#decline-account-adjustment">DeclineAccountAdjustment</RegionLink>.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              Handle unknown values without failing: new <code className="bg-muted px-1 py-0.5 rounded">rejectReasons</code> values, entry{" "}
+              <code className="bg-muted px-1 py-0.5 rounded">type</code> values, event types and <code className="bg-muted px-1 py-0.5 rounded">action</code> / <code className="bg-muted px-1 py-0.5 rounded">actor</code>{" "}
+              values can be added. If your webhook parser rejects unknown event groups, event types or keys, update it
+              before this release.
+            </p>
+          </section>
+
+          <Separator />
+        </RegionOnly>
+
         <RegionOnly region="us">
           <div id="2026-10-19" />
           <section id="us-webhook-updates-2026-10" className="space-y-4">
