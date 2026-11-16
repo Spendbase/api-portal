@@ -15,25 +15,18 @@ export default function VersioningPage() {
           <h1 className="text-4xl font-bold tracking-tight">Cards API - Changelog</h1>
         </div>
 
+        <RegionOnly region="eu">
         <div id="2026-11-16" />
         <section id="cards-api-2026-11-16" className="space-y-4">
-          <RegionOnly region="eu">
-            <h2 className="text-2xl font-semibold">Decline Fee, card network references, error responses</h2>
-          </RegionOnly>
-          <RegionOnly region="us">
-            <h2 className="text-2xl font-semibold">Error responses</h2>
-          </RegionOnly>
+          <h2 className="text-2xl font-semibold">EU only: Decline Fee, card network references, error responses</h2>
           <p className="text-muted-foreground">Version date: 2026-11-16</p>
           <div className="space-y-3">
             <div className="rounded-lg border border-border bg-card p-4 space-y-2">
               <p className="font-semibold text-sm">Error responses</p>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                 <li>
-                  <RegionLink href="/docs/accounts#get-accounts-by-currency">Get a list of all accounts</RegionLink>
-                  <RegionOnly region="eu">
-                    {" "}and <RegionLink href="/docs/cards#get-cardholder">Get cardholder</RegionLink>
-                  </RegionOnly>
-                  : an error now returns the matching status code with <code className="bg-muted px-1 py-0.5 rounded">{`{"error": "..."}`}</code>. Before,
+                  <RegionLink href="/docs/accounts#get-accounts-by-currency">Get a list of all accounts</RegionLink> and{" "}
+                  <RegionLink href="/docs/cards#get-cardholder">Get cardholder</RegionLink>: an error now returns the matching status code with <code className="bg-muted px-1 py-0.5 rounded">{`{"error": "..."}`}</code>. Before,
                   it could return an empty success body, e.g. <code className="bg-muted px-1 py-0.5 rounded">404</code> with <code className="bg-muted px-1 py-0.5 rounded">{`{"status": ""}`}</code>.
                 </li>
                 <li>
@@ -45,13 +38,7 @@ export default function VersioningPage() {
           </div>
         </section>
 
-        <RegionOnly region="us">
-          <Separator />
-        </RegionOnly>
-
-        <RegionOnly region="eu">
           <section id="eu-decline-fee" className="space-y-4">
-            <h3 className="text-xl font-semibold">EU only</h3>
             <p className="text-muted-foreground leading-relaxed">
               These changes apply to EU accounts only. The US Cards API and US webhooks are not affected.
             </p>
