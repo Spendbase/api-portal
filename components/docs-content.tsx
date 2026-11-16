@@ -2329,6 +2329,11 @@ function EuOnlyTransactionFields() {
             <code className="font-mono">id</code> of the original transaction. Omitted otherwise.
           </li>
         </ul>
+        <p>
+          On an incoming bank transfer, <code className="font-mono">details.reference</code> (string) is the payer&apos;s
+          note or payment reference. From 28 November 2026 it can be up to 1400 characters for incoming SEPA payments
+          (previously up to 255). Do not assume a shorter maximum length when storing or displaying it.
+        </p>
       </RegionOnly>
       <RegionOnly region="us">
         <p>
