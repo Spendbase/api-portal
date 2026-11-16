@@ -1050,7 +1050,8 @@ export function AccountsContent() {
               <h2 className="text-2xl font-semibold">Get a list of all accounts</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Currency (EUR, USD…) as path param. The response includes sub-accounts and the master-account in
-                the requested currency. Account data contains ID, name, balance info, etc.
+                the requested currency. Account data contains ID, name, balance info, etc. Errors return the
+                matching status code with <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "..."}`}</code>.
               </p>
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Path Parameters</h3>
@@ -1664,6 +1665,42 @@ export function CardsContent() {
   "message": "200 OK",
   "id": "string"
 }`}</ResponseBlock>
+            <RegionOnly region="eu">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="text-sm font-medium">Card refused: errorCode</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  When a card is refused for a reason you can act on, the error response carries{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>.{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code> is the HTTP status and{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code> is for people and may be
+                  reworded, so branch on <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>.
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">403</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">CARD_ISSUING_SUSPENDED</code>: Spendbase
+                    suspended card issuing for the company. Existing cards, lock, unlock and terminate keep working.
+                    Card creation works again once issuing is resumed. Contact support.
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">INSUFFICIENT_FUNDS_FOR_ISSUING_FEE</code>: the
+                    account cannot cover the card issuing fee. Top up the account and try again.
+                  </li>
+                </ul>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code> is omitted on success and on
+                  other errors. New values may be added: treat an unknown one like an error without{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>.
+                </p>
+              </div>
+              <ResponseBlock status="403 Forbidden">{`{
+  "code": 403,
+  "message": "Card issuing is suspended for your company. Contact support.",
+  "id": "",
+  "errorCode": "CARD_ISSUING_SUSPENDED"
+}`}</ResponseBlock>
+            </RegionOnly>
           </div>
 
           <Separator />
@@ -1934,7 +1971,9 @@ export function CardsContent() {
             <ScopeBadge scope="cardsWrite" />
             <h2 className="text-2xl font-semibold">Set limit</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Responds with a success message if the card limit update was requested successfully.
+              Responds with a success message if the card limit update was requested successfully. An empty or
+              invalid body, such as a missing or unknown <code className="bg-muted px-1 py-0.5 rounded text-xs">type</code>,
+              returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> with <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "..."}`}</code>.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
@@ -2094,7 +2133,8 @@ export function CardsContent() {
               <h2 className="text-2xl font-semibold">Get cardholder</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Responds with cardholder information. Fields without a value are omitted;{" "}
-                <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is always present.
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is always present. Errors, such as
+                an unknown cardholder ID, return the matching status code with <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "..."}`}</code>.
               </p>
               <div className="rounded-lg border border-border bg-card p-4">
                 <EnumValues
@@ -2272,8 +2312,14 @@ function EuOnlyTransactionFields() {
   return (
     <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
       <RegionOnly region="eu">
-        <p>Card transactions can also include two fields in <code className="font-mono">details</code>:</p>
+        <p>Card transactions can also include these fields in <code className="font-mono">details</code>:</p>
         <ul className="list-disc pl-5 space-y-1">
+          <li>
+            <code className="font-mono">authorizationCode</code> (string): the issuer&apos;s approval code for the card
+            transaction (ISO 8583 DE38), the same value as <code className="font-mono">authorizationCode</code> in the
+            card webhooks. Omitted when the bank did not send one (for example on declines and some offline clearings)
+            and on transactions recorded before this field was added.
+          </li>
           <li>
             <code className="font-mono">isReversed</code> (boolean): <code className="font-mono">true</code> when the
             transaction was reversed, and on the reversal entry itself. Omitted otherwise.
@@ -2678,12 +2724,10 @@ function EuWebhookEvents() {
             with exponential backoff (1s up to 30s).
           </li>
           <li>
-            Delivery is at-least-once, so the same event can arrive more than once. Deduplicate Card and Internal
-            Transfer events on the payload contents (for example{" "}
-            <code className={code}>transactionId</code> + <code className={code}>X-Event-Type</code> +{" "}
-            <code className={code}>lifecyclePhase</code>). Decline Fee events carry an{" "}
-            <code className={code}>eventId</code>: see <a href="#decline-fee-events" className="underline">Decline Fee
-            events</a>.
+            Delivery is at-least-once, so the same event can arrive more than once. Every payload carries an{" "}
+            <code className={code}>eventId</code> (a UUID). All deliveries of one event share it, and two different
+            events never do (not even the Authorization and Settlement of one purchase). Drop any event whose{" "}
+            <code className={code}>eventId</code> you have already processed. Treat it as opaque.
           </li>
           <li>Events are not guaranteed to arrive in order. JSON field order is not guaranteed either.</li>
           <li>
@@ -2693,7 +2737,8 @@ function EuWebhookEvents() {
           </li>
           <li>
             <code className={code}>timestamp</code> is when the webhook was created (UTC, RFC 3339, e.g.{" "}
-            <code className={code}>2026-10-07T12:34:56Z</code>), not when the transaction happened.
+            <code className={code}>2026-10-07T12:34:56Z</code>), not when the transaction happened. On card transaction
+            events, <code className={code}>transactionTime</code> is when the transaction happened at the card network.
           </li>
           <li>
             <code className={code}>cardId</code> / <code className={code}>card_id</code> is the Spendbase card ID returned
@@ -2845,7 +2890,10 @@ function EuWebhookEvents() {
   merchantCategory: null;           // reserved, currently always null
   mccCode: string;                  // "" if unknown
   authorisationType: string;        // see values below
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                // UTC RFC 3339
+  eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -2895,7 +2943,10 @@ function EuWebhookEvents() {
   cardName: string;
   panLastFour: string;
   transactionId: string;
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                // UTC RFC 3339
+  eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -2925,7 +2976,10 @@ function EuWebhookEvents() {
   billingAmount: string;                    // decimal string, released hold in billing currency, incl. fees
   billingCurrencyIson: string | null;       // ISO 4217 numeric
   expiredBy: 'ISSUER' | 'SYSTEM';           // see values below
+  authorizationCode: string | null;         // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;           // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                        // UTC RFC 3339
+  eventId: string;                          // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -3046,7 +3100,10 @@ function EuWebhookEvents() {
   cardName: string;
   panLastFour: string;
   transactionId: string;
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;  // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;               // UTC RFC 3339
+  eventId: string;                 // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -3132,7 +3189,10 @@ function EuWebhookEvents() {
   cardName: string;
   panLastFour: string;
   transactionId: string;            // same as the original authorization
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                // UTC RFC 3339
+  eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -3159,7 +3219,10 @@ function EuWebhookEvents() {
   cardName: string;
   panLastFour: string;
   transactionId: string;
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                // UTC RFC 3339
+  eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues

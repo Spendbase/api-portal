@@ -15,15 +15,57 @@ export default function VersioningPage() {
           <h1 className="text-4xl font-bold tracking-tight">Cards API - Changelog</h1>
         </div>
 
+        <div id="2026-11-16" />
+        <section id="cards-api-2026-11-16" className="space-y-4">
+          <RegionOnly region="eu">
+            <h2 className="text-2xl font-semibold">Decline Fee, card network references, error responses</h2>
+          </RegionOnly>
+          <RegionOnly region="us">
+            <h2 className="text-2xl font-semibold">Error responses</h2>
+          </RegionOnly>
+          <p className="text-muted-foreground">Version date: 2026-11-16</p>
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Error responses</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>
+                  <RegionLink href="/docs/accounts#get-accounts-by-currency">Get a list of all accounts</RegionLink>
+                  <RegionOnly region="eu">
+                    {" "}and <RegionLink href="/docs/cards#get-cardholder">Get cardholder</RegionLink>
+                  </RegionOnly>
+                  : an error now returns the matching status code with <code className="bg-muted px-1 py-0.5 rounded">{`{"error": "..."}`}</code>. Before,
+                  it could return an empty success body, e.g. <code className="bg-muted px-1 py-0.5 rounded">404</code> with <code className="bg-muted px-1 py-0.5 rounded">{`{"status": ""}`}</code>.
+                </li>
+                <li>
+                  <RegionLink href="/docs/cards#set-limit">Set limit</RegionLink>: an empty or invalid body now
+                  returns <code className="bg-muted px-1 py-0.5 rounded">400</code> instead of <code className="bg-muted px-1 py-0.5 rounded">502</code>.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <RegionOnly region="us">
+          <Separator />
+        </RegionOnly>
+
         <RegionOnly region="eu">
-          <div id="2026-11-11" />
           <section id="eu-decline-fee" className="space-y-4">
-            <h2 className="text-2xl font-semibold">EU only: Decline Fee</h2>
-            <p className="text-muted-foreground">Version date: 2026-11-11</p>
+            <h3 className="text-xl font-semibold">EU only</h3>
             <p className="text-muted-foreground leading-relaxed">
               These changes apply to EU accounts only. The US Cards API and US webhooks are not affected.
             </p>
             <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Cards</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/cards#create-card">Create card</RegionLink>: a refused card now carries{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">errorCode</code>: <code className="bg-muted px-1 py-0.5 rounded">CARD_ISSUING_SUSPENDED</code> (<code className="bg-muted px-1 py-0.5 rounded">403</code>) or{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">INSUFFICIENT_FUNDS_FOR_ISSUING_FEE</code> (<code className="bg-muted px-1 py-0.5 rounded">400</code>).
+                  </li>
+                </ul>
+              </div>
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
                 <p className="font-semibold text-sm">Transactions</p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
@@ -35,6 +77,10 @@ export default function VersioningPage() {
                     and <RegionLink href="/docs/transactions#get-transaction-details">Get transaction details</RegionLink>.
                     Present only on a declined card transaction whose decline fee was billed, and only when the decline
                     fee is enabled for the company.
+                  </li>
+                  <li>
+                    Added <code className="bg-muted px-1 py-0.5 rounded">details.authorizationCode</code>, the issuer&apos;s approval code, to card transactions
+                    in the same endpoints.
                   </li>
                 </ul>
               </div>
@@ -54,6 +100,14 @@ export default function VersioningPage() {
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
                 <p className="font-semibold text-sm">Webhooks</p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    Every event now carries <code className="bg-muted px-1 py-0.5 rounded">eventId</code>. Use it to drop repeat deliveries (see{" "}
+                    <RegionLink href="/docs/webhooks#webhook-delivery">Delivery</RegionLink>).
+                  </li>
+                  <li>
+                    Card Authorization, Settlement, Authorization Expired, Decline, Reversal and Refund: added{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">authorizationCode</code> and <code className="bg-muted px-1 py-0.5 rounded">transactionTime</code>.
+                  </li>
                   <li>
                     <RegionLink href="/docs/webhooks#card-decline">Card Decline</RegionLink>: added{" "}
                     <code className="bg-muted px-1 py-0.5 rounded">rejectReasons</code>. <code className="bg-muted px-1 py-0.5 rounded">rejectReason</code> is unchanged.

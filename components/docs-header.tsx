@@ -71,7 +71,7 @@ const ALL_SECTIONS: { label: string; id: string; group: string; page: string; re
   { label: "Account Provisioned", id: "account-provisioned", group: "Webhooks", page: "/docs/webhooks", region: "us" },
   { label: "Account Created", id: "account-created", group: "Webhooks", page: "/docs/webhooks", region: "us" },
   { label: "Release Notes", id: "release-notes", group: "Versioning", page: "/docs/versioning" },
-  { label: "2026-11-11 (EU)", id: "2026-11-11", group: "Versioning", page: "/docs/versioning", region: "eu" },
+  { label: "2026-11-16", id: "2026-11-16", group: "Versioning", page: "/docs/versioning" },
   { label: "2026-10-19 (US)", id: "2026-10-19", group: "Versioning", page: "/docs/versioning", region: "us" },
   { label: "2026-09-03", id: "2026-09-03", group: "Versioning", page: "/docs/versioning", region: "us" },
   { label: "2026-08-13", id: "2026-08-13", group: "Versioning", page: "/docs/versioning" },
