@@ -134,6 +134,67 @@ export default function VersioningPage() {
         </RegionOnly>
 
         <RegionOnly region="us">
+          <div id="2026-11-04" />
+          <section id="us-webhook-updates-2026-11" className="space-y-4">
+            <h2 className="text-2xl font-semibold">US only: Webhooks - decline reasons, card network adjustments</h2>
+            <p className="text-muted-foreground">Version date: 2026-11-04</p>
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to US accounts only. EU webhooks and the EU Cards API are not affected. No event type
+              or field is added.
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Card Decline</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/webhooks#card-decline">Card Decline</RegionLink>:{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">rejectReason</code> is now always set, never{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">null</code>. New values{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">POSTAL_CODE</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">CARD_RISK_GROUP</code> and{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">UNKNOWN_ERROR</code> (a reason not listed).
+                  </li>
+                  <li>
+                    Corrected the descriptions of <code className="bg-muted px-1 py-0.5 rounded">CARD_SUSPENDED</code>{" "}
+                    (the card is locked) and <code className="bg-muted px-1 py-0.5 rounded">CARD_BLOCKED</code> (the
+                    card is closed or blocked). The values sent did not change.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Card network adjustments</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    An adjustment that charges more now arrives as a{" "}
+                    <RegionLink href="/docs/webhooks#card-network-adjustments">Card Settlement</RegionLink> for the
+                    same <code className="bg-muted px-1 py-0.5 rounded">transactionId</code>, with{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">transactionAmount</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">exchangeRate</code> and the merchant amount fields{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">null</code>. Before, it arrived as a Card Reversal,
+                    which read as money returned.
+                  </li>
+                  <li>
+                    An adjustment that gives money back is still a{" "}
+                    <RegionLink href="/docs/webhooks#card-refund">Card Refund</RegionLink>.{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">merchantAmount</code> and{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">merchantCurrencyISOCode</code> are now always{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">null</code>, never the purchase&apos;s figures.
+                  </li>
+                  <li>
+                    A purchase can now have a Settlement that is not a clearing. Add Settlements up per{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">transactionId</code> rather than taking the last one.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              If your parser rejects unknown <code className="bg-muted px-1 py-0.5 rounded">rejectReason</code> values or
+              requires <code className="bg-muted px-1 py-0.5 rounded">merchantAmount</code> on a Settlement, update it.
+            </p>
+          </section>
+
+          <Separator />
+
           <div id="2026-10-19" />
           <section id="us-webhook-updates-2026-10" className="space-y-4">
             <h2 className="text-2xl font-semibold">US only: Webhooks - event ID, budget transfer outcome</h2>

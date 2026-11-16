@@ -3599,11 +3599,15 @@ function UsWebhookEvents() {
               <code className={code}>merchantAmount</code>, <code className={code}>exchangeRate</code>: a cross-currency
               purchase where the bank did not report the amount in the merchant&apos;s currency. For a same-currency
               purchase, <code className={code}>merchantAmount</code> equals the billing amount and{" "}
-              <code className={code}>exchangeRate</code> is <code className={code}>&quot;1&quot;</code>.
+              <code className={code}>exchangeRate</code> is <code className={code}>&quot;1&quot;</code>. Also on a{" "}
+              <a href="#card-network-adjustments" className="underline">card network adjustment</a>, which carries no
+              merchant-currency figure.
             </li>
             <li>
-              <code className={code}>rejectReason</code>: the bank declined without a reason that maps to a documented
-              value.
+              <code className={code}>transactionAmount</code> on Settlement: the Settlement for a card network
+              adjustment, or a cross-currency purchase where the bank did not report the merchant&apos;s figure.{" "}
+              <code className={code}>transactionAmount</code> is in the merchant&apos;s currency, so it is never filled
+              from the billed amount. Use <code className={code}>billingAmount</code>, which is always present.
             </li>
             <li>
               <code className={code}>holderId</code>: the card has no cardholder record.
@@ -3618,8 +3622,9 @@ function UsWebhookEvents() {
             </li>
           </ul>
           <p className="text-sm text-muted-foreground">
-            <code className={code}>eventId</code>, <code className={code}>authorisationType</code> and every Budget
-            Transfer Failed field are never <code className={code}>null</code>.
+            <code className={code}>eventId</code>, <code className={code}>authorisationType</code>, the Decline&apos;s{" "}
+            <code className={code}>rejectReason</code> and every Budget Transfer Failed field are never{" "}
+            <code className={code}>null</code>.
           </p>
         </div>
       </div>
@@ -3748,6 +3753,32 @@ function UsWebhookEvents() {
   timestamp: string;                       // UTC RFC 3339
   eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
+        <div id="card-network-adjustments" className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <p className="text-sm font-medium">Card network adjustments</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            The card network can adjust what it charges for a purchase, usually after the purchase has settled, but
+            also between the clearings of a purchase that clears in parts. Each adjustment is sent as soon as it
+            happens, for the same <code className={code}>transactionId</code>:
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>An adjustment that charges more is a Settlement, also when it adjusts a refund.</li>
+            <li>
+              An adjustment that gives money back is a <a href="#card-refund" className="underline">Card Refund</a> at{" "}
+              <code className={code}>SETTLEMENT</code>.
+            </li>
+          </ul>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <code className={code}>billingAmount</code> is the adjustment&apos;s own amount.{" "}
+            <code className={code}>merchantAmount</code> and <code className={code}>merchantCurrencyISOCode</code> are{" "}
+            <code className={code}>null</code>, and so are the Settlement&apos;s <code className={code}>exchangeRate</code>{" "}
+            and <code className={code}>transactionAmount</code>.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            A purchase can therefore have several Settlements. Add them up per{" "}
+            <code className={code}>transactionId</code> rather than taking the last one as final, and do not treat a
+            Settlement as closing the authorization.
+          </p>
+        </div>
       </div>
 
       <Separator />
@@ -3760,7 +3791,7 @@ function UsWebhookEvents() {
         <ResponseBlock status="Payload">{`{
   tx_type: 'DECLINE';
   lifecyclePhase: 'DECLINE';
-  rejectReason: string | null;             // see values below
+  rejectReason: string;                    // see values below; never null
   merchantName: string | null;
   mccCode: string | null;
   amount: string | null;                   // decimal string, attempted amount in billing currency
@@ -3777,19 +3808,26 @@ function UsWebhookEvents() {
           <EnumValues
             name="rejectReason"
             values={[
-              ["INSUFFICIENT_FUNDS", "Not enough available balance on the account."],
-              ["LIMIT_EXCEEDED", "A card limit was exceeded."],
-              ["CARD_BLOCKED", "The card is locked."],
-              ["CARD_SUSPENDED", "The card is suspended."],
-              ["CARD_ACCOUNT_BLOCKED", "The account behind the card is blocked."],
-              ["EXPIRATION_DATE", "Wrong or expired card expiration date."],
-              ["CVC_CVV", "Wrong CVC/CVV."],
-              ["MAGNETIC_STRIPE_INVALID", "The magnetic stripe data is invalid."],
-              ["RISK_TRANSACTION_NOT_PERMITTED", "The transaction type is not permitted by risk rules."],
-              ["RISK_TRANSACTION_REJECTED", "The transaction was rejected by risk rules."],
-              ["DO_NOT_HONOR", "Declined by the issuer without a specific reason."],
+              ["INSUFFICIENT_FUNDS", "The budget behind the card did not have enough money."],
+              ["LIMIT_EXCEEDED", "A spending limit on the card was reached."],
+              ["CARD_SUSPENDED", "The card is locked."],
+              ["CARD_BLOCKED", "The card is closed or blocked."],
+              ["EXPIRATION_DATE", "The card has expired, or the expiry date entered did not match."],
+              ["CVC_CVV", "The security code entered did not match."],
+              ["POSTAL_CODE", "The billing postal code or address entered at the merchant did not match the card's."],
+              ["CARD_ACCOUNT_BLOCKED", "The account behind the card is closed."],
+              ["CARD_RISK_GROUP", "The card cannot be used in that country or region."],
+              ["RISK_TRANSACTION_NOT_PERMITTED", "A permanent restriction on the card program or account."],
+              ["RISK_TRANSACTION_REJECTED", "The bank's real-time risk check declined the payment."],
+              ["MAGNETIC_STRIPE_INVALID", "The card's stripe data could not be verified."],
+              ["DO_NOT_HONOR", "The card issuer declined without a more specific reason, including when the payment could not be authorized in time."],
+              ["UNKNOWN_ERROR", "The bank declined for a reason not listed above."],
             ]}
           />
+          <p className="text-sm text-muted-foreground">
+            Every Card Decline carries a <code className={code}>rejectReason</code>. New values may be added: treat an
+            unknown value like <code className={code}>UNKNOWN_ERROR</code>.
+          </p>
         </div>
       </div>
 
@@ -3827,7 +3865,11 @@ function UsWebhookEvents() {
         <h2 className="text-2xl font-semibold">Card Refund</h2>
         <p className="text-muted-foreground leading-relaxed">
           Fired when a card transaction is refunded. It can fire twice for the same refund: once at authorization and
-          once at settlement. Use <code className={code}>lifecyclePhase</code> to tell them apart.
+          once at settlement. Use <code className={code}>lifecyclePhase</code> to tell them apart. A card network
+          adjustment that gives money back also arrives as a Refund at <code className={code}>SETTLEMENT</code>, with{" "}
+          <code className={code}>merchantAmount</code> and <code className={code}>merchantCurrencyISOCode</code>{" "}
+          <code className={code}>null</code> (see <a href="#card-network-adjustments" className="underline">Card network
+          adjustments</a>).
         </p>
         <WebhookHeaders group="Card" type="Refund" />
         <ResponseBlock status="Payload">{`{
