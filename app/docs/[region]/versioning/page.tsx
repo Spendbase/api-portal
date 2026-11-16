@@ -82,10 +82,6 @@ export default function VersioningPage() {
                     Added <code className="bg-muted px-1 py-0.5 rounded">details.authorizationCode</code>, the issuer&apos;s approval code, to card transactions
                     in the same endpoints.
                   </li>
-                  <li>
-                    From 28 November 2026, <code className="bg-muted px-1 py-0.5 rounded">details.reference</code> on an incoming SEPA transfer can be up to
-                    1400 characters (previously up to 255), in the same endpoints.
-                  </li>
                 </ul>
               </div>
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
