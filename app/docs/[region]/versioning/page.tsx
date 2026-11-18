@@ -16,6 +16,38 @@ export default function VersioningPage() {
         </div>
 
         <RegionOnly region="eu">
+          <div id="2026-11-18" />
+          <section id="eu-chargeback-webhooks" className="space-y-4">
+            <h2 className="text-2xl font-semibold">EU only: Chargeback webhooks</h2>
+            <p className="text-muted-foreground">Version date: 2026-11-18</p>
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to EU accounts only. The US Cards API and US webhooks are not affected.
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Webhooks</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    New <code className="bg-muted px-1 py-0.5 rounded">Chargeback</code> event group with two events:{" "}
+                    <RegionLink href="/docs/webhooks#chargeback-adjustment">ChargebackAdjustment</RegionLink> (the
+                    disputed amount returned to the card account or taken back) and{" "}
+                    <RegionLink href="/docs/webhooks#chargeback-fee-charged">ChargebackFeeCharged</RegionLink> (the
+                    chargeback fee of a dispute charged).
+                  </li>
+                  <li>
+                    Sent to every company that receives card events. Money and currencies use their own format, see{" "}
+                    <RegionLink href="/docs/webhooks#chargeback-events">Chargeback events</RegionLink>.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              If your webhook parser rejects unknown event groups or event types, update it before this release.
+            </p>
+          </section>
+
+          <Separator />
+
         <div id="2026-11-16" />
         <section id="cards-api-2026-11-16" className="space-y-4">
           <h2 className="text-2xl font-semibold">EU only: Decline Fee, card network references, error responses</h2>

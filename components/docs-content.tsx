@@ -2720,7 +2720,8 @@ function EuWebhookEvents() {
           <li>
             Card events belong to the <code className={code}>Card</code> group, Internal Transfer to the{" "}
             <code className={code}>bank</code> group, Decline Fee events to the{" "}
-            <code className={code}>DeclineFee</code> group. The event is identified by the{" "}
+            <code className={code}>DeclineFee</code> group, Chargeback events to the{" "}
+            <code className={code}>Chargeback</code> group. The event is identified by the{" "}
             <code className={code}>X-Event-Type</code> header.
           </li>
           <li>
@@ -3296,6 +3297,179 @@ function EuWebhookEvents() {
       </div>
 
       <DeclineFeeWebhookEvents />
+
+      <ChargebackWebhookEvents />
+    </>
+  )
+}
+
+// Chargeback events (Chargeback group). Sent by cards-tribe (internal/service/webhook/chargeback.go), BEU-8893.
+function ChargebackWebhookEvents() {
+  const code = "px-1.5 py-0.5 rounded bg-muted font-mono text-sm"
+  return (
+    <>
+      <Separator />
+
+      {/* Chargeback events: common rules */}
+      <div id="chargeback-events" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Chargeback events</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Events of the <code className={code}>Chargeback</code> group announce the money a card dispute (chargeback)
+          moves on the card account: the disputed amount returned to the company or taken back, and the chargeback fee.
+        </p>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="X-Event-Type"
+            values={[
+              ["ChargebackAdjustment", "The disputed amount was returned to the card account, or taken back from it."],
+              ["ChargebackFeeCharged", "The chargeback fee of a dispute was charged to the card account."],
+            ]}
+          />
+        </div>
+        <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed">
+          <li>Sent to every company that receives card events. No separate setup is needed.</li>
+          <li>
+            Every payload carries an <code className={code}>eventId</code>. It is the same on every delivery of one
+            occurrence, so deduplicate on it.
+          </li>
+          <li>
+            Unlike the card events, money is a positive decimal string with the currency&apos;s minor-unit digits, e.g.{" "}
+            <code className={code}>&quot;120.50&quot;</code> for EUR or <code className={code}>&quot;13000&quot;</code>{" "}
+            for JPY, and currencies are ISO 4217 alphabetic codes, e.g. <code className={code}>EUR</code>.
+          </li>
+          <li>
+            Times are UTC ISO 8601 with milliseconds, e.g. <code className={code}>2026-11-18T10:30:00.123Z</code>.
+          </li>
+          <li>
+            <code className={code}>transactionId</code> is the disputed card transaction: the{" "}
+            <code className={code}>transactionId</code> of its card events. <code className={code}>disputeId</code>{" "}
+            identifies the dispute; all events of one dispute carry the same value. <code className={code}>cardId</code>{" "}
+            is the Spendbase card ID returned by the Cards API.
+          </li>
+          <li>
+            <code className={code}>ledgerTransactionId</code> is the <code className={code}>id</code> of the
+            adjustment or fee in{" "}
+            <RegionLink href="/docs/transactions">the transactions returned by the Transactions API</RegionLink>.
+          </li>
+          <li>
+            No event is sent when a dispute is opened or changes status. The first event of a dispute is its first
+            adjustment or its fee, whichever comes first.
+          </li>
+          <li>
+            Signatures and retries work as for the other events. Handle unknown event types and unknown{" "}
+            <code className={code}>direction</code> values without failing.
+          </li>
+        </ul>
+      </div>
+
+      <Separator />
+
+      {/* ChargebackAdjustment */}
+      <div id="chargeback-adjustment" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Chargeback Adjustment</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a dispute moves money on the card account: the disputed amount is returned to it (
+          <code className={code}>CREDIT</code>, e.g. the dispute was won) or a returned amount is taken back (
+          <code className={code}>DEBIT</code>, e.g. the dispute was lost after a provisional credit). A dispute can
+          have more than one adjustment; each one is its own event with its own{" "}
+          <code className={code}>adjustmentTransactionId</code>.
+        </p>
+        <WebhookHeaders group="Chargeback" type="ChargebackAdjustment" />
+        <ResponseBlock status="Payload">{`{
+  disputeId: string;
+  externalDisputeId: string | null;    // dispute reference of the card network, when known
+  transactionId: string;               // the disputed transaction (transactionId of its card events)
+  adjustmentTransactionId: string;     // the adjustment; the same on every delivery
+  ledgerTransactionId: string | null;  // the adjustment in the Transactions API
+  direction: 'CREDIT' | 'DEBIT';
+  amount: string;                      // positive, in currencyISOCode (the card account currency)
+  currencyISOCode: string;             // ISO 4217 alphabetic
+  merchantAmount: string;              // positive, in merchantCurrencyISOCode
+  merchantCurrencyISOCode: string;     // ISO 4217 alphabetic
+  merchantName: string | null;
+  cardId: string;
+  cardName: string;
+  panLastFour: string;
+  occurredAt: string;                  // when the adjustment was processed, UTC ISO 8601 with milliseconds
+  eventId: string;
+}`}</ResponseBlock>
+        <ResponseBlock status="Example">{`{
+  "disputeId": "17950039404572",
+  "externalDisputeId": null,
+  "transactionId": "649756ed-0a8d-4c00-8de0-7901810bc435",
+  "adjustmentTransactionId": "17950049029729",
+  "ledgerTransactionId": "483fad51-791d-4cc9-83fc-aaa20c997038",
+  "direction": "CREDIT",
+  "amount": "120.50",
+  "currencyISOCode": "EUR",
+  "merchantAmount": "120.50",
+  "merchantCurrencyISOCode": "EUR",
+  "merchantName": "ACME Online Store",
+  "cardId": "4393bbdb-53bc-485e-bd8a-9287b0cd5db7",
+  "cardName": "Marketing",
+  "panLastFour": "8844",
+  "occurredAt": "2026-11-18T12:28:22.000Z",
+  "eventId": "6d2cc39d-6255-570b-b2f3-bbf110962d89"
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="direction"
+            values={[
+              ["CREDIT", "The disputed amount was returned to the card account."],
+              ["DEBIT", "A returned amount was taken back from the card account."],
+            ]}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* ChargebackFeeCharged */}
+      <div id="chargeback-fee-charged" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Chargeback Fee Charged</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when the chargeback fee of a dispute is charged to the card account. There is at most one fee per
+          dispute, whatever the outcome of the dispute. The fee is priced in{" "}
+          <code className={code}>baseCurrencyISOCode</code> and charged in the card account currency at{" "}
+          <code className={code}>exchangeRate</code>. If the card account cannot cover it, the fee is charged later and
+          the event comes when it is.
+        </p>
+        <WebhookHeaders group="Chargeback" type="ChargebackFeeCharged" />
+        <ResponseBlock status="Payload">{`{
+  disputeId: string;
+  transactionId: string;               // the disputed transaction (transactionId of its card events)
+  feeTransactionId: string;            // the fee; one per dispute
+  ledgerTransactionId: string | null;  // the fee in the Transactions API
+  amount: string;                      // charged fee, positive, in currencyISOCode (the card account currency)
+  currencyISOCode: string;             // ISO 4217 alphabetic
+  baseAmount: string;                  // the fee as priced, positive, in baseCurrencyISOCode
+  baseCurrencyISOCode: string;         // ISO 4217 alphabetic
+  exchangeRate: string;                // amount / baseAmount, not rounded
+  merchantName: string | null;
+  cardId: string;
+  cardName: string;
+  panLastFour: string;
+  chargedAt: string;                   // UTC ISO 8601 with milliseconds
+  eventId: string;
+}`}</ResponseBlock>
+        <ResponseBlock status="Example">{`{
+  "disputeId": "17950039404572",
+  "transactionId": "649756ed-0a8d-4c00-8de0-7901810bc435",
+  "feeTransactionId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+  "ledgerTransactionId": "7e8f9a0b-1c2d-4e3f-8a4b-5c6d7e8f9a0b",
+  "amount": "39.57",
+  "currencyISOCode": "EUR",
+  "baseAmount": "35.00",
+  "baseCurrencyISOCode": "GBP",
+  "exchangeRate": "1.1305714285714286",
+  "merchantName": "ACME Online Store",
+  "cardId": "4393bbdb-53bc-485e-bd8a-9287b0cd5db7",
+  "cardName": "Marketing",
+  "panLastFour": "8844",
+  "chargedAt": "2026-11-18T13:00:00.000Z",
+  "eventId": "9c4e2f1a-7b3d-5e6f-8a9b-0c1d2e3f4a5b"
+}`}</ResponseBlock>
+      </div>
     </>
   )
 }

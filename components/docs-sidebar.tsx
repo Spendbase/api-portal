@@ -97,6 +97,9 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Billed Status Changed", id: "billed-status-changed", region: "eu" },
       { label: "Decline Account Top-Up", id: "decline-account-top-up", region: "eu" },
       { label: "Decline Account Adjustment", id: "decline-account-adjustment", region: "eu" },
+      { label: "Chargeback Events", id: "chargeback-events", region: "eu" },
+      { label: "Chargeback Adjustment", id: "chargeback-adjustment", region: "eu" },
+      { label: "Chargeback Fee Charged", id: "chargeback-fee-charged", region: "eu" },
       { label: "Account Funded", id: "account-funded", region: "us" },
       { label: "Account Withdrawn", id: "account-withdrawn", region: "us" },
       { label: "Balance Adjusted", id: "balance-adjusted", region: "us" },
@@ -110,6 +113,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
     path: "/docs/versioning",
     items: [
       { label: "Release Notes", id: "release-notes" },
+      { label: "2026-11-18 (EU)", id: "2026-11-18", region: "eu" },
       { label: "2026-11-16 (EU)", id: "2026-11-16", region: "eu" },
       { label: "2026-11-04 (US)", id: "2026-11-04", region: "us" },
       { label: "2026-10-19 (US)", id: "2026-10-19", region: "us" },
