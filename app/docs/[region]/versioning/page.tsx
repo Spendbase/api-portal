@@ -15,7 +15,205 @@ export default function VersioningPage() {
           <h1 className="text-4xl font-bold tracking-tight">Cards API - Changelog</h1>
         </div>
 
+        <RegionOnly region="eu">
+          <div id="2026-11-18" />
+          <section id="eu-chargeback-webhooks" className="space-y-4">
+            <h2 className="text-2xl font-semibold">EU only: Chargeback webhooks</h2>
+            <p className="text-muted-foreground">Version date: 2026-11-18</p>
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to EU accounts only. The US Cards API and US webhooks are not affected.
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Webhooks</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    New <code className="bg-muted px-1 py-0.5 rounded">Chargeback</code> event group with two events:{" "}
+                    <RegionLink href="/docs/webhooks#chargeback-adjustment">ChargebackAdjustment</RegionLink> (the
+                    disputed amount returned to the card account or taken back) and{" "}
+                    <RegionLink href="/docs/webhooks#chargeback-fee-charged">ChargebackFeeCharged</RegionLink> (the
+                    chargeback fee of a dispute charged).
+                  </li>
+                  <li>
+                    Sent to every company that receives card events. Money and currencies use their own format, see{" "}
+                    <RegionLink href="/docs/webhooks#chargeback-events">Chargeback events</RegionLink>.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              If your webhook parser rejects unknown event groups or event types, update it before this release.
+            </p>
+          </section>
+
+          <Separator />
+
+        <div id="2026-11-16" />
+        <section id="cards-api-2026-11-16" className="space-y-4">
+          <h2 className="text-2xl font-semibold">EU only: Decline Fee, card network references, error responses</h2>
+          <p className="text-muted-foreground">Version date: 2026-11-16</p>
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Error responses</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>
+                  <RegionLink href="/docs/accounts#get-accounts-by-currency">Get a list of all accounts</RegionLink> and{" "}
+                  <RegionLink href="/docs/cards#get-cardholder">Get cardholder</RegionLink>: an error now returns the matching status code with <code className="bg-muted px-1 py-0.5 rounded">{`{"error": "..."}`}</code>. Before,
+                  it could return an empty success body, e.g. <code className="bg-muted px-1 py-0.5 rounded">404</code> with <code className="bg-muted px-1 py-0.5 rounded">{`{"status": ""}`}</code>.
+                </li>
+                <li>
+                  <RegionLink href="/docs/cards#set-limit">Set limit</RegionLink>: an empty or invalid body now
+                  returns <code className="bg-muted px-1 py-0.5 rounded">400</code> instead of <code className="bg-muted px-1 py-0.5 rounded">502</code>.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+          <section id="eu-decline-fee" className="space-y-4">
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to EU accounts only. The US Cards API and US webhooks are not affected.
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Cards</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/cards#create-card">Create card</RegionLink>: a refused card now carries{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">errorCode</code>: <code className="bg-muted px-1 py-0.5 rounded">CARD_ISSUING_SUSPENDED</code> (<code className="bg-muted px-1 py-0.5 rounded">403</code>) or{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">INSUFFICIENT_FUNDS_FOR_ISSUING_FEE</code> (<code className="bg-muted px-1 py-0.5 rounded">400</code>).
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Transactions</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    Added <code className="bg-muted px-1 py-0.5 rounded">declineFee</code> to the transactions returned by{" "}
+                    <RegionLink href="/docs/transactions#get-card-transactions">Get card transactions</RegionLink>,{" "}
+                    <RegionLink href="/docs/transactions#get-transactions">Get transactions</RegionLink>,{" "}
+                    <RegionLink href="/docs/transactions#get-master-transactions">Get master transactions</RegionLink>{" "}
+                    and <RegionLink href="/docs/transactions#get-transaction-details">Get transaction details</RegionLink>.
+                    Present only on a declined card transaction whose decline fee was billed, and only when the decline
+                    fee is enabled for the company.
+                  </li>
+                  <li>
+                    Added <code className="bg-muted px-1 py-0.5 rounded">details.authorizationCode</code>, the issuer&apos;s approval code, to card transactions
+                    in the same endpoints.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Decline Account</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    New endpoints <RegionLink href="/docs/accounts#get-decline-account">GET /decline-account</RegionLink>,{" "}
+                    <RegionLink href="/docs/accounts#get-decline-account-entries">GET /decline-account/entries</RegionLink>{" "}
+                    and <RegionLink href="/docs/accounts#get-decline-rate">GET /decline-account/decline-rate</RegionLink>.
+                  </li>
+                  <li>
+                    The existing <code className="bg-muted px-1 py-0.5 rounded">accountsRead</code> scope grants access to them. No new scope is needed.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Webhooks</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    Every event now carries <code className="bg-muted px-1 py-0.5 rounded">eventId</code>. Use it to drop repeat deliveries (see{" "}
+                    <RegionLink href="/docs/webhooks#webhook-delivery">Delivery</RegionLink>).
+                  </li>
+                  <li>
+                    Card Authorization, Settlement, Authorization Expired, Decline, Reversal and Refund: added{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">authorizationCode</code> and <code className="bg-muted px-1 py-0.5 rounded">transactionTime</code>.
+                  </li>
+                  <li>
+                    <RegionLink href="/docs/webhooks#card-decline">Card Decline</RegionLink>: added{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">rejectReasons</code>. <code className="bg-muted px-1 py-0.5 rounded">rejectReason</code> is unchanged.
+                  </li>
+                  <li>
+                    New <code className="bg-muted px-1 py-0.5 rounded">DeclineFee</code> event group with four events:{" "}
+                    <RegionLink href="/docs/webhooks#decline-fee-charged">DeclineFeeCharged</RegionLink>,{" "}
+                    <RegionLink href="/docs/webhooks#billed-status-changed">BilledStatusChanged</RegionLink>,{" "}
+                    <RegionLink href="/docs/webhooks#decline-account-top-up">DeclineAccountTopUp</RegionLink> and{" "}
+                    <RegionLink href="/docs/webhooks#decline-account-adjustment">DeclineAccountAdjustment</RegionLink>.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              Handle unknown values without failing: new <code className="bg-muted px-1 py-0.5 rounded">rejectReasons</code> values, entry{" "}
+              <code className="bg-muted px-1 py-0.5 rounded">type</code> values, event types and <code className="bg-muted px-1 py-0.5 rounded">action</code> / <code className="bg-muted px-1 py-0.5 rounded">actor</code>{" "}
+              values can be added. If your webhook parser rejects unknown event groups, event types or keys, update it
+              before this release.
+            </p>
+          </section>
+
+          <Separator />
+        </RegionOnly>
+
         <RegionOnly region="us">
+          <div id="2026-11-04" />
+          <section id="us-webhook-updates-2026-11" className="space-y-4">
+            <h2 className="text-2xl font-semibold">US only: Webhooks - decline reasons, card network adjustments</h2>
+            <p className="text-muted-foreground">Version date: 2026-11-04</p>
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to US accounts only. EU webhooks and the EU Cards API are not affected. No event type
+              or field is added.
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Card Decline</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/webhooks#card-decline">Card Decline</RegionLink>:{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">rejectReason</code> is now always set, never{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">null</code>. New values{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">POSTAL_CODE</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">CARD_RISK_GROUP</code> and{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">UNKNOWN_ERROR</code> (a reason not listed).
+                  </li>
+                  <li>
+                    Corrected the descriptions of <code className="bg-muted px-1 py-0.5 rounded">CARD_SUSPENDED</code>{" "}
+                    (the card is locked) and <code className="bg-muted px-1 py-0.5 rounded">CARD_BLOCKED</code> (the
+                    card is closed or blocked). The values sent did not change.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Card network adjustments</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    An adjustment that charges more now arrives as a{" "}
+                    <RegionLink href="/docs/webhooks#card-network-adjustments">Card Settlement</RegionLink> for the
+                    same <code className="bg-muted px-1 py-0.5 rounded">transactionId</code>, with{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">transactionAmount</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">exchangeRate</code> and the merchant amount fields{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">null</code>. Before, it arrived as a Card Reversal,
+                    which read as money returned.
+                  </li>
+                  <li>
+                    An adjustment that gives money back is still a{" "}
+                    <RegionLink href="/docs/webhooks#card-refund">Card Refund</RegionLink>.{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">merchantAmount</code> and{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">merchantCurrencyISOCode</code> are now always{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">null</code>, never the purchase&apos;s figures.
+                  </li>
+                  <li>
+                    A purchase can now have a Settlement that is not a clearing. Add Settlements up per{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">transactionId</code> rather than taking the last one.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              If your parser rejects unknown <code className="bg-muted px-1 py-0.5 rounded">rejectReason</code> values or
+              requires <code className="bg-muted px-1 py-0.5 rounded">merchantAmount</code> on a Settlement, update it.
+            </p>
+          </section>
+
+          <Separator />
+
           <div id="2026-10-19" />
           <section id="us-webhook-updates-2026-10" className="space-y-4">
             <h2 className="text-2xl font-semibold">US only: Webhooks - event ID, budget transfer outcome</h2>

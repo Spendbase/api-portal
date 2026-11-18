@@ -160,6 +160,42 @@ const EXAMPLES: { title: string; section: Section; code: string; region?: Region
   $BASE_URL/accounts/rename-account/$ACCOUNT_ID`,
   },
   {
+    title: "Get Decline Account",
+    section: "accounts",
+    region: "eu",
+    code: `curl --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/decline-account`,
+  },
+  {
+    title: "Get Decline Account Entries",
+    section: "accounts",
+    region: "eu",
+    code: `curl --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  -G \\
+  -d "page=1" \\
+  -d "limit=20" \\
+  $BASE_URL/decline-account/entries`,
+  },
+  {
+    title: "Get Decline Rate",
+    section: "accounts",
+    region: "eu",
+    code: `curl --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/decline-account/decline-rate`,
+  },
+  {
     title: "Create Card",
     section: "cards",
     region: "eu",

@@ -763,6 +763,275 @@ export function QuickStartContent() {
   )
 }
 
+// Decline Account (Decline Fee, EU only). Shapes: cards-adapter internal/controllers/decline_account.go and
+// gen/cards-router/spec.yaml (dto.DeclineAccount*, dto.DeclineRate*).
+function DeclineAccountNotFound() {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+      <p className="text-sm font-medium">404 Not Found</p>
+      <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+        <li>
+          <code className="bg-muted px-1 py-0.5 rounded">{`{"error": "Not found"}`}</code> — the Decline Account is not
+          available to the company
+        </li>
+      </ul>
+    </div>
+  )
+}
+
+function DeclineAccountSection() {
+  const c = "bg-muted px-1 py-0.5 rounded text-xs"
+  return (
+    <>
+      <Separator />
+
+      {/* Decline Account overview */}
+      <div id="decline-account" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Decline Account</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Decline fees are charged to the company Decline Account. These endpoints return its balance, its entries
+          (fees, fee reversals, top-ups and adjustments) and the company decline rate. When the Decline Account is not
+          available to the company, every endpoint returns <code className={c}>404</code>{" "}
+          <code className={c}>{`{"error": "Not found"}`}</code>.
+        </p>
+        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1.5 leading-relaxed">
+          <li>
+            Money is a USD decimal string with 2 decimals, e.g. <code className={c}>&quot;-12.50&quot;</code>. A balance
+            below 0 is a debt, above 0 a deposit.
+          </li>
+          <li>Dates are UTC.</li>
+          <li>
+            New entries are also announced by the{" "}
+            <RegionLink href="/docs/webhooks#decline-fee-events">Decline Fee webhooks</RegionLink>.
+          </li>
+        </ul>
+      </div>
+
+      <Separator />
+
+      {/* Get Decline Account */}
+      <div id="get-decline-account" className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <GetBadge />
+          <code className="text-sm font-mono">/decline-account</code>
+        </div>
+        <ScopeBadge scope="accountsRead" />
+        <h2 className="text-2xl font-semibold">Get Decline Account</h2>
+        <p className="text-muted-foreground leading-relaxed">Returns the current balance of the Decline Account.</p>
+        <ResponseBlock>{`{
+  "balanceUsd": "-12.50",
+  "currencyISOCode": "USD",
+  "isDebt": true
+}`}</ResponseBlock>
+        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+          <li>
+            <code className={c}>balanceUsd</code> (string) — balance in USD with 2 decimals. Below 0 is a debt, above 0 a
+            deposit.
+          </li>
+          <li><code className={c}>currencyISOCode</code> (string) — always <code className={c}>USD</code>.</li>
+          <li>
+            <code className={c}>isDebt</code> (boolean) — <code className={c}>true</code> when{" "}
+            <code className={c}>balanceUsd</code> is below 0.
+          </li>
+        </ul>
+        <DeclineAccountNotFound />
+      </div>
+
+      <Separator />
+
+      {/* Get Decline Account entries */}
+      <div id="get-decline-account-entries" className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <GetBadge />
+          <code className="text-sm font-mono">/decline-account/entries</code>
+        </div>
+        <ScopeBadge scope="accountsRead" />
+        <h2 className="text-2xl font-semibold">Get Decline Account entries</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Returns the Decline Account entries, newest first, one page at a time, together with the current balance. There
+          are no period or type filters.
+        </p>
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Query Parameters</h3>
+          <div className="space-y-2">
+            <Param name="page" type="integer">Page number, from 1. Defaults to 1.</Param>
+            <Param name="limit" type="integer">Entries per page, 1–100. Defaults to 20.</Param>
+          </div>
+        </div>
+        <ResponseBlock>{`{
+  "balanceUsd": "99.50",
+  "entries": [
+    {
+      "amountUsd": "-0.50",
+      "createdAt": "2026-11-10T12:15:04Z",
+      "id": "5f2b8c1e-3d4a-4b6c-9e8f-1a2b3c4d5e6f",
+      "transaction": {
+        "amount": "10.00",
+        "authorizedAt": "2026-11-10T11:59:58Z",
+        "currencyISOCode": "EUR",
+        "merchantName": "ACME",
+        "transactionId": "3a4b5c6d-7e8f-4091-a2b3-c4d5e6f7a8b9",
+        "tribeTransactionId": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+      },
+      "type": "DECLINE_FEE"
+    },
+    {
+      "amountUsd": "100.00",
+      "createdAt": "2026-11-09T08:00:00Z",
+      "id": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+      "reference": "WIRE-42",
+      "type": "TOP_UP"
+    }
+  ],
+  "limit": 20,
+  "page": 1,
+  "total": 2
+}`}</ResponseBlock>
+        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+          <li><code className={c}>total</code> (integer) — number of entries on all pages.</li>
+          <li><code className={c}>balanceUsd</code> (string) — current balance in USD.</li>
+          <li>
+            <code className={c}>entries[].id</code> (string) — entry ID, the same value as{" "}
+            <code className={c}>entryId</code> in the Decline Fee webhooks.
+          </li>
+          <li><code className={c}>entries[].type</code> (string) — entry type, see values below.</li>
+          <li><code className={c}>entries[].amountUsd</code> (string) — signed amount in USD: a fee is negative.</li>
+          <li><code className={c}>entries[].createdAt</code> (string) — when the entry was recorded. RFC 3339, UTC.</li>
+          <li>
+            <code className={c}>entries[].reference</code> (string) — top-up reference (e.g. the wire reference) or the
+            adjustment reason. Omitted on other entries.
+          </li>
+          <li>
+            <code className={c}>entries[].transaction</code> (object) — the declined card transaction behind a{" "}
+            <code className={c}>DECLINE_FEE</code> or <code className={c}>DECLINE_FEE_REVERSAL</code> entry. Omitted on
+            other entries.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+          <EnumValues
+            name="type"
+            values={[
+              ["DECLINE_FEE", "A decline fee was charged. Negative amount."],
+              ["DECLINE_FEE_REVERSAL", "A charged decline fee was returned to the balance. Positive amount."],
+              ["TOP_UP", "A payment to the Decline Account was recorded. Positive amount."],
+              ["ADJUSTMENT", "A correction to the balance. Positive or negative amount."],
+            ]}
+          />
+          <p className="text-sm text-muted-foreground">
+            Handle an unknown <code className={c}>type</code> without failing: new values can be added.
+          </p>
+        </div>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <p className="text-sm font-medium">transaction</p>
+          <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+            <li>
+              <code className={c}>tribeTransactionId</code> — the <code className={c}>transactionId</code> sent in the{" "}
+              <RegionLink href="/docs/webhooks#card-decline">Card Decline</RegionLink> and Decline Fee webhooks
+            </li>
+            <li>
+              <code className={c}>transactionId</code> — the ID for{" "}
+              <RegionLink href="/docs/transactions#get-transaction-details">Get transaction details</RegionLink>
+            </li>
+            <li><code className={c}>merchantName</code> — merchant name</li>
+            <li>
+              <code className={c}>amount</code>, <code className={c}>currencyISOCode</code> — the declined amount, in the
+              card billing currency (not always USD)
+            </li>
+            <li><code className={c}>authorizedAt</code> — when the transaction was declined. RFC 3339, UTC</li>
+          </ul>
+          <p className="text-sm text-muted-foreground">
+            Fields other than <code className={c}>tribeTransactionId</code> are omitted when empty.
+          </p>
+        </div>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <p className="text-sm font-medium">400 Bad Request</p>
+          <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+            <li>
+              <code className="bg-muted px-1 py-0.5 rounded">page must be a whole number</code> /{" "}
+              <code className="bg-muted px-1 py-0.5 rounded">limit must be a whole number</code>
+            </li>
+            <li><code className="bg-muted px-1 py-0.5 rounded">page must be between 1 and 1073741824</code></li>
+            <li><code className="bg-muted px-1 py-0.5 rounded">limit must be between 1 and 100</code></li>
+          </ul>
+          <p className="text-sm text-muted-foreground">
+            Returned as <code className={c}>{`{"error": "..."}`}</code>.
+          </p>
+        </div>
+        <DeclineAccountNotFound />
+      </div>
+
+      <Separator />
+
+      {/* Get decline rate */}
+      <div id="get-decline-rate" className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <GetBadge />
+          <code className="text-sm font-mono">/decline-account/decline-rate</code>
+        </div>
+        <ScopeBadge scope="accountsRead" />
+        <h2 className="text-2xl font-semibold">Get decline rate</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Returns the company decline rate for two periods, each compared with the period before it (UTC):{" "}
+          <code className={c}>monthToDate</code> is this month so far against the same days of the previous month,{" "}
+          <code className={c}>today</code> is today against yesterday.
+        </p>
+        <ResponseBlock>{`{
+  "monthToDate": {
+    "changePp": "+1.2",
+    "current": {
+      "authorizations": 160,
+      "declines": 10,
+      "from": "2026-11-01",
+      "rate": "6.2",
+      "to": "2026-11-11"
+    },
+    "previous": {
+      "authorizations": 200,
+      "declines": 10,
+      "from": "2026-10-01",
+      "rate": "5.0",
+      "to": "2026-10-11"
+    }
+  },
+  "today": {
+    "current": {
+      "authorizations": 0,
+      "declines": 0,
+      "from": "2026-11-11",
+      "to": "2026-11-11"
+    },
+    "previous": {
+      "authorizations": 4,
+      "declines": 1,
+      "from": "2026-11-10",
+      "rate": "25.0",
+      "to": "2026-11-10"
+    }
+  }
+}`}</ResponseBlock>
+        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+          <li>
+            <code className={c}>current</code> / <code className={c}>previous</code> (object) — one period:{" "}
+            <code className={c}>from</code> and <code className={c}>to</code> (<code className={c}>YYYY-MM-DD</code>, UTC,
+            inclusive), the <code className={c}>authorizations</code> and <code className={c}>declines</code> counts, and{" "}
+            <code className={c}>rate</code>.
+          </li>
+          <li>
+            <code className={c}>rate</code> (string) — decline rate in percent with 1 decimal, e.g.{" "}
+            <code className={c}>&quot;6.2&quot;</code>. Omitted when the period has no authorizations.
+          </li>
+          <li>
+            <code className={c}>changePp</code> (string) — current rate minus previous rate in percentage points, e.g.{" "}
+            <code className={c}>&quot;+1.1&quot;</code> or <code className={c}>&quot;-0.4&quot;</code>. Omitted when
+            either rate is missing.
+          </li>
+        </ul>
+        <DeclineAccountNotFound />
+      </div>
+    </>
+  )
+}
+
 export function AccountsContent() {
   return (
     <main className="flex-1 min-w-0 py-12 px-6 lg:px-12">
@@ -781,7 +1050,8 @@ export function AccountsContent() {
               <h2 className="text-2xl font-semibold">Get a list of all accounts</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Currency (EUR, USD…) as path param. The response includes sub-accounts and the master-account in
-                the requested currency. Account data contains ID, name, balance info, etc.
+                the requested currency. Account data contains ID, name, balance info, etc. Errors return the
+                matching status code with <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "..."}`}</code>.
               </p>
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Path Parameters</h3>
@@ -1241,6 +1511,10 @@ export function AccountsContent() {
   "ledgerAccountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q"
 }`}</ResponseBlock>
           </div>
+
+          <RegionOnly region="eu">
+            <DeclineAccountSection />
+          </RegionOnly>
         </div>
         <PageNav />
       </div>
@@ -1391,6 +1665,42 @@ export function CardsContent() {
   "message": "200 OK",
   "id": "string"
 }`}</ResponseBlock>
+            <RegionOnly region="eu">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="text-sm font-medium">Card refused: errorCode</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  When a card is refused for a reason you can act on, the error response carries{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>.{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code> is the HTTP status and{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code> is for people and may be
+                  reworded, so branch on <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>.
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">403</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">CARD_ISSUING_SUSPENDED</code>: Spendbase
+                    suspended card issuing for the company. Existing cards, lock, unlock and terminate keep working.
+                    Card creation works again once issuing is resumed. Contact support.
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">INSUFFICIENT_FUNDS_FOR_ISSUING_FEE</code>: the
+                    account cannot cover the card issuing fee. Top up the account and try again.
+                  </li>
+                </ul>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code> is omitted on success and on
+                  other errors. New values may be added: treat an unknown one like an error without{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>.
+                </p>
+              </div>
+              <ResponseBlock status="403 Forbidden">{`{
+  "code": 403,
+  "message": "Card issuing is suspended for your company. Contact support.",
+  "id": "",
+  "errorCode": "CARD_ISSUING_SUSPENDED"
+}`}</ResponseBlock>
+            </RegionOnly>
           </div>
 
           <Separator />
@@ -1661,7 +1971,9 @@ export function CardsContent() {
             <ScopeBadge scope="cardsWrite" />
             <h2 className="text-2xl font-semibold">Set limit</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Responds with a success message if the card limit update was requested successfully.
+              Responds with a success message if the card limit update was requested successfully. An empty or
+              invalid body, such as a missing or unknown <code className="bg-muted px-1 py-0.5 rounded text-xs">type</code>,
+              returns <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> with <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "..."}`}</code>.
             </p>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Body Parameters</h3>
@@ -1821,7 +2133,8 @@ export function CardsContent() {
               <h2 className="text-2xl font-semibold">Get cardholder</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Responds with cardholder information. Fields without a value are omitted;{" "}
-                <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is always present.
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code> is always present. Errors, such as
+                an unknown cardholder ID, return the matching status code with <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "..."}`}</code>.
               </p>
               <div className="rounded-lg border border-border bg-card p-4">
                 <EnumValues
@@ -1999,8 +2312,14 @@ function EuOnlyTransactionFields() {
   return (
     <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
       <RegionOnly region="eu">
-        <p>Card transactions can also include two fields in <code className="font-mono">details</code>:</p>
+        <p>Card transactions can also include these fields in <code className="font-mono">details</code>:</p>
         <ul className="list-disc pl-5 space-y-1">
+          <li>
+            <code className="font-mono">authorizationCode</code> (string): the issuer&apos;s approval code for the card
+            transaction (ISO 8583 DE38), the same value as <code className="font-mono">authorizationCode</code> in the
+            card webhooks. Omitted when the bank did not send one (for example on declines and some offline clearings)
+            and on transactions recorded before this field was added.
+          </li>
           <li>
             <code className="font-mono">isReversed</code> (boolean): <code className="font-mono">true</code> when the
             transaction was reversed, and on the reversal entry itself. Omitted otherwise.
@@ -2010,6 +2329,11 @@ function EuOnlyTransactionFields() {
             <code className="font-mono">id</code> of the original transaction. Omitted otherwise.
           </li>
         </ul>
+        <p>
+          On an incoming bank transfer, <code className="font-mono">details.reference</code> (string) is the payer&apos;s
+          note or payment reference. From 28 November 2026 it can be up to 1400 characters for incoming SEPA payments
+          (previously up to 255). Do not assume a shorter maximum length when storing or displaying it.
+        </p>
       </RegionOnly>
       <RegionOnly region="us">
         <p>
@@ -2019,6 +2343,48 @@ function EuOnlyTransactionFields() {
         </p>
       </RegionOnly>
     </div>
+  )
+}
+
+// Decline reasons and the decline fee on declined card transactions (EU only).
+// declineFee: cards-router dto.DeclineFeeInfo; rejectReasons: dto.TransactionDetails.
+function EuDeclinedTransactionFields() {
+  return (
+    <RegionOnly region="eu">
+      <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+        <p>A declined card transaction can also include:</p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>
+            <code className="font-mono">details.rejectReasons</code> (array of strings): every reason the transaction
+            was declined, highest priority first; <code className="font-mono">details.rejectReason</code> is its first
+            element. The values are the same as <code className="font-mono">rejectReasons</code> in the{" "}
+            <RegionLink href="/docs/webhooks#card-decline">Card Decline</RegionLink> webhook. Handle an unknown value
+            without failing: new values can be added without notice.
+          </li>
+          <li>
+            <code className="font-mono">declineFee</code> (object): the decline fee billed for this transaction.
+            Present only when the decline fee was billed and the decline fee is enabled for the company by Spendbase.
+            Absent otherwise, never <code className="font-mono">null</code>. If the fee is later removed, the field
+            disappears. <code className="font-mono">billed</code> is always <code className="font-mono">true</code>,{" "}
+            <code className="font-mono">feeUsd</code> is a USD decimal string and{" "}
+            <code className="font-mono">currencyISOCode</code> is always <code className="font-mono">USD</code>. The
+            charge itself is an entry in{" "}
+            <RegionLink href="/docs/accounts#get-decline-account-entries">Decline Account entries</RegionLink>.
+          </li>
+        </ul>
+        <ResponseBlock status="Excerpt: declined card transaction">{`{
+  "details": {
+    "rejectReason": "LimitExceeded",
+    "rejectReasons": ["LimitExceeded", "InsufficientFunds"]
+  },
+  "declineFee": {
+    "billed": true,
+    "feeUsd": "0.50",
+    "currencyISOCode": "USD"
+  }
+}`}</ResponseBlock>
+      </div>
+    </RegionOnly>
   )
 }
 
@@ -2082,6 +2448,7 @@ export function TransactionsContent() {
               return <code className="font-mono">{`{"error": "..."}`}</code> with the matching status code.
             </p>
             <EuOnlyTransactionFields />
+            <EuDeclinedTransactionFields />
             <TransactionFieldValues />
           </div>
 
@@ -2136,6 +2503,7 @@ export function TransactionsContent() {
               <ResponseBlock>{transactionsByAccountExample(false)}</ResponseBlock>
             </RegionOnly>
             <EuOnlyTransactionFields />
+            <EuDeclinedTransactionFields />
             <p className="text-sm text-muted-foreground leading-relaxed">
               <code className="font-mono">hasMore</code> and <code className="font-mono">nextCursor</code> are omitted on the
               last page. Invalid pagination params return <code className="font-mono">400</code> with{" "}
@@ -2189,6 +2557,7 @@ export function TransactionsContent() {
   },
   "transactions": [${indentJson(BANK_TRANSACTION_OBJECT, "    ")}]
 }`}</ResponseBlock>
+            <EuDeclinedTransactionFields />
           </div>
 
           <Separator />
@@ -2224,6 +2593,7 @@ export function TransactionsContent() {
               status code.
             </p>
             <EuOnlyTransactionFields />
+            <EuDeclinedTransactionFields />
           </div>
 
           <Separator />
@@ -2327,6 +2697,16 @@ function EuCardLifecycleValues() {
   )
 }
 
+// Client values of rejectReasons (cards-tribe internal/service/reject_reason.go rejectReasonClientMap).
+const DECLINE_REJECT_REASONS = [
+  "InsufficientFunds", "LimitExceeded", "CardBlocked", "CardSuspended", "CardAccountBlocked", "CardNotActivated",
+  "CardExpired", "StolenCard", "ExpirationDate", "CVC/CVV", "CvvRequired", "PostalCode", "Missing3DS", "ScaRequired",
+  "AavValidatedUnknownError", "AavFailed", "ManualKeyEntryFailed", "MotoNotEnabled", "MagneticStripeInvalid",
+  "RiskTransactionNotPermitted", "RiskTransactionRejected", "CardRiskGroup", "SuspectedFraud", "CardUsageNotPermitted",
+  "TokenInactive", "PinIncorrect", "PinTriesExceeded", "CryptographicFailure", "InvalidMerchant", "InvalidTransaction",
+  "AuthorizationExpired", "ProgramSuspended", "ProcessorError", "DoNotHonor", "UnknownError",
+]
+
 function EuWebhookEvents() {
   const code = "px-1.5 py-0.5 rounded bg-muted font-mono text-sm"
   return (
@@ -2339,7 +2719,9 @@ function EuWebhookEvents() {
         <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed">
           <li>
             Card events belong to the <code className={code}>Card</code> group, Internal Transfer to the{" "}
-            <code className={code}>bank</code> group. The event is identified by the{" "}
+            <code className={code}>bank</code> group, Decline Fee events to the{" "}
+            <code className={code}>DeclineFee</code> group, Chargeback events to the{" "}
+            <code className={code}>Chargeback</code> group. The event is identified by the{" "}
             <code className={code}>X-Event-Type</code> header.
           </li>
           <li>
@@ -2348,9 +2730,10 @@ function EuWebhookEvents() {
             with exponential backoff (1s up to 30s).
           </li>
           <li>
-            Delivery is at-least-once and payloads carry no event ID, so the same event can arrive more than once.
-            Deduplicate on the payload contents (for example <code className={code}>transactionId</code> +{" "}
-            <code className={code}>X-Event-Type</code> + <code className={code}>lifecyclePhase</code>).
+            Delivery is at-least-once, so the same event can arrive more than once. Every payload carries an{" "}
+            <code className={code}>eventId</code> (a UUID). All deliveries of one event share it, and two different
+            events never do (not even the Authorization and Settlement of one purchase). Drop any event whose{" "}
+            <code className={code}>eventId</code> you have already processed. Treat it as opaque.
           </li>
           <li>Events are not guaranteed to arrive in order. JSON field order is not guaranteed either.</li>
           <li>
@@ -2360,7 +2743,8 @@ function EuWebhookEvents() {
           </li>
           <li>
             <code className={code}>timestamp</code> is when the webhook was created (UTC, RFC 3339, e.g.{" "}
-            <code className={code}>2026-10-07T12:34:56Z</code>), not when the transaction happened.
+            <code className={code}>2026-10-07T12:34:56Z</code>), not when the transaction happened. On card transaction
+            events, <code className={code}>transactionTime</code> is when the transaction happened at the card network.
           </li>
           <li>
             <code className={code}>cardId</code> / <code className={code}>card_id</code> is the Spendbase card ID returned
@@ -2512,7 +2896,10 @@ function EuWebhookEvents() {
   merchantCategory: null;           // reserved, currently always null
   mccCode: string;                  // "" if unknown
   authorisationType: string;        // see values below
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                // UTC RFC 3339
+  eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -2562,7 +2949,10 @@ function EuWebhookEvents() {
   cardName: string;
   panLastFour: string;
   transactionId: string;
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                // UTC RFC 3339
+  eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -2592,7 +2982,10 @@ function EuWebhookEvents() {
   billingAmount: string;                    // decimal string, released hold in billing currency, incl. fees
   billingCurrencyIson: string | null;       // ISO 4217 numeric
   expiredBy: 'ISSUER' | 'SYSTEM';           // see values below
+  authorizationCode: string | null;         // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;           // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                        // UTC RFC 3339
+  eventId: string;                          // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -2703,6 +3096,7 @@ function EuWebhookEvents() {
   tx_type: 'DECLINE';
   lifecyclePhase: 'DECLINE';
   rejectReason: string;            // see values below; "" if unknown
+  rejectReasons: string[];         // every reason, highest priority first; [] if none
   merchantName: string;            // "" if unknown
   mccCode: string;                 // "" if unknown
   amount: string;                  // decimal string, billing currency, incl. fees
@@ -2712,7 +3106,10 @@ function EuWebhookEvents() {
   cardName: string;
   panLastFour: string;
   transactionId: string;
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;  // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;               // UTC RFC 3339
+  eventId: string;                 // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -2742,6 +3139,36 @@ function EuWebhookEvents() {
             ]}
           />
         </div>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+          <p className="text-sm font-medium">rejectReasons</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Every reason the transaction was declined, highest priority first. Always an array:{" "}
+            <code className={code}>[]</code> when there is no reason. It uses the same values as{" "}
+            <code className={code}>details.rejectReasons</code> on{" "}
+            <RegionLink href="/docs/transactions#get-transaction-details">transactions</RegionLink>, which are written
+            differently from <code className={code}>rejectReason</code>: for example{" "}
+            <code className={code}>LIMIT_EXCEEDED</code> in <code className={code}>rejectReason</code> is{" "}
+            <code className={code}>LimitExceeded</code> in <code className={code}>rejectReasons</code>.{" "}
+            <code className={code}>rejectReason</code> is unchanged. Known values:
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {DECLINE_REJECT_REASONS.map((r) => (
+              <code key={r} className="bg-muted px-2 py-0.5 rounded text-xs font-mono">{r}</code>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Handle an unknown value without failing: new values can be added without notice.
+          </p>
+        </div>
+        <Note>
+          <p>
+            Card Decline does not carry a decline fee. When a decline fee is billed for the transaction, at least 15
+            minutes after the decline, it is announced by a separate{" "}
+            <a href="#decline-fee-charged" className="underline">DeclineFeeCharged</a> event with the same{" "}
+            <code className={code}>transactionId</code>. <code className={code}>rejectReasons</code> is sent whether or
+            not the decline fee is enabled for the company.
+          </p>
+        </Note>
       </div>
 
       <Separator />
@@ -2768,7 +3195,10 @@ function EuWebhookEvents() {
   cardName: string;
   panLastFour: string;
   transactionId: string;            // same as the original authorization
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                // UTC RFC 3339
+  eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
       </div>
 
@@ -2795,7 +3225,10 @@ function EuWebhookEvents() {
   cardName: string;
   panLastFour: string;
   transactionId: string;
+  authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
+  transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
   timestamp: string;                // UTC RFC 3339
+  eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -2861,6 +3294,390 @@ function EuWebhookEvents() {
             <code className={code}>externalTransactionId</code> + <code className={code}>type</code>.
           </p>
         </Note>
+      </div>
+
+      <DeclineFeeWebhookEvents />
+
+      <ChargebackWebhookEvents />
+    </>
+  )
+}
+
+// Chargeback events (Chargeback group). Sent by cards-tribe (internal/service/webhook/chargeback.go), BEU-8893.
+function ChargebackWebhookEvents() {
+  const code = "px-1.5 py-0.5 rounded bg-muted font-mono text-sm"
+  return (
+    <>
+      <Separator />
+
+      {/* Chargeback events: common rules */}
+      <div id="chargeback-events" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Chargeback events</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Events of the <code className={code}>Chargeback</code> group announce the money a card dispute (chargeback)
+          moves on the card account: the disputed amount returned to the company or taken back, and the chargeback fee.
+        </p>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="X-Event-Type"
+            values={[
+              ["ChargebackAdjustment", "The disputed amount was returned to the card account, or taken back from it."],
+              ["ChargebackFeeCharged", "The chargeback fee of a dispute was charged to the card account."],
+            ]}
+          />
+        </div>
+        <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed">
+          <li>Sent to every company that receives card events. No separate setup is needed.</li>
+          <li>
+            Every payload carries an <code className={code}>eventId</code>. It is the same on every delivery of one
+            occurrence, so deduplicate on it.
+          </li>
+          <li>
+            Unlike the card events, money is a positive decimal string with the currency&apos;s minor-unit digits, e.g.{" "}
+            <code className={code}>&quot;120.50&quot;</code> for EUR or <code className={code}>&quot;13000&quot;</code>{" "}
+            for JPY, and currencies are ISO 4217 alphabetic codes, e.g. <code className={code}>EUR</code>.
+          </li>
+          <li>
+            Times are UTC ISO 8601 with milliseconds, e.g. <code className={code}>2026-11-18T10:30:00.123Z</code>.
+          </li>
+          <li>
+            <code className={code}>transactionId</code> is the disputed card transaction: the{" "}
+            <code className={code}>transactionId</code> of its card events. <code className={code}>disputeId</code>{" "}
+            identifies the dispute; all events of one dispute carry the same value. <code className={code}>cardId</code>{" "}
+            is the Spendbase card ID returned by the Cards API.
+          </li>
+          <li>
+            <code className={code}>ledgerTransactionId</code> is the <code className={code}>id</code> of the
+            adjustment or fee in{" "}
+            <RegionLink href="/docs/transactions">the transactions returned by the Transactions API</RegionLink>.
+          </li>
+          <li>
+            No event is sent when a dispute is opened or changes status. The first event of a dispute is its first
+            adjustment or its fee, whichever comes first.
+          </li>
+          <li>
+            Signatures and retries work as for the other events. Handle unknown event types and unknown{" "}
+            <code className={code}>direction</code> values without failing.
+          </li>
+        </ul>
+      </div>
+
+      <Separator />
+
+      {/* ChargebackAdjustment */}
+      <div id="chargeback-adjustment" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Chargeback Adjustment</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a dispute moves money on the card account: the disputed amount is returned to it (
+          <code className={code}>CREDIT</code>, e.g. the dispute was won) or a returned amount is taken back (
+          <code className={code}>DEBIT</code>, e.g. the dispute was lost after a provisional credit). A dispute can
+          have more than one adjustment; each one is its own event with its own{" "}
+          <code className={code}>adjustmentTransactionId</code>.
+        </p>
+        <WebhookHeaders group="Chargeback" type="ChargebackAdjustment" />
+        <ResponseBlock status="Payload">{`{
+  disputeId: string;
+  externalDisputeId: string | null;    // dispute reference of the card network, when known
+  transactionId: string;               // the disputed transaction (transactionId of its card events)
+  adjustmentTransactionId: string;     // the adjustment; the same on every delivery
+  ledgerTransactionId: string | null;  // the adjustment in the Transactions API
+  direction: 'CREDIT' | 'DEBIT';
+  amount: string;                      // positive, in currencyISOCode (the card account currency)
+  currencyISOCode: string;             // ISO 4217 alphabetic
+  merchantAmount: string;              // positive, in merchantCurrencyISOCode
+  merchantCurrencyISOCode: string;     // ISO 4217 alphabetic
+  merchantName: string | null;
+  cardId: string;
+  cardName: string;
+  panLastFour: string;
+  occurredAt: string;                  // when the adjustment was processed, UTC ISO 8601 with milliseconds
+  eventId: string;
+}`}</ResponseBlock>
+        <ResponseBlock status="Example">{`{
+  "disputeId": "17950039404572",
+  "externalDisputeId": null,
+  "transactionId": "649756ed-0a8d-4c00-8de0-7901810bc435",
+  "adjustmentTransactionId": "17950049029729",
+  "ledgerTransactionId": "483fad51-791d-4cc9-83fc-aaa20c997038",
+  "direction": "CREDIT",
+  "amount": "120.50",
+  "currencyISOCode": "EUR",
+  "merchantAmount": "120.50",
+  "merchantCurrencyISOCode": "EUR",
+  "merchantName": "ACME Online Store",
+  "cardId": "4393bbdb-53bc-485e-bd8a-9287b0cd5db7",
+  "cardName": "Marketing",
+  "panLastFour": "8844",
+  "occurredAt": "2026-11-18T12:28:22.000Z",
+  "eventId": "6d2cc39d-6255-570b-b2f3-bbf110962d89"
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="direction"
+            values={[
+              ["CREDIT", "The disputed amount was returned to the card account."],
+              ["DEBIT", "A returned amount was taken back from the card account."],
+            ]}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* ChargebackFeeCharged */}
+      <div id="chargeback-fee-charged" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Chargeback Fee Charged</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when the chargeback fee of a dispute is charged to the card account. There is at most one fee per
+          dispute, whatever the outcome of the dispute. The fee is priced in{" "}
+          <code className={code}>baseCurrencyISOCode</code> and charged in the card account currency at{" "}
+          <code className={code}>exchangeRate</code>. If the card account cannot cover it, the fee is charged later and
+          the event comes when it is.
+        </p>
+        <WebhookHeaders group="Chargeback" type="ChargebackFeeCharged" />
+        <ResponseBlock status="Payload">{`{
+  disputeId: string;
+  transactionId: string;               // the disputed transaction (transactionId of its card events)
+  feeTransactionId: string;            // the fee; one per dispute
+  ledgerTransactionId: string | null;  // the fee in the Transactions API
+  amount: string;                      // charged fee, positive, in currencyISOCode (the card account currency)
+  currencyISOCode: string;             // ISO 4217 alphabetic
+  baseAmount: string;                  // the fee as priced, positive, in baseCurrencyISOCode
+  baseCurrencyISOCode: string;         // ISO 4217 alphabetic
+  exchangeRate: string;                // amount / baseAmount, not rounded
+  merchantName: string | null;
+  cardId: string;
+  cardName: string;
+  panLastFour: string;
+  chargedAt: string;                   // UTC ISO 8601 with milliseconds
+  eventId: string;
+}`}</ResponseBlock>
+        <ResponseBlock status="Example">{`{
+  "disputeId": "17950039404572",
+  "transactionId": "649756ed-0a8d-4c00-8de0-7901810bc435",
+  "feeTransactionId": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+  "ledgerTransactionId": "7e8f9a0b-1c2d-4e3f-8a4b-5c6d7e8f9a0b",
+  "amount": "39.57",
+  "currencyISOCode": "EUR",
+  "baseAmount": "35.00",
+  "baseCurrencyISOCode": "GBP",
+  "exchangeRate": "1.1305714285714286",
+  "merchantName": "ACME Online Store",
+  "cardId": "4393bbdb-53bc-485e-bd8a-9287b0cd5db7",
+  "cardName": "Marketing",
+  "panLastFour": "8844",
+  "chargedAt": "2026-11-18T13:00:00.000Z",
+  "eventId": "9c4e2f1a-7b3d-5e6f-8a9b-0c1d2e3f4a5b"
+}`}</ResponseBlock>
+      </div>
+    </>
+  )
+}
+
+// Decline Fee events (DeclineFee group). Sent by cards-tribe (internal/service/webhook/decline_fee.go) and by
+// cards (libs/decline-fee); contract: decline-fee-webhooks-contract.md (BEU-8362).
+function DeclineFeeWebhookEvents() {
+  const code = "px-1.5 py-0.5 rounded bg-muted font-mono text-sm"
+  return (
+    <>
+      <Separator />
+
+      {/* Decline Fee events: common rules */}
+      <div id="decline-fee-events" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Decline Fee events</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Events of the <code className={code}>DeclineFee</code> group announce changes to the company{" "}
+          <RegionLink href="/docs/accounts#decline-account">Decline Account</RegionLink>: decline fees, their reversals,
+          top-ups and adjustments. Each event announces one Decline Account entry.
+        </p>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="X-Event-Type"
+            values={[
+              ["DeclineFeeCharged", "A decline fee was billed automatically, at least 15 minutes after the decline."],
+              ["BilledStatusChanged", "The billed status of a declined transaction changed."],
+              ["DeclineAccountTopUp", "A payment to the Decline Account was recorded."],
+              ["DeclineAccountAdjustment", "A correction (+/−) to the Decline Account was recorded."],
+            ]}
+          />
+        </div>
+        <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground leading-relaxed">
+          <li>
+            Sent only when the decline fee is enabled for the company by Spendbase. Enabling it does not resend past
+            events.
+          </li>
+          <li>
+            Every payload carries an <code className={code}>eventId</code>. It is the same on every delivery of one
+            occurrence, so deduplicate on it.
+          </li>
+          <li>
+            Money is a USD decimal string with exactly 2 decimals, e.g. <code className={code}>&quot;0.50&quot;</code>{" "}
+            or <code className={code}>&quot;-12.50&quot;</code>. <code className={code}>currencyISOCode</code> is always{" "}
+            <code className={code}>USD</code>. <code className={code}>balanceAfterUsd</code> is the Decline Account
+            balance right after the entry was recorded; below 0 is a debt.
+          </li>
+          <li>
+            Times are UTC ISO 8601 with milliseconds, e.g. <code className={code}>2026-11-10T12:15:04.123Z</code>.
+          </li>
+          <li>
+            <code className={code}>transactionId</code> is the <code className={code}>transactionId</code> of the
+            declined transaction&apos;s <a href="#card-decline" className="underline">Card Decline</a> event.{" "}
+            <code className={code}>entryId</code> is the entry <code className={code}>id</code> in{" "}
+            <RegionLink href="/docs/accounts#get-decline-account-entries">Decline Account entries</RegionLink>.
+          </li>
+          <li>A change to several transactions at once sends one event per transaction.</li>
+          <li>
+            Delivery is best-effort: an event can be missed. Reconcile with{" "}
+            <RegionLink href="/docs/accounts#get-decline-account-entries">GET /decline-account/entries</RegionLink>.
+          </li>
+          <li>
+            Signatures and retries work as for the other events. Handle unknown event types and unknown{" "}
+            <code className={code}>action</code> / <code className={code}>actor</code> values without failing.
+          </li>
+        </ul>
+      </div>
+
+      <Separator />
+
+      {/* DeclineFeeCharged */}
+      <div id="decline-fee-charged" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Decline Fee Charged</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a decline fee is billed automatically for a declined card transaction. Billing runs at least 15
+          minutes after the decline, so this event comes well after the{" "}
+          <a href="#card-decline" className="underline">Card Decline</a> event. Not every decline is charged a fee.
+        </p>
+        <WebhookHeaders group="DeclineFee" type="DeclineFeeCharged" />
+        <ResponseBlock status="Payload">{`{
+  transactionId: string;    // the declined transaction (transactionId of its Card Decline event)
+  entryId: string;          // the DECLINE_FEE entry
+  feeUsd: string;           // charged fee, positive, 2 decimals
+  currencyISOCode: 'USD';
+  billingMonth: string;     // month the fee belongs to, YYYY-MM
+  balanceAfterUsd: string;  // balance right after the entry, 2 decimals
+  chargedAt: string;        // UTC ISO 8601 with milliseconds
+  eventId: string;
+}`}</ResponseBlock>
+        <ResponseBlock status="Example">{`{
+  "transactionId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  "entryId": "5f2b8c1e-3d4a-4b6c-9e8f-1a2b3c4d5e6f",
+  "feeUsd": "0.50",
+  "currencyISOCode": "USD",
+  "billingMonth": "2026-11",
+  "balanceAfterUsd": "-12.50",
+  "chargedAt": "2026-11-10T12:15:04.123Z",
+  "eventId": "0e88d9a1-b520-59cb-9609-5530e7b9004b"
+}`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* BilledStatusChanged */}
+      <div id="billed-status-changed" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Billed Status Changed</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when the billed status of a declined transaction changes: a fee is removed (returned to the balance), a
+          removed fee is billed again, or a decline that was not billed is billed.
+        </p>
+        <WebhookHeaders group="DeclineFee" type="BilledStatusChanged" />
+        <ResponseBlock status="Payload">{`{
+  transactionId: string;    // the declined transaction (transactionId of its Card Decline event)
+  entryId: string;          // DECLINE_FEE_REVERSAL entry for REMOVED, DECLINE_FEE entry otherwise
+  action: 'REMOVED' | 'RETURNED' | 'MARKED';
+  billed: boolean;          // false for REMOVED, true otherwise
+  feeUsd: string;           // the transaction's fee, positive, 2 decimals
+  currencyISOCode: 'USD';
+  balanceAfterUsd: string;  // balance right after the entry, 2 decimals
+  actor: 'ADMIN' | 'SYSTEM';
+  updatedAt: string;        // UTC ISO 8601 with milliseconds
+  eventId: string;
+}`}</ResponseBlock>
+        <ResponseBlock status="Example">{`{
+  "transactionId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  "entryId": "2d4f6a8c-0e1b-4c3d-9f5e-7a9b1c3d5e7f",
+  "action": "REMOVED",
+  "billed": false,
+  "feeUsd": "0.50",
+  "currencyISOCode": "USD",
+  "balanceAfterUsd": "-12.00",
+  "actor": "ADMIN",
+  "updatedAt": "2026-11-12T09:30:00.000Z",
+  "eventId": "00501ae4-1325-5867-a974-c53222223722"
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+          <EnumValues
+            name="action"
+            values={[
+              ["REMOVED", "The fee was removed and returned to the balance. billed is false."],
+              ["RETURNED", "A removed fee was billed again. billed is true."],
+              ["MARKED", "A decline that was not billed was billed. billed is true."],
+            ]}
+          />
+          <EnumValues
+            name="actor"
+            values={[
+              ["ADMIN", "Changed by Spendbase."],
+              ["SYSTEM", "Changed automatically, e.g. the transaction was approved later."],
+            ]}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* DeclineAccountTopUp */}
+      <div id="decline-account-top-up" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Decline Account Top-Up</h2>
+        <p className="text-muted-foreground leading-relaxed">Fired when a payment to the Decline Account is recorded.</p>
+        <WebhookHeaders group="DeclineFee" type="DeclineAccountTopUp" />
+        <ResponseBlock status="Payload">{`{
+  entryId: string;          // the TOP_UP entry
+  amountUsd: string;        // positive, 2 decimals
+  currencyISOCode: 'USD';
+  reference: string;        // top-up reference, e.g. the wire reference
+  balanceAfterUsd: string;  // balance right after the entry, 2 decimals
+  updatedAt: string;        // UTC ISO 8601 with milliseconds
+  eventId: string;
+}`}</ResponseBlock>
+        <ResponseBlock status="Example">{`{
+  "entryId": "9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d",
+  "amountUsd": "100.00",
+  "currencyISOCode": "USD",
+  "reference": "WIRE-42",
+  "balanceAfterUsd": "88.00",
+  "updatedAt": "2026-11-12T10:00:00.000Z",
+  "eventId": "281de737-3bb6-5e3b-925a-eaed85357098"
+}`}</ResponseBlock>
+      </div>
+
+      <Separator />
+
+      {/* DeclineAccountAdjustment */}
+      <div id="decline-account-adjustment" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Decline Account Adjustment</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a correction to the Decline Account is recorded. <code className={code}>amountUsd</code> is
+          signed: positive adds to the balance, negative takes from it.
+        </p>
+        <WebhookHeaders group="DeclineFee" type="DeclineAccountAdjustment" />
+        <ResponseBlock status="Payload">{`{
+  entryId: string;          // the ADJUSTMENT entry
+  amountUsd: string;        // signed, 2 decimals
+  currencyISOCode: 'USD';
+  reason: string;           // reason for the adjustment
+  balanceAfterUsd: string;  // balance right after the entry, 2 decimals
+  updatedAt: string;        // UTC ISO 8601 with milliseconds
+  eventId: string;
+}`}</ResponseBlock>
+        <ResponseBlock status="Example">{`{
+  "entryId": "4e6a8c0b-2d1f-4e3a-8b5c-6d7e8f9a0b1c",
+  "amountUsd": "-10.00",
+  "currencyISOCode": "USD",
+  "reason": "Correction of a duplicate top-up",
+  "balanceAfterUsd": "78.00",
+  "updatedAt": "2026-11-12T11:00:00.000Z",
+  "eventId": "2ad063dd-6fba-5ceb-8c25-1622061a8f9b"
+}`}</ResponseBlock>
       </div>
     </>
   )
@@ -2961,11 +3778,15 @@ function UsWebhookEvents() {
               <code className={code}>merchantAmount</code>, <code className={code}>exchangeRate</code>: a cross-currency
               purchase where the bank did not report the amount in the merchant&apos;s currency. For a same-currency
               purchase, <code className={code}>merchantAmount</code> equals the billing amount and{" "}
-              <code className={code}>exchangeRate</code> is <code className={code}>&quot;1&quot;</code>.
+              <code className={code}>exchangeRate</code> is <code className={code}>&quot;1&quot;</code>. Also on a{" "}
+              <a href="#card-network-adjustments" className="underline">card network adjustment</a>, which carries no
+              merchant-currency figure.
             </li>
             <li>
-              <code className={code}>rejectReason</code>: the bank declined without a reason that maps to a documented
-              value.
+              <code className={code}>transactionAmount</code> on Settlement: the Settlement for a card network
+              adjustment, or a cross-currency purchase where the bank did not report the merchant&apos;s figure.{" "}
+              <code className={code}>transactionAmount</code> is in the merchant&apos;s currency, so it is never filled
+              from the billed amount. Use <code className={code}>billingAmount</code>, which is always present.
             </li>
             <li>
               <code className={code}>holderId</code>: the card has no cardholder record.
@@ -2980,8 +3801,9 @@ function UsWebhookEvents() {
             </li>
           </ul>
           <p className="text-sm text-muted-foreground">
-            <code className={code}>eventId</code>, <code className={code}>authorisationType</code> and every Budget
-            Transfer Failed field are never <code className={code}>null</code>.
+            <code className={code}>eventId</code>, <code className={code}>authorisationType</code>, the Decline&apos;s{" "}
+            <code className={code}>rejectReason</code> and every Budget Transfer Failed field are never{" "}
+            <code className={code}>null</code>.
           </p>
         </div>
       </div>
@@ -3110,6 +3932,32 @@ function UsWebhookEvents() {
   timestamp: string;                       // UTC RFC 3339
   eventId: string;                         // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
+        <div id="card-network-adjustments" className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <p className="text-sm font-medium">Card network adjustments</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            The card network can adjust what it charges for a purchase, usually after the purchase has settled, but
+            also between the clearings of a purchase that clears in parts. Each adjustment is sent as soon as it
+            happens, for the same <code className={code}>transactionId</code>:
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>An adjustment that charges more is a Settlement, also when it adjusts a refund.</li>
+            <li>
+              An adjustment that gives money back is a <a href="#card-refund" className="underline">Card Refund</a> at{" "}
+              <code className={code}>SETTLEMENT</code>.
+            </li>
+          </ul>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <code className={code}>billingAmount</code> is the adjustment&apos;s own amount.{" "}
+            <code className={code}>merchantAmount</code> and <code className={code}>merchantCurrencyISOCode</code> are{" "}
+            <code className={code}>null</code>, and so are the Settlement&apos;s <code className={code}>exchangeRate</code>{" "}
+            and <code className={code}>transactionAmount</code>.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            A purchase can therefore have several Settlements. Add them up per{" "}
+            <code className={code}>transactionId</code> rather than taking the last one as final, and do not treat a
+            Settlement as closing the authorization.
+          </p>
+        </div>
       </div>
 
       <Separator />
@@ -3122,7 +3970,7 @@ function UsWebhookEvents() {
         <ResponseBlock status="Payload">{`{
   tx_type: 'DECLINE';
   lifecyclePhase: 'DECLINE';
-  rejectReason: string | null;             // see values below
+  rejectReason: string;                    // see values below; never null
   merchantName: string | null;
   mccCode: string | null;
   amount: string | null;                   // decimal string, attempted amount in billing currency
@@ -3139,19 +3987,26 @@ function UsWebhookEvents() {
           <EnumValues
             name="rejectReason"
             values={[
-              ["INSUFFICIENT_FUNDS", "Not enough available balance on the account."],
-              ["LIMIT_EXCEEDED", "A card limit was exceeded."],
-              ["CARD_BLOCKED", "The card is locked."],
-              ["CARD_SUSPENDED", "The card is suspended."],
-              ["CARD_ACCOUNT_BLOCKED", "The account behind the card is blocked."],
-              ["EXPIRATION_DATE", "Wrong or expired card expiration date."],
-              ["CVC_CVV", "Wrong CVC/CVV."],
-              ["MAGNETIC_STRIPE_INVALID", "The magnetic stripe data is invalid."],
-              ["RISK_TRANSACTION_NOT_PERMITTED", "The transaction type is not permitted by risk rules."],
-              ["RISK_TRANSACTION_REJECTED", "The transaction was rejected by risk rules."],
-              ["DO_NOT_HONOR", "Declined by the issuer without a specific reason."],
+              ["INSUFFICIENT_FUNDS", "The budget behind the card did not have enough money."],
+              ["LIMIT_EXCEEDED", "A spending limit on the card was reached."],
+              ["CARD_SUSPENDED", "The card is locked."],
+              ["CARD_BLOCKED", "The card is closed or blocked."],
+              ["EXPIRATION_DATE", "The card has expired, or the expiry date entered did not match."],
+              ["CVC_CVV", "The security code entered did not match."],
+              ["POSTAL_CODE", "The billing postal code or address entered at the merchant did not match the card's."],
+              ["CARD_ACCOUNT_BLOCKED", "The account behind the card is closed."],
+              ["CARD_RISK_GROUP", "The card cannot be used in that country or region."],
+              ["RISK_TRANSACTION_NOT_PERMITTED", "A permanent restriction on the card program or account."],
+              ["RISK_TRANSACTION_REJECTED", "The bank's real-time risk check declined the payment."],
+              ["MAGNETIC_STRIPE_INVALID", "The card's stripe data could not be verified."],
+              ["DO_NOT_HONOR", "The card issuer declined without a more specific reason, including when the payment could not be authorized in time."],
+              ["UNKNOWN_ERROR", "The bank declined for a reason not listed above."],
             ]}
           />
+          <p className="text-sm text-muted-foreground">
+            Every Card Decline carries a <code className={code}>rejectReason</code>. New values may be added: treat an
+            unknown value like <code className={code}>UNKNOWN_ERROR</code>.
+          </p>
         </div>
       </div>
 
@@ -3189,7 +4044,11 @@ function UsWebhookEvents() {
         <h2 className="text-2xl font-semibold">Card Refund</h2>
         <p className="text-muted-foreground leading-relaxed">
           Fired when a card transaction is refunded. It can fire twice for the same refund: once at authorization and
-          once at settlement. Use <code className={code}>lifecyclePhase</code> to tell them apart.
+          once at settlement. Use <code className={code}>lifecyclePhase</code> to tell them apart. A card network
+          adjustment that gives money back also arrives as a Refund at <code className={code}>SETTLEMENT</code>, with{" "}
+          <code className={code}>merchantAmount</code> and <code className={code}>merchantCurrencyISOCode</code>{" "}
+          <code className={code}>null</code> (see <a href="#card-network-adjustments" className="underline">Card network
+          adjustments</a>).
         </p>
         <WebhookHeaders group="Card" type="Refund" />
         <ResponseBlock status="Payload">{`{
