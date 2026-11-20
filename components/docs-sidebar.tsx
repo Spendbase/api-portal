@@ -59,6 +59,11 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Add Cardholder", id: "add-cardholder", region: "eu" },
       { label: "Get Cardholder", id: "get-cardholder", region: "eu" },
       { label: "Get Team Cardholders", id: "get-team-cardholders" },
+      { label: "Employees", id: "employees", region: "us" },
+      { label: "List Employees", id: "cardholder-enrollments", region: "us" },
+      { label: "Invite Employee", id: "invite-cardholder", region: "us" },
+      { label: "Withdraw Invite", id: "withdraw-cardholder-invite", region: "us" },
+      { label: "Add Employee to a Budget", id: "add-cardholder-to-budget", region: "us" },
     ],
   },
   {

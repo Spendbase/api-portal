@@ -16,6 +16,27 @@ export default function VersioningPage() {
         </div>
 
         <RegionOnly region="eu">
+          <section id="eu-cardholders-no-date-of-birth" className="space-y-4">
+            <h2 className="text-2xl font-semibold">Get team cardholders: date of birth removed</h2>
+            <p className="text-muted-foreground">Version date: TBD</p>
+            <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+              <p className="font-semibold text-sm">Cards</p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>
+                  <RegionLink href="/docs/cards#get-team-cardholders">Get team cardholders</RegionLink> no longer
+                  returns <code className="bg-muted px-1 py-0.5 rounded">date_of_birth</code>. Every other field is
+                  unchanged.
+                </li>
+              </ul>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              If your integration reads <code className="bg-muted px-1 py-0.5 rounded">date_of_birth</code> from this
+              endpoint, stop relying on it before this release.
+            </p>
+          </section>
+
+          <Separator />
+
           <div id="2026-11-18" />
           <section id="eu-chargeback-webhooks" className="space-y-4">
             <h2 className="text-2xl font-semibold">EU only: Chargeback webhooks</h2>
@@ -153,6 +174,67 @@ export default function VersioningPage() {
         </RegionOnly>
 
         <RegionOnly region="us">
+          <section id="us-employees-bin" className="space-y-4">
+            <h2 className="text-2xl font-semibold">US only: Employees, card BIN, error codes</h2>
+            <p className="text-muted-foreground">Version date: TBD</p>
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to US accounts only, except where noted. All of them are additive except one: Get
+              team cardholders no longer returns <code className="bg-muted px-1 py-0.5 rounded">date_of_birth</code>.
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Employees</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    For companies whose cards are issued to named employees, four new endpoints:{" "}
+                    <RegionLink href="/docs/cards#cardholder-enrollments">List employees</RegionLink>,{" "}
+                    <RegionLink href="/docs/cards#invite-cardholder">Invite employee</RegionLink>,{" "}
+                    <RegionLink href="/docs/cards#withdraw-cardholder-invite">Withdraw invite</RegionLink> and{" "}
+                    <RegionLink href="/docs/cards#add-cardholder-to-budget">Add employee to a budget</RegionLink>. The
+                    existing <code className="bg-muted px-1 py-0.5 rounded">cardholdersRead</code> and{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">cardholdersWrite</code> scopes grant access.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Cards</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/cards#get-card">Get card</RegionLink>, Get all cards and Get account
+                    cards: added <code className="bg-muted px-1 py-0.5 rounded">bin</code>, the card&apos;s BIN.
+                  </li>
+                  <li>
+                    <RegionLink href="/docs/cards#create-card">Create card</RegionLink>: the rules for companies whose
+                    cards are issued to named employees are documented, and a refused card carries{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">errorCode</code>. Request and response shapes are
+                    unchanged.
+                  </li>
+                  <li>
+                    Both regions: <RegionLink href="/docs/cards#get-team-cardholders">Get team cardholders</RegionLink>{" "}
+                    no longer returns <code className="bg-muted px-1 py-0.5 rounded">date_of_birth</code>. If your
+                    integration reads it, stop relying on it before this release.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Webhooks</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/webhooks#card-created">Card Created</RegionLink>, Card Blocked, Card
+                    Unblocked and Card Terminated: added <code className="bg-muted px-1 py-0.5 rounded">bin</code>{" "}
+                    (<code className="bg-muted px-1 py-0.5 rounded">null</code> when not known).
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              If your parser rejects unknown keys, unknown <code className="bg-muted px-1 py-0.5 rounded">errorCode</code>{" "}
+              values or unknown response fields, update it before this release.
+            </p>
+          </section>
+
+          <Separator />
+
           <div id="2026-11-04" />
           <section id="us-webhook-updates-2026-11" className="space-y-4">
             <h2 className="text-2xl font-semibold">US only: Webhooks - decline reasons, card network adjustments</h2>

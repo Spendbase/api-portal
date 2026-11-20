@@ -35,6 +35,14 @@ function PatchBadge() {
   )
 }
 
+function DeleteBadge() {
+  return (
+    <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+      DELETE
+    </Badge>
+  )
+}
+
 function ScopeBadge({ scope }: { scope: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-mono text-violet-700 dark:text-violet-300">
@@ -750,6 +758,14 @@ export function QuickStartContent() {
                   <code className={code}>email</code>: the email the Spendbase account was created with
                 </li>
               </ul>
+              <p>
+                If your company&apos;s cards are issued to named employees, send{" "}
+                <code className={code}>spendbaseUserId</code> (the employee) instead of{" "}
+                <code className={code}>email</code>, after the employee is approved on that budget: see{" "}
+                <RegionLink href="/docs/cards#employees">Employees</RegionLink>. An{" "}
+                <code className={code}>email</code>-only request is refused with{" "}
+                <code className={code}>EMPLOYEE_REQUIRED</code>.
+              </p>
               <p>
                 Set a spending limit with <RegionLink href="/docs/cards#set-limit">Set limit</RegionLink> after the card
                 is created.
@@ -1585,6 +1601,12 @@ export function CardsContent() {
                     <a href="#add-cardholder" className="underline">Add cardholder</a>.
                   </RegionOnly>{" "}
                   One of <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is required.
+                  <RegionOnly region="us">
+                    {" "}For companies whose cards are issued to named employees,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> is required and names
+                    the employee the card is for. The employee must be approved on the card&apos;s budget: see{" "}
+                    <a href="#employees" className="underline">Employees</a>.
+                  </RegionOnly>
                 </Param>
                 <Param name="email" type="string">
                   <RegionOnly region="eu">Cardholder email, used when <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> is not set.</RegionOnly>
@@ -1658,13 +1680,89 @@ export function CardsContent() {
                 <p>
                   The card currency is always USD.
                 </p>
+                <p>
+                  Companies whose cards are issued to named employees: send{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> instead of{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code>. A card is created only for an
+                  employee whose status on that budget is <code className="bg-muted px-1 py-0.5 rounded text-xs">APPROVED</code>.
+                  To issue cards in bulk, call Create card once per card.
+                </p>
               </Note>
+              <ResponseBlock status="Request body: named employee">{`{
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "cardName": "Travel — Alex",
+  "spendbaseUserId": "01a1f3c8-9b2d-4c7e-8f6a-3d5e7b9c1a2f"
+}`}</ResponseBlock>
             </RegionOnly>
             <ResponseBlock>{`{
   "code": 200,
   "message": "200 OK",
   "id": "string"
 }`}</ResponseBlock>
+            <RegionOnly region="us">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="text-sm font-medium">Card refused: errorCode</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  For companies whose cards are issued to named employees, a refused card carries{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>.{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code> is the HTTP status and{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code> is for people and may be
+                  reworded, so branch on <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>. No
+                  card is created on any refusal.
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_REQUIRED</code>: no{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> was sent.
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">404</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_NOT_FOUND</code>: not an active
+                    member of your company who may hold cards.
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_NOT_REGISTERED</code>: the employee
+                    has not registered as a cardholder in the Spendbase app yet.
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_NOT_ON_BUDGET</code>: the employee
+                    was not added to this budget, or was added but the application did not reach the bank (status{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">NOT_FILED</code>). Call{" "}
+                    <a href="#add-cardholder-to-budget" className="underline">Add employee to a budget</a> (again).
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">APPROVAL_PENDING</code>: the bank has not
+                    decided yet. Try again once the budget&apos;s status is{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">APPROVED</code>.
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_DENIED</code>: the bank denied the
+                    employee for this budget.
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_ACCESS_CLOSED</code>: the
+                    employee&apos;s access to this budget was closed.
+                  </li>
+                </ul>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code> is omitted on success and on
+                  other errors. New values may be added: treat an unknown one like an error without{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>.
+                </p>
+              </div>
+              <ResponseBlock status="400 Bad Request">{`{
+  "code": 400,
+  "message": "the employee has not been added to this budget",
+  "id": "",
+  "errorCode": "EMPLOYEE_NOT_ON_BUDGET"
+}`}</ResponseBlock>
+            </RegionOnly>
             <RegionOnly region="eu">
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
                 <p className="text-sm font-medium">Card refused: errorCode</p>
@@ -1718,6 +1816,28 @@ export function CardsContent() {
               value are omitted from the response.
             </p>
             <ResponseBlock>{CARD_OBJECT}</ResponseBlock>
+            <RegionOnly region="us">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="text-sm font-medium">US card fields</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">bin</code> (string): the card&apos;s BIN,
+                    the leading digits of the card number as the bank issued them, e.g.{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">&quot;555555&quot;</code>. Use it to tell
+                    cards of different card programmes apart. Omitted when it is not known. With{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">cardLast4</code> it is the most of a card
+                    number any response carries outside Get card details. Also returned by Get all cards and Get
+                    account cards.
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">cardHolder.id</code>: for companies whose
+                    cards are issued to named employees, the{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> of the employee who
+                    holds the card.
+                  </li>
+                </ul>
+              </div>
+            </RegionOnly>
           </div>
 
           <Separator />
@@ -2173,7 +2293,8 @@ export function CardsContent() {
             <ScopeBadge scope="cardholdersRead" />
             <h2 className="text-2xl font-semibold">Get team cardholders</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Returns all cardholders of your company.
+              Returns all cardholders of your company. Fields without a value are omitted. The cardholder&apos;s date
+              of birth is not returned.
             </p>
             <ResponseBlock>{`[
   {
@@ -2186,7 +2307,6 @@ export function CardsContent() {
     "title": "string",
     "email": "string",
     "mobile": "string",
-    "date_of_birth": "string",
     "address_line_1": "string",
     "address_line_2": "string",
     "city": "string",
@@ -2213,6 +2333,292 @@ export function CardsContent() {
               />
             </div>
           </div>
+
+          <RegionOnly region="us">
+            <Separator />
+
+            {/* Employees */}
+            <div id="employees" className="space-y-4">
+              <h2 className="text-2xl font-semibold">Employees</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                For companies whose cards are issued to named employees, every card is issued on a budget to one
+                employee, and the bank must approve that employee for that budget first. The flow:
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground leading-relaxed">
+                <li>
+                  <a href="#invite-cardholder" className="underline">Invite</a> an active team member by their{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code>.
+                </li>
+                <li>
+                  The employee registers in the Spendbase app: personal details and the cardholder terms. This step is
+                  not available through the API.
+                </li>
+                <li>
+                  <a href="#add-cardholder-to-budget" className="underline">Add the employee to a budget</a>. The bank
+                  decides, usually within seconds to minutes; a manual review can take longer.
+                </li>
+                <li>
+                  <a href="#cardholder-enrollments" className="underline">List employees</a> until the budget&apos;s
+                  status is <code className="bg-muted px-1 py-0.5 rounded text-xs">APPROVED</code>.
+                </li>
+                <li>
+                  <a href="#create-card" className="underline">Create a card</a> on that budget with the
+                  employee&apos;s <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code>.
+                </li>
+              </ol>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Companies whose cards are not issued to named employees get{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> with{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">CARDHOLDERS_NOT_OFFERED</code> from every
+                endpoint in this section. Errors are{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">{`{"error": "...", "errorCode": "..."}`}</code>:
+                the message is for people and may be reworded, so branch on{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>. It is omitted when there is
+                none, and new values may be added.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* List employees */}
+            <div id="cardholder-enrollments" className="space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <GetBadge />
+                <code className="text-sm font-mono">/cards/cardholder-enrollments</code>
+              </div>
+              <ScopeBadge scope="cardholdersRead" />
+              <h2 className="text-2xl font-semibold">List employees</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Every employee who was invited or has registered, their cardholder state and their standing on each
+                budget they were added to. A team member who was never invited is not listed: invite them first. A
+                card can be issued on <code className="bg-muted px-1 py-0.5 rounded text-xs">accountId</code>{" "}
+                to an employee only while that budget&apos;s <code className="bg-muted px-1 py-0.5 rounded text-xs">status</code>{" "}
+                is <code className="bg-muted px-1 py-0.5 rounded text-xs">APPROVED</code>. Fields without a value are
+                omitted; <code className="bg-muted px-1 py-0.5 rounded text-xs">budgets</code> is always an array.
+              </p>
+              <ResponseBlock>{`{
+  "cardholders": [
+    {
+      "spendbaseUserId": "01a1f3c8-9b2d-4c7e-8f6a-3d5e7b9c1a2f",
+      "state": "REGISTERED",
+      "firstName": "Alex",
+      "lastName": "Morgan",
+      "invitedAt": "2026-11-19T17:45:59Z",
+      "invitedBySpendbaseUserId": "01a1c08a-5e3f-4b2d-9c8e-7f6a5b4c3d2e",
+      "termsVersion": "2026-11",
+      "termsAcceptedAt": "2026-11-19T17:47:10Z",
+      "termsCurrent": true,
+      "budgets": [
+        {
+          "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+          "budgetName": "Travel",
+          "status": "APPROVED",
+          "statusChangedAt": "2026-11-19T17:49:15Z",
+          "createdAt": "2026-11-19T17:49:06Z"
+        }
+      ]
+    }
+  ],
+  "terms": {
+    "url": "https://example.com/cardholder-terms",
+    "version": "2026-11"
+  }
+}`}</ResponseBlock>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+                <EnumValues
+                  name="state"
+                  values={[
+                    ["INVITED", "Invited; has not registered yet."],
+                    ["REGISTERING", "Registration is being processed."],
+                    ["REGISTRATION_FAILED", "Registration did not complete. The employee can try again in the app."],
+                    ["REGISTERED", "Registered. Can be added to budgets."],
+                  ]}
+                />
+                <EnumValues
+                  name="budgets[].status"
+                  values={[
+                    ["NOT_FILED", "Added, but the application did not reach the bank. Add the employee again."],
+                    ["PENDING", "Waiting for the bank's decision."],
+                    ["IN_REVIEW", "The bank is reviewing the application manually."],
+                    ["APPROVED", "Cards can be issued on this budget to this employee."],
+                    ["DENIED", "The bank denied the employee for this budget; denialReason holds its reason code."],
+                    ["CLOSED", "The employee's access to this budget was closed."],
+                  ]}
+                />
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">termsCurrent</code> is{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">false</code> when the employee never accepted
+                  the cardholder terms or accepted an older version; they must accept the current terms in the app
+                  before they can be added to a budget. <code className="bg-muted px-1 py-0.5 rounded text-xs">terms</code>{" "}
+                  is the version currently in force.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Invite employee */}
+            <div id="invite-cardholder" className="space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <PostBadge />
+                <code className="text-sm font-mono">/cards/cardholder-invites</code>
+              </div>
+              <ScopeBadge scope="cardholdersWrite" />
+              <h2 className="text-2xl font-semibold">Invite employee</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Invites an active team member to become a cardholder. They see the invitation in the Spendbase app and
+                register there. Inviting the same employee twice is one invite. Responds{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">201</code> with the employee&apos;s standing.
+              </p>
+              <div className="space-y-2">
+                <Param name="spendbaseUserId" type="string" required>The team member to invite.</Param>
+              </div>
+              <ResponseBlock status="Request body">{`{
+  "spendbaseUserId": "01a1f3c8-9b2d-4c7e-8f6a-3d5e7b9c1a2f"
+}`}</ResponseBlock>
+              <ResponseBlock status="201 Created">{`{
+  "cardholder": {
+    "spendbaseUserId": "01a1f3c8-9b2d-4c7e-8f6a-3d5e7b9c1a2f",
+    "state": "INVITED",
+    "invitedAt": "2026-11-19T17:45:59Z",
+    "invitedBySpendbaseUserId": "01a1c08a-5e3f-4b2d-9c8e-7f6a5b4c3d2e",
+    "termsCurrent": false,
+    "budgets": []
+  },
+  "terms": {
+    "url": "https://example.com/cardholder-terms",
+    "version": "2026-11"
+  }
+}`}</ResponseBlock>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">404</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_NOT_FOUND</code>: not an active
+                  member of your company who may hold cards.
+                </li>
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">COMPANY_NOT_APPROVED</code>: your
+                  company&apos;s own application is not approved yet.
+                </li>
+              </ul>
+            </div>
+
+            <Separator />
+
+            {/* Withdraw invite */}
+            <div id="withdraw-cardholder-invite" className="space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <DeleteBadge />
+                <code className="text-sm font-mono">/cards/cardholder-invites/:spendbaseUserId</code>
+              </div>
+              <ScopeBadge scope="cardholdersWrite" />
+              <h2 className="text-2xl font-semibold">Withdraw invite</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Withdraws an invite the employee has not acted on. Responds{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">204</code> with no body.
+              </p>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">ALREADY_REGISTERED</code>: the employee has
+                  registered, so there is no invite to withdraw.
+                </li>
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">404</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">INVITE_NOT_FOUND</code>: there is no invite
+                  for this employee.
+                </li>
+              </ul>
+            </div>
+
+            <Separator />
+
+            {/* Add employee to a budget */}
+            <div id="add-cardholder-to-budget" className="space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <PostBadge />
+                <code className="text-sm font-mono">/cards/cardholder-budgets</code>
+              </div>
+              <ScopeBadge scope="cardholdersWrite" />
+              <h2 className="text-2xl font-semibold">Add employee to a budget</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Asks the bank to approve a registered employee on a budget. The decision is asynchronous: read{" "}
+                <a href="#cardholder-enrollments" className="underline">List employees</a> for it. Once the
+                application has reached the bank, adding the same employee to the same budget again sends nothing new
+                and responds with their current standing. A budget whose status is{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">NOT_FILED</code> is filed again.
+              </p>
+              <div className="space-y-2">
+                <Param name="spendbaseUserId" type="string" required>The registered employee.</Param>
+                <Param name="accountId" type="string" required>
+                  The budget&apos;s account ID: the same value <a href="#create-card" className="underline">Create card</a>{" "}
+                  takes.
+                </Param>
+              </div>
+              <ResponseBlock status="Request body">{`{
+  "spendbaseUserId": "01a1f3c8-9b2d-4c7e-8f6a-3d5e7b9c1a2f",
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q"
+}`}</ResponseBlock>
+              <ResponseBlock>{`{
+  "cardholder": {
+    "spendbaseUserId": "01a1f3c8-9b2d-4c7e-8f6a-3d5e7b9c1a2f",
+    "state": "REGISTERED",
+    "firstName": "Alex",
+    "lastName": "Morgan",
+    "termsVersion": "2026-11",
+    "termsAcceptedAt": "2026-11-19T17:47:10Z",
+    "termsCurrent": true,
+    "budgets": [
+      {
+        "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+        "budgetName": "Travel",
+        "status": "PENDING",
+        "createdAt": "2026-11-19T17:49:06Z"
+      }
+    ]
+  },
+  "terms": {
+    "url": "https://example.com/cardholder-terms",
+    "version": "2026-11"
+  }
+}`}</ResponseBlock>
+              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_NOT_REGISTERED</code>: the employee
+                  has not registered in the app yet.
+                </li>
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">TERMS_NOT_CURRENT</code>: the employee must
+                  accept the current cardholder terms in the app.
+                </li>
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">COMPANY_NOT_APPROVED</code>: your
+                  company&apos;s own application is not approved yet.
+                </li>
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">APPLICATION_NOT_ACCEPTED</code>: the bank did
+                  not accept the application; the message may list the bank&apos;s reason codes.
+                </li>
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">404</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_NOT_FOUND</code>: not an active
+                  member who may hold cards. A <code className="bg-muted px-1 py-0.5 rounded text-xs">404</code>{" "}
+                  without <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code> means no such budget.
+                </li>
+                <li>
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">ADD_IN_PROGRESS</code>: the same request is
+                  already being processed. Try again in a minute.
+                </li>
+              </ul>
+            </div>
+          </RegionOnly>
         </div>
         <PageNav />
       </div>
@@ -2761,7 +3167,8 @@ function EuWebhookEvents() {
         <h2 className="text-2xl font-semibold">Card lifecycle events</h2>
         <p className="text-muted-foreground leading-relaxed">
           Card Created, Card Blocked, Card Unblocked and Card Terminated share one payload. It matches the US card
-          payload, plus <code className={code}>reason</code> and the deprecated snake_case keys. Values that are not known are sent as <code className={code}>null</code>, never as an empty string. An event
+          payload except <code className={code}>bin</code>, which EU card events do not carry, plus{" "}
+          <code className={code}>reason</code> and the deprecated snake_case keys. Values that are not known are sent as <code className={code}>null</code>, never as an empty string. An event
           is sent only when the card status actually changes, so repeating a lock on a locked card sends nothing.
         </p>
         <ResponseBlock status="Payload">{EU_CARD_LIFECYCLE_PAYLOAD}</ResponseBlock>
@@ -3695,6 +4102,7 @@ const US_CARD_LIFECYCLE_PAYLOAD = `{
   cardStatus: SpendbaseCardStatus;       // status after the change
   previousStatus: SpendbaseCardStatus | null;  // status before the change; null on Card Created
   initiatedBy: 'product' | 'bank' | null;      // who made the change; null on Card Created
+  bin: string | null;                    // the card's BIN, as in Get Card; null when not known
   timestamp: string;                     // UTC RFC 3339
   eventId: string;                       // unique per event, same on every redelivery; see Delivery
 }`
@@ -3794,6 +4202,9 @@ function UsWebhookEvents() {
             <li>
               <code className={code}>accountId</code>, <code className={code}>cardName</code>,{" "}
               <code className={code}>panLastFour</code>: rare, when the card record is missing that value.
+            </li>
+            <li>
+              <code className={code}>bin</code> on card events: the card&apos;s BIN is not known.
             </li>
             <li>
               <code className={code}>transferId</code> on Balance Adjusted: the adjustment was made by Spendbase, not by

@@ -368,6 +368,55 @@ curl --cert client.crt --key client.key \\
   $BASE_URL/cards/get-cardholder/$CARDHOLDER_ID`,
   },
   {
+    title: "List Employees",
+    section: "cards",
+    region: "us",
+    code: `curl --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/cardholder-enrollments`,
+  },
+  {
+    title: "Invite Employee",
+    section: "cards",
+    region: "us",
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  -H "Content-Type: application/json" \\
+  -d '{"spendbaseUserId": "$EMPLOYEE_ID"}' \\
+  $BASE_URL/cards/cardholder-invites`,
+  },
+  {
+    title: "Withdraw Invite",
+    section: "cards",
+    region: "us",
+    code: `curl -X DELETE --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/cardholder-invites/$EMPLOYEE_ID`,
+  },
+  {
+    title: "Add Employee to a Budget",
+    section: "cards",
+    region: "us",
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  -H "Content-Type: application/json" \\
+  -d '{"spendbaseUserId": "$EMPLOYEE_ID",
+       "accountId": "$BUDGET_ACCOUNT_ID"}' \\
+  $BASE_URL/cards/cardholder-budgets`,
+  },
+  {
     title: "Get Card Transactions",
     section: "transactions",
     code: `curl --cert client.crt --key client.key \\
