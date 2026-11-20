@@ -5,9 +5,9 @@ import { Search, Menu, X } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { RegionSwitcher, regionPath, useRegion, type Region } from "@/components/region"
+import { RegionSwitcher, regionPath, useRegion, US_REGIONS, inRegion, type Region, type RegionSpec } from "@/components/region"
 
-const ALL_SECTIONS: { label: string; id: string; group: string; page: string; region?: Region }[] = [
+const ALL_SECTIONS: { label: string; id: string; group: string; page: string; region?: RegionSpec }[] = [
   { label: "Basic Requirements", id: "basic-requirements", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Authentication & TLS", id: "authentication-tls", group: "Getting Started", page: "/docs/getting-started" },
   { label: "Go Signing Example", id: "go-signing-example", group: "Getting Started", page: "/docs/getting-started" },
@@ -38,11 +38,11 @@ const ALL_SECTIONS: { label: string; id: string; group: string; page: string; re
   { label: "Add Cardholder", id: "add-cardholder", group: "Cards", page: "/docs/cards", region: "eu" },
   { label: "Get Cardholder", id: "get-cardholder", group: "Cards", page: "/docs/cards", region: "eu" },
   { label: "Get Team Cardholders", id: "get-team-cardholders", group: "Cards", page: "/docs/cards" },
-  { label: "Employees", id: "employees", group: "Cards", page: "/docs/cards", region: "us" },
-  { label: "List Employees", id: "cardholder-enrollments", group: "Cards", page: "/docs/cards", region: "us" },
-  { label: "Invite Employee", id: "invite-cardholder", group: "Cards", page: "/docs/cards", region: "us" },
-  { label: "Withdraw Invite", id: "withdraw-cardholder-invite", group: "Cards", page: "/docs/cards", region: "us" },
-  { label: "Add Employee to a Budget", id: "add-cardholder-to-budget", group: "Cards", page: "/docs/cards", region: "us" },
+  { label: "Employees", id: "employees", group: "Cards", page: "/docs/cards", region: "us2" },
+  { label: "List Employees", id: "cardholder-enrollments", group: "Cards", page: "/docs/cards", region: "us2" },
+  { label: "Invite Employee", id: "invite-cardholder", group: "Cards", page: "/docs/cards", region: "us2" },
+  { label: "Withdraw Invite", id: "withdraw-cardholder-invite", group: "Cards", page: "/docs/cards", region: "us2" },
+  { label: "Add Employee to a Budget", id: "add-cardholder-to-budget", group: "Cards", page: "/docs/cards", region: "us2" },
   { label: "Get Card Transactions", id: "get-card-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Transactions", id: "get-transactions", group: "Transactions", page: "/docs/transactions" },
   { label: "Get Master Transactions", id: "get-master-transactions", group: "Transactions", page: "/docs/transactions" },
@@ -72,18 +72,18 @@ const ALL_SECTIONS: { label: string; id: string; group: string; page: string; re
   { label: "Chargeback Events", id: "chargeback-events", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
   { label: "Chargeback Adjustment", id: "chargeback-adjustment", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
   { label: "Chargeback Fee Charged", id: "chargeback-fee-charged", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
-  { label: "Account Funded", id: "account-funded", group: "Webhooks", page: "/docs/webhooks", region: "us" },
-  { label: "Account Withdrawn", id: "account-withdrawn", group: "Webhooks", page: "/docs/webhooks", region: "us" },
-  { label: "Balance Adjusted", id: "balance-adjusted", group: "Webhooks", page: "/docs/webhooks", region: "us" },
-  { label: "Budget Transfer Failed", id: "budget-transfer-failed", group: "Webhooks", page: "/docs/webhooks", region: "us" },
-  { label: "Account Provisioned", id: "account-provisioned", group: "Webhooks", page: "/docs/webhooks", region: "us" },
-  { label: "Account Created", id: "account-created", group: "Webhooks", page: "/docs/webhooks", region: "us" },
+  { label: "Account Funded", id: "account-funded", group: "Webhooks", page: "/docs/webhooks", region: US_REGIONS },
+  { label: "Account Withdrawn", id: "account-withdrawn", group: "Webhooks", page: "/docs/webhooks", region: US_REGIONS },
+  { label: "Balance Adjusted", id: "balance-adjusted", group: "Webhooks", page: "/docs/webhooks", region: US_REGIONS },
+  { label: "Budget Transfer Failed", id: "budget-transfer-failed", group: "Webhooks", page: "/docs/webhooks", region: US_REGIONS },
+  { label: "Account Provisioned", id: "account-provisioned", group: "Webhooks", page: "/docs/webhooks", region: US_REGIONS },
+  { label: "Account Created", id: "account-created", group: "Webhooks", page: "/docs/webhooks", region: US_REGIONS },
   { label: "Release Notes", id: "release-notes", group: "Versioning", page: "/docs/versioning" },
   { label: "2026-11-18 (EU)", id: "2026-11-18", group: "Versioning", page: "/docs/versioning", region: "eu" },
   { label: "2026-11-16 (EU)", id: "2026-11-16", group: "Versioning", page: "/docs/versioning", region: "eu" },
-  { label: "2026-11-04 (US)", id: "2026-11-04", group: "Versioning", page: "/docs/versioning", region: "us" },
-  { label: "2026-10-19 (US)", id: "2026-10-19", group: "Versioning", page: "/docs/versioning", region: "us" },
-  { label: "2026-09-03", id: "2026-09-03", group: "Versioning", page: "/docs/versioning", region: "us" },
+  { label: "2026-11-04 (US)", id: "2026-11-04", group: "Versioning", page: "/docs/versioning", region: US_REGIONS },
+  { label: "2026-10-19 (US)", id: "2026-10-19", group: "Versioning", page: "/docs/versioning", region: US_REGIONS },
+  { label: "2026-09-03", id: "2026-09-03", group: "Versioning", page: "/docs/versioning", region: US_REGIONS },
   { label: "2026-08-13", id: "2026-08-13", group: "Versioning", page: "/docs/versioning" },
   { label: "2026-06-25", id: "2026-06-25", group: "Versioning", page: "/docs/versioning" },
 ]
@@ -100,7 +100,7 @@ export function DocsHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const results = query.trim()
     ? ALL_SECTIONS.filter(
         (s) =>
-          (!s.region || s.region === region) &&
+          inRegion(region, s.region) &&
           (s.label.toLowerCase().includes(query.toLowerCase()) ||
             s.group.toLowerCase().includes(query.toLowerCase()))
       )

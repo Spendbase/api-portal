@@ -3,7 +3,7 @@ import { Separator } from "@/components/ui/separator"
 import { AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ResponseBlock } from "@/components/response-block"
-import { RegionLink, RegionOnly } from "@/components/region"
+import { RegionLink, RegionOnly, US_REGIONS } from "@/components/region"
 import { PageNav } from "@/components/page-nav"
 
 function GetBadge() {
@@ -474,7 +474,7 @@ export function GettingStartedContent() {
                 <code className="bg-muted px-1 py-0.5 rounded">429</code> can also come from the card provider when it
                 rate-limits requests.
               </li>
-              <RegionOnly region="us">
+              <RegionOnly region={US_REGIONS}>
                 <li>
                   Transfer money, Transfer with note: 5 requests per minute, 30 requests per hour.
                 </li>
@@ -678,7 +678,7 @@ export function QuickStartContent() {
                 Take the <code className={code}>id</code> of the master account. Cards can be issued on it directly.
               </p>
             </RegionOnly>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <p>
                 A sub-account named <code className={code}>Main budget</code> is already created for you. Take its{" "}
                 <code className={code}>id</code>: you can issue cards on it right away.
@@ -692,7 +692,7 @@ export function QuickStartContent() {
               <RegionLink href="/docs/accounts#create-account">Create account</RegionLink>, passing the bank account{" "}
               <code className={code}>id</code> from step 1 as <code className={code}>ledgerBankAccountId</code>.
             </p>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <p>
                 In the US a sub-account name can be at most 13 characters, and a new sub-account starts with no funds:
                 cards on it are declined until the Spendbase team funds it.
@@ -742,7 +742,7 @@ export function QuickStartContent() {
               </ul>
             </QuickStartStep>
           </RegionOnly>
-          <RegionOnly region="us">
+          <RegionOnly region={US_REGIONS}>
             <QuickStartStep id="qs-create-card" n={4} title="Issue a card">
               <p>
                 Call <RegionLink href="/docs/cards#create-card">Create card</RegionLink> with:
@@ -754,18 +754,25 @@ export function QuickStartContent() {
                 <li>
                   <code className={code}>cardName</code>: a name for the card
                 </li>
-                <li>
-                  <code className={code}>email</code>: the email the Spendbase account was created with
-                </li>
+                <RegionOnly region="us">
+                  <li>
+                    <code className={code}>email</code>: the email the Spendbase account was created with
+                  </li>
+                </RegionOnly>
+                <RegionOnly region="us2">
+                  <li>
+                    <code className={code}>spendbaseUserId</code>: the employee the card is for
+                  </li>
+                </RegionOnly>
               </ul>
-              <p>
-                If your company&apos;s cards are issued to named employees, send{" "}
-                <code className={code}>spendbaseUserId</code> (the employee) instead of{" "}
-                <code className={code}>email</code>, after the employee is approved on that budget: see{" "}
-                <RegionLink href="/docs/cards#employees">Employees</RegionLink>. An{" "}
-                <code className={code}>email</code>-only request is refused with{" "}
-                <code className={code}>EMPLOYEE_REQUIRED</code>.
-              </p>
+              <RegionOnly region="us2">
+                <p>
+                  Every card is issued to a named employee, and the employee must be approved on that budget first:
+                  see <RegionLink href="/docs/cards#employees">Employees</RegionLink>. A request without{" "}
+                  <code className={code}>spendbaseUserId</code> is refused with{" "}
+                  <code className={code}>EMPLOYEE_REQUIRED</code>.
+                </p>
+              </RegionOnly>
               <p>
                 Set a spending limit with <RegionLink href="/docs/cards#set-limit">Set limit</RegionLink> after the card
                 is created.
@@ -1192,7 +1199,7 @@ export function AccountsContent() {
               created account (use it for transfers and Get account by ID). If it is empty, get the ID from Get ledger
               accounts.
             </p>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note>
                 <p>
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">accountName</code> can be at most 13 characters (an emoji counts as 2); longer names
@@ -1251,7 +1258,7 @@ export function AccountsContent() {
               <code className="bg-muted px-1 py-0.5 rounded text-xs">ref</code> of a sub account is the account{" "}
               <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> returned by create account.
             </p>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note>
                 <p>
                   US accounts have two levels: the bank account and its sub-accounts.{" "}
@@ -1343,7 +1350,7 @@ export function AccountsContent() {
               Ledger IDs can be received from the ledger accounts route. Responds with a success message if the money
               was transferred.
             </p>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note>
                 <p>
                   In the US this moves money between two of your sub-accounts. The bank confirms the transfer, which
@@ -1409,7 +1416,7 @@ export function AccountsContent() {
                 <li><code className="bg-muted px-1 py-0.5 rounded">insufficient funds</code> — <code className="bg-muted px-1 py-0.5 rounded">amount</code> exceeds the source account&apos;s <code className="bg-muted px-1 py-0.5 rounded">freeBalance</code></li>
               </ul>
             </div>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
                 <p className="text-sm font-medium">US — the reason is in <code className="bg-muted px-1 py-0.5 rounded">error</code></p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
@@ -1437,7 +1444,7 @@ export function AccountsContent() {
               Same as Transfer money (with the same 400 errors), but also attaches the note to both the debit and the
               credit transaction of the transfer.
             </p>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note warning>
                 <p>
                   In the US a successful response means the note was attached to both sides of the transfer, not that
@@ -1498,7 +1505,7 @@ export function AccountsContent() {
             <p className="text-muted-foreground leading-relaxed">
               Responds with the account ID, new name and ledger account ID.
             </p>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note warning>
                 <p>
                   Not available in the US: a sub-account keeps the name it was created with. The request is always
@@ -1592,37 +1599,42 @@ export function CardsContent() {
                     {" "}3–50 characters: Latin letters, digits, spaces and <code className="bg-muted px-1 py-0.5 rounded text-xs">- , . /</code>. Other characters are
                     rejected.
                   </RegionOnly>
-                  <RegionOnly region="us"> Up to 255 characters.</RegionOnly>
+                  <RegionOnly region={US_REGIONS}> Up to 255 characters.</RegionOnly>
                 </Param>
-                <Param name="spendbaseUserId" type="string">
-                  Spendbase user ID of the cardholder.
-                  <RegionOnly region="eu">
-                    {" "}Use the <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> returned by{" "}
-                    <a href="#add-cardholder" className="underline">Add cardholder</a>.
-                  </RegionOnly>{" "}
-                  One of <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is required.
-                  <RegionOnly region="us">
-                    {" "}For companies whose cards are issued to named employees,{" "}
-                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> is required and names
-                    the employee the card is for. The employee must be approved on the card&apos;s budget: see{" "}
-                    <a href="#employees" className="underline">Employees</a>.
-                  </RegionOnly>
-                </Param>
-                <Param name="email" type="string">
-                  <RegionOnly region="eu">Cardholder email, used when <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> is not set.</RegionOnly>
-                  <RegionOnly region="us">
-                    Cardholder email: the email the Spendbase account was created with. Used when{" "}
-                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> is not set.
-                  </RegionOnly>{" "}
-                  One of <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is required.
-                </Param>
+                <RegionOnly region={["us", "eu"]}>
+                  <Param name="spendbaseUserId" type="string">
+                    Spendbase user ID of the cardholder.
+                    <RegionOnly region="eu">
+                      {" "}Use the <code className="bg-muted px-1 py-0.5 rounded text-xs">id</code> returned by{" "}
+                      <a href="#add-cardholder" className="underline">Add cardholder</a>.
+                    </RegionOnly>{" "}
+                    One of <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is required.
+                  </Param>
+                  <Param name="email" type="string">
+                    <RegionOnly region="eu">Cardholder email, used when <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> is not set.</RegionOnly>
+                    <RegionOnly region="us">
+                      Cardholder email: the email the Spendbase account was created with. Used when{" "}
+                      <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> is not set.
+                    </RegionOnly>{" "}
+                    One of <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> or <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is required.
+                  </Param>
+                </RegionOnly>
+                <RegionOnly region="us2">
+                  <Param name="spendbaseUserId" type="string" required>
+                    The employee the card is for. The employee must be approved on the card&apos;s budget: see{" "}
+                    <a href="#employees" className="underline">Employees</a>.{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code> is not accepted in place of
+                    it: a request without <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code>{" "}
+                    is refused with <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_REQUIRED</code>.
+                  </Param>
+                </RegionOnly>
                 <Param name="limit" type="object">
                   Initial card limit, same shape as the{" "}
                   <a href="#set-limit" className="underline">Set limit</a> body:{" "}
                   <code className="bg-muted px-1 rounded text-xs">type</code> (required),{" "}
                   <code className="bg-muted px-1 rounded text-xs">amount</code>.
                   <RegionOnly region="eu"> Applied asynchronously after the card is created.</RegionOnly>
-                  <RegionOnly region="us">
+                  <RegionOnly region={US_REGIONS}>
                     {" "}Not applied in the US: the card is created without a limit. Call Set limit after creating the
                     card.
                   </RegionOnly>
@@ -1652,6 +1664,13 @@ export function CardsContent() {
   "expirationDate": "2028-12-31T23:59:59Z"
 }`}</ResponseBlock>
             </RegionOnly>
+            <RegionOnly region="us2">
+              <ResponseBlock status="Request body">{`{
+  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
+  "cardName": "Travel — Alex",
+  "spendbaseUserId": "01a1f3c8-9b2d-4c7e-8f6a-3d5e7b9c1a2f"
+}`}</ResponseBlock>
+            </RegionOnly>
             <RegionOnly region="us">
               <ResponseBlock status="Request body">{`{
   "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
@@ -1675,35 +1694,30 @@ export function CardsContent() {
                 </p>
               </Note>
             </RegionOnly>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note>
                 <p>
                   The card currency is always USD.
                 </p>
-                <p>
-                  Companies whose cards are issued to named employees: send{" "}
-                  <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> instead of{" "}
-                  <code className="bg-muted px-1 py-0.5 rounded text-xs">email</code>. A card is created only for an
-                  employee whose status on that budget is <code className="bg-muted px-1 py-0.5 rounded text-xs">APPROVED</code>.
-                  To issue cards in bulk, call Create card once per card.
-                </p>
+                <RegionOnly region="us2">
+                  <p>
+                    Every card is issued to a named employee. A card is created only for an employee whose status on
+                    that budget is <code className="bg-muted px-1 py-0.5 rounded text-xs">APPROVED</code>. To issue
+                    cards in bulk, call Create card once per card.
+                  </p>
+                </RegionOnly>
               </Note>
-              <ResponseBlock status="Request body: named employee">{`{
-  "accountId": "RVVNV0VVUgBhM2Y1ZDhjMi02ZTFiLTRmOWEtOGM3ZC0yYjRlNmY4YTFjM2Q",
-  "cardName": "Travel — Alex",
-  "spendbaseUserId": "01a1f3c8-9b2d-4c7e-8f6a-3d5e7b9c1a2f"
-}`}</ResponseBlock>
             </RegionOnly>
             <ResponseBlock>{`{
   "code": 200,
   "message": "200 OK",
   "id": "string"
 }`}</ResponseBlock>
-            <RegionOnly region="us">
+            <RegionOnly region="us2">
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
                 <p className="text-sm font-medium">Card refused: errorCode</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  For companies whose cards are issued to named employees, a refused card carries{" "}
+                  A refused card carries{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>.{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">code</code> is the HTTP status and{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code> is for people and may be
@@ -1816,7 +1830,7 @@ export function CardsContent() {
               value are omitted from the response.
             </p>
             <ResponseBlock>{CARD_OBJECT}</ResponseBlock>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
                 <p className="text-sm font-medium">US card fields</p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
@@ -1829,12 +1843,13 @@ export function CardsContent() {
                     number any response carries outside Get card details. Also returned by Get all cards and Get
                     account cards.
                   </li>
-                  <li>
-                    <code className="bg-muted px-1 py-0.5 rounded text-xs">cardHolder.id</code>: for companies whose
-                    cards are issued to named employees, the{" "}
-                    <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> of the employee who
-                    holds the card.
-                  </li>
+                  <RegionOnly region="us2">
+                    <li>
+                      <code className="bg-muted px-1 py-0.5 rounded text-xs">cardHolder.id</code>: the{" "}
+                      <code className="bg-muted px-1 py-0.5 rounded text-xs">spendbaseUserId</code> of the employee who
+                      holds the card.
+                    </li>
+                  </RegionOnly>
                 </ul>
               </div>
             </RegionOnly>
@@ -1933,7 +1948,7 @@ export function CardsContent() {
                   A card with status <code className="bg-muted px-1 py-0.5 rounded text-xs">NEW</code> returns empty card number, CVV and expiry.
                 </p>
               </RegionOnly>
-              <RegionOnly region="us">
+              <RegionOnly region={US_REGIONS}>
                 <p>A terminated card returns an empty card number and CVV.</p>
               </RegionOnly>
             </Note>
@@ -1996,7 +2011,7 @@ export function CardsContent() {
                 </p>
               </Note>
             </RegionOnly>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note>
                 <p>Locking an already locked card succeeds without changes.</p>
               </Note>
@@ -2027,7 +2042,7 @@ export function CardsContent() {
                 </p>
               </Note>
             </RegionOnly>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note>
                 <p>Unlocking an active card succeeds without changes. A terminated card cannot be unlocked.</p>
               </Note>
@@ -2059,7 +2074,7 @@ export function CardsContent() {
                 </p>
               </Note>
             </RegionOnly>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note>
                 <p>
                   Terminating an already terminated card succeeds without changes, so a repeated call is safe. A
@@ -2110,7 +2125,7 @@ export function CardsContent() {
                       ]}
                     />
                   </RegionOnly>
-                  <RegionOnly region="us">
+                  <RegionOnly region={US_REGIONS}>
                     <EnumValues
                       values={[
                         ["DAILY", "Spending cap that resets every day."],
@@ -2132,7 +2147,7 @@ export function CardsContent() {
   "type": "MONTHLY",
   "amount": 1000
 }`}</ResponseBlock>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note warning>
                 <p>
                   Setting or updating a limit resets its usage. Only transactions made after the limit is set count
@@ -2161,7 +2176,7 @@ export function CardsContent() {
                   pending returns <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>.
                 </p>
               </RegionOnly>
-              <RegionOnly region="us">
+              <RegionOnly region={US_REGIONS}>
                 <p>
                   Two concurrent updates of the same card return <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>; nothing is changed.
                 </p>
@@ -2334,15 +2349,15 @@ export function CardsContent() {
             </div>
           </div>
 
-          <RegionOnly region="us">
+          <RegionOnly region="us2">
             <Separator />
 
             {/* Employees */}
             <div id="employees" className="space-y-4">
               <h2 className="text-2xl font-semibold">Employees</h2>
               <p className="text-muted-foreground leading-relaxed">
-                For companies whose cards are issued to named employees, every card is issued on a budget to one
-                employee, and the bank must approve that employee for that budget first. The flow:
+                Every card is issued on a budget to one named employee, and the bank must approve that employee for
+                that budget first. The flow:
               </p>
               <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground leading-relaxed">
                 <li>
@@ -2367,7 +2382,7 @@ export function CardsContent() {
                 </li>
               </ol>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Companies whose cards are not issued to named employees get{" "}
+                These endpoints exist in the US2 region only: a company outside it gets{" "}
                 <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> with{" "}
                 <code className="bg-muted px-1 py-0.5 rounded text-xs">errorCode</code>{" "}
                 <code className="bg-muted px-1 py-0.5 rounded text-xs">CARDHOLDERS_NOT_OFFERED</code> from every
@@ -2741,7 +2756,7 @@ function EuOnlyTransactionFields() {
           (previously up to 255). Do not assume a shorter maximum length when storing or displaying it.
         </p>
       </RegionOnly>
-      <RegionOnly region="us">
+      <RegionOnly region={US_REGIONS}>
         <p>
           <code className="font-mono">details.isReversed</code> and{" "}
           <code className="font-mono">details.originalTransactionId</code> are only returned for EU accounts. US
@@ -2905,7 +2920,7 @@ export function TransactionsContent() {
             <RegionOnly region="eu">
               <ResponseBlock>{transactionsByAccountExample(true)}</ResponseBlock>
             </RegionOnly>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <ResponseBlock>{transactionsByAccountExample(false)}</ResponseBlock>
             </RegionOnly>
             <EuOnlyTransactionFields />
@@ -2933,7 +2948,7 @@ export function TransactionsContent() {
               transactions are returned, together with the account <code className="font-mono">balances</code> when
               available. Fields with zero/empty values are omitted from the response.
             </p>
-            <RegionOnly region="us">
+            <RegionOnly region={US_REGIONS}>
               <Note warning>
                 <p>US accounts have no master account, so this endpoint returns an empty list.</p>
               </Note>
@@ -4845,7 +4860,7 @@ def webhook():
 
           </div>
 
-          <RegionOnly region="us">
+          <RegionOnly region={US_REGIONS}>
             <UsWebhookEvents />
           </RegionOnly>
 

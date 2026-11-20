@@ -5,9 +5,9 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
-import { DEFAULT_REGION, REGIONS, regionPath, type Region } from "@/lib/region"
+import { DEFAULT_REGION, REGIONS, inRegion, regionPath, switchRegionPath, type Region, type RegionSpec } from "@/lib/region"
 
-export { DEFAULT_REGION, REGIONS, isRegion, regionPath, type Region } from "@/lib/region"
+export { DEFAULT_REGION, REGIONS, US_REGIONS, inRegion, isRegion, regionPath, type Region, type RegionSpec } from "@/lib/region"
 
 const RegionContext = createContext<Region>(DEFAULT_REGION)
 
@@ -19,8 +19,8 @@ export function useRegion() {
   return useContext(RegionContext)
 }
 
-export function RegionOnly({ region, children }: { region: Region; children: React.ReactNode }) {
-  return useRegion() === region ? <>{children}</> : null
+export function RegionOnly({ region, children }: { region: RegionSpec; children: React.ReactNode }) {
+  return inRegion(useRegion(), region) ? <>{children}</> : null
 }
 
 export function RegionSwitcher() {
@@ -30,8 +30,7 @@ export function RegionSwitcher() {
 
   const switchTo = (next: Region) => {
     if (next === region) return
-    const path = pathname.replace(/^\/docs\/(us|eu)(?=\/|$)/, `/docs/${next}`)
-    router.push(path + window.location.hash)
+    router.push(switchRegionPath(pathname, next) + window.location.hash)
   }
 
   return (

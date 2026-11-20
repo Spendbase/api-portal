@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { ChevronDown, ChevronRight, X } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { regionPath, useRegion, type Region } from "@/components/region"
+import { regionPath, useRegion, US_REGIONS, inRegion, type Region, type RegionSpec } from "@/components/region"
 
-export const DOCS_SECTIONS: { title: string; path: string; items: { label: string; id: string; region?: Region }[] }[] = [
+export const DOCS_SECTIONS: { title: string; path: string; items: { label: string; id: string; region?: RegionSpec }[] }[] = [
   {
     title: "Getting Started",
     path: "/docs/getting-started",
@@ -59,11 +59,11 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Add Cardholder", id: "add-cardholder", region: "eu" },
       { label: "Get Cardholder", id: "get-cardholder", region: "eu" },
       { label: "Get Team Cardholders", id: "get-team-cardholders" },
-      { label: "Employees", id: "employees", region: "us" },
-      { label: "List Employees", id: "cardholder-enrollments", region: "us" },
-      { label: "Invite Employee", id: "invite-cardholder", region: "us" },
-      { label: "Withdraw Invite", id: "withdraw-cardholder-invite", region: "us" },
-      { label: "Add Employee to a Budget", id: "add-cardholder-to-budget", region: "us" },
+      { label: "Employees", id: "employees", region: "us2" },
+      { label: "List Employees", id: "cardholder-enrollments", region: "us2" },
+      { label: "Invite Employee", id: "invite-cardholder", region: "us2" },
+      { label: "Withdraw Invite", id: "withdraw-cardholder-invite", region: "us2" },
+      { label: "Add Employee to a Budget", id: "add-cardholder-to-budget", region: "us2" },
     ],
   },
   {
@@ -105,12 +105,12 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Chargeback Events", id: "chargeback-events", region: "eu" },
       { label: "Chargeback Adjustment", id: "chargeback-adjustment", region: "eu" },
       { label: "Chargeback Fee Charged", id: "chargeback-fee-charged", region: "eu" },
-      { label: "Account Funded", id: "account-funded", region: "us" },
-      { label: "Account Withdrawn", id: "account-withdrawn", region: "us" },
-      { label: "Balance Adjusted", id: "balance-adjusted", region: "us" },
-      { label: "Budget Transfer Failed", id: "budget-transfer-failed", region: "us" },
-      { label: "Account Provisioned", id: "account-provisioned", region: "us" },
-      { label: "Account Created", id: "account-created", region: "us" },
+      { label: "Account Funded", id: "account-funded", region: US_REGIONS },
+      { label: "Account Withdrawn", id: "account-withdrawn", region: US_REGIONS },
+      { label: "Balance Adjusted", id: "balance-adjusted", region: US_REGIONS },
+      { label: "Budget Transfer Failed", id: "budget-transfer-failed", region: US_REGIONS },
+      { label: "Account Provisioned", id: "account-provisioned", region: US_REGIONS },
+      { label: "Account Created", id: "account-created", region: US_REGIONS },
     ],
   },
   {
@@ -120,9 +120,9 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Release Notes", id: "release-notes" },
       { label: "2026-11-18 (EU)", id: "2026-11-18", region: "eu" },
       { label: "2026-11-16 (EU)", id: "2026-11-16", region: "eu" },
-      { label: "2026-11-04 (US)", id: "2026-11-04", region: "us" },
-      { label: "2026-10-19 (US)", id: "2026-10-19", region: "us" },
-      { label: "2026-09-03", id: "2026-09-03", region: "us" },
+      { label: "2026-11-04 (US)", id: "2026-11-04", region: US_REGIONS },
+      { label: "2026-10-19 (US)", id: "2026-10-19", region: US_REGIONS },
+      { label: "2026-09-03", id: "2026-09-03", region: US_REGIONS },
       { label: "2026-08-13", id: "2026-08-13" },
       { label: "2026-06-25", id: "2026-06-25" },
     ],
@@ -196,7 +196,7 @@ function SidebarNav({
               </button>
               {open && (
                 <ul className="mt-1 mb-2">
-                  {section.items.filter((item) => !item.region || item.region === region).map((item) => {
+                  {section.items.filter((item) => inRegion(region, item.region)).map((item) => {
                     return (
                       <li key={item.id}>
                         <Link
