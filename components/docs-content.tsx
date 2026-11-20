@@ -1739,8 +1739,9 @@ export function CardsContent() {
                 <RegionOnly region="us2">
                   <p>
                     Every card is issued to a named employee. A card is created only for an employee whose status on
-                    that budget is <code className="bg-muted px-1 py-0.5 rounded text-xs">APPROVED</code>. To issue
-                    cards in bulk, call Create card once per card.
+                    that budget is <code className="bg-muted px-1 py-0.5 rounded text-xs">APPROVED</code>, and an
+                    employee can hold one card per budget that is not terminated. To issue cards in bulk, call Create
+                    card once per card.
                   </p>
                 </RegionOnly>
               </Note>
@@ -1799,6 +1800,12 @@ export function CardsContent() {
                     <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
                     <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_ACCESS_CLOSED</code>: the
                     employee&apos;s access to this budget was closed.
+                  </li>
+                  <li>
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded text-xs">EMPLOYEE_ALREADY_HAS_CARD</code>: the
+                    employee already has a card on this budget that is not terminated. An employee can hold one such
+                    card per budget: terminate it to issue another.
                   </li>
                 </ul>
                 <p className="text-sm text-muted-foreground leading-relaxed">
