@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useRegion, type Region } from "@/components/region"
+import { useRegion, US_REGIONS, inRegion, type Region, type RegionSpec } from "@/components/region"
 import { cn } from "@/lib/utils"
 
 type Section = "getting-started" | "quick-start" | "accounts" | "cards" | "transactions" | "webhooks"
@@ -60,8 +60,8 @@ function EnvRow({ label, value, copyable, sub }: { label: string; value: string;
   )
 }
 
-// region: only shown for that region (endpoints backed by the cards service are EU-only)
-const EXAMPLES: { title: string; section: Section; code: string; region?: Region }[] = [
+// region: only shown for those regions (endpoints backed by the cards service are EU-only; Employees are US2-only)
+const EXAMPLES: { title: string; section: Section; code: string; region?: RegionSpec }[] = [
   {
     title: "Get Accounts by Currency",
     section: "accounts",
@@ -216,7 +216,7 @@ const EXAMPLES: { title: string; section: Section; code: string; region?: Region
     // US: the cardholder is identified by the email the Spendbase account was created with
     title: "Create Card",
     section: "cards",
-    region: "us",
+    region: US_REGIONS,
     code: `curl -X POST --cert client.crt --key client.key \\
   -H "X-Api-Key: $API_KEY" \\
   -H "X-Signature: $SIGNATURE" \\
@@ -368,6 +368,55 @@ curl --cert client.crt --key client.key \\
   $BASE_URL/cards/get-cardholder/$CARDHOLDER_ID`,
   },
   {
+    title: "List Employees",
+    section: "cards",
+    region: "us2",
+    code: `curl --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/cardholder-enrollments`,
+  },
+  {
+    title: "Invite Employee",
+    section: "cards",
+    region: "us2",
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  -H "Content-Type: application/json" \\
+  -d '{"spendbaseUserId": "$EMPLOYEE_ID"}' \\
+  $BASE_URL/cards/cardholder-invites`,
+  },
+  {
+    title: "Withdraw Invite",
+    section: "cards",
+    region: "us2",
+    code: `curl -X DELETE --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/cardholder-invites/$EMPLOYEE_ID`,
+  },
+  {
+    title: "Add Employee to a Budget",
+    section: "cards",
+    region: "us2",
+    code: `curl -X POST --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  -H "Content-Type: application/json" \\
+  -d '{"spendbaseUserId": "$EMPLOYEE_ID",
+       "accountId": "$BUDGET_ACCOUNT_ID"}' \\
+  $BASE_URL/cards/cardholder-budgets`,
+  },
+  {
     title: "Get Card Transactions",
     section: "transactions",
     code: `curl --cert client.crt --key client.key \\
@@ -448,6 +497,10 @@ const AUTH: Record<Region, { default: string; webhooks: string }> = {
     default: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce) + TLS Certificates",
     webhooks: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce)",
   },
+  us2: {
+    default: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce) + TLS Certificates",
+    webhooks: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce)",
+  },
   eu: {
     default: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce) or External-Token, + TLS Certificates",
     webhooks: "X-Api-Key + Ed25519 signature (X-Signature, X-Timestamp, X-Nonce) or External-Token",
@@ -488,7 +541,7 @@ export function CodePanel({ section }: { section: Section }) {
   // EU supports both API keys and legacy API tokens; US uses API keys only.
   const [authChoice, setAuthChoice] = useState<AuthMethod>("api-key")
   const auth: AuthMethod = region === "eu" ? authChoice : "api-key"
-  const examples = EXAMPLES.filter((e) => e.section === section && (!e.region || e.region === region))
+  const examples = EXAMPLES.filter((e) => e.section === section && inRegion(region, e.region))
 
   return (
     <aside className="hidden xl:block w-[min(480px,38%)] shrink-0 border-l border-border bg-card sticky top-14 h-[calc(100vh-3.5rem)] self-start">
