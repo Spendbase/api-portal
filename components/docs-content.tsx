@@ -641,6 +641,47 @@ function QuickStartStep({ id, n, title, children }: { id: string; n: number; tit
   )
 }
 
+// US and US2 "Issue a card" step; US2 has an extra employee step before it, so the number differs.
+function UsIssueCardStep({ n }: { n: number }) {
+  const code = "bg-muted px-1 py-0.5 rounded text-xs"
+  return (
+    <QuickStartStep id="qs-create-card" n={n} title="Issue a card">
+      <p>
+        Call <RegionLink href="/docs/cards#create-card">Create card</RegionLink> with:
+      </p>
+      <ul className="list-disc list-inside space-y-1">
+        <li>
+          <code className={code}>accountId</code>: the sub-account <code className={code}>id</code>
+        </li>
+        <li>
+          <code className={code}>cardName</code>: a name for the card
+        </li>
+        <RegionOnly region="us">
+          <li>
+            <code className={code}>email</code>: the email the Spendbase account was created with
+          </li>
+        </RegionOnly>
+        <RegionOnly region="us2">
+          <li>
+            <code className={code}>spendbaseUserId</code>: the employee the card is for
+          </li>
+        </RegionOnly>
+      </ul>
+      <RegionOnly region="us2">
+        <p>
+          Use the budget the employee was approved on in step 4. If the card is refused, its{" "}
+          <code className={code}>errorCode</code> says why: see{" "}
+          <RegionLink href="/docs/cards#create-card">Create card</RegionLink>.
+        </p>
+      </RegionOnly>
+      <p>
+        Set a spending limit with <RegionLink href="/docs/cards#set-limit">Set limit</RegionLink> after the card is
+        created.
+      </p>
+    </QuickStartStep>
+  )
+}
+
 export function QuickStartContent() {
   const code = "bg-muted px-1 py-0.5 rounded text-xs"
   return (
@@ -742,42 +783,38 @@ export function QuickStartContent() {
               </ul>
             </QuickStartStep>
           </RegionOnly>
-          <RegionOnly region={US_REGIONS}>
-            <QuickStartStep id="qs-create-card" n={4} title="Issue a card">
+          <RegionOnly region="us2">
+            <QuickStartStep id="qs-employee" n={4} title="Get an employee approved on the budget">
               <p>
-                Call <RegionLink href="/docs/cards#create-card">Create card</RegionLink> with:
+                Every card is issued to a named employee, and the bank must approve that employee for the budget the
+                card is issued on. See <RegionLink href="/docs/cards#employees">Employees</RegionLink> for the details.
               </p>
-              <ul className="list-disc list-inside space-y-1">
+              <ol className="list-decimal list-inside space-y-1">
                 <li>
-                  <code className={code}>accountId</code>: the sub-account <code className={code}>id</code>
+                  <RegionLink href="/docs/cards#invite-cardholder">Invite</RegionLink> the team member by their{" "}
+                  <code className={code}>spendbaseUserId</code>.
                 </li>
                 <li>
-                  <code className={code}>cardName</code>: a name for the card
+                  The employee registers in the Spendbase app and accepts the cardholder terms. This step is not
+                  available through the API.
                 </li>
-                <RegionOnly region="us">
-                  <li>
-                    <code className={code}>email</code>: the email the Spendbase account was created with
-                  </li>
-                </RegionOnly>
-                <RegionOnly region="us2">
-                  <li>
-                    <code className={code}>spendbaseUserId</code>: the employee the card is for
-                  </li>
-                </RegionOnly>
-              </ul>
-              <RegionOnly region="us2">
-                <p>
-                  Every card is issued to a named employee, and the employee must be approved on that budget first:
-                  see <RegionLink href="/docs/cards#employees">Employees</RegionLink>. A request without{" "}
-                  <code className={code}>spendbaseUserId</code> is refused with{" "}
-                  <code className={code}>EMPLOYEE_REQUIRED</code>.
-                </p>
-              </RegionOnly>
-              <p>
-                Set a spending limit with <RegionLink href="/docs/cards#set-limit">Set limit</RegionLink> after the card
-                is created.
-              </p>
+                <li>
+                  <RegionLink href="/docs/cards#add-cardholder-to-budget">Add the employee to the budget</RegionLink>{" "}
+                  with the sub-account <code className={code}>id</code> from step 2 or 3 as{" "}
+                  <code className={code}>accountId</code>.
+                </li>
+                <li>
+                  Call <RegionLink href="/docs/cards#cardholder-enrollments">List employees</RegionLink> until that
+                  budget&apos;s <code className={code}>status</code> is <code className={code}>APPROVED</code>.
+                </li>
+              </ol>
             </QuickStartStep>
+          </RegionOnly>
+          <RegionOnly region="us">
+            <UsIssueCardStep n={4} />
+          </RegionOnly>
+          <RegionOnly region="us2">
+            <UsIssueCardStep n={5} />
           </RegionOnly>
         </div>
         <PageNav />
