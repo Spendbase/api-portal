@@ -88,6 +88,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Authorization Expired", id: "authorization-expired", region: "eu" },
       { label: "Card OTP", id: "card-otp", region: "eu" },
       { label: "Card OTP Failed", id: "card-otp-failed", region: "eu" },
+      { label: "Card Token", id: "card-token", region: "eu" },
       { label: "Card Decline", id: "card-decline" },
       { label: "Card Reversal", id: "card-reversal" },
       { label: "Card Refund", id: "card-refund" },
