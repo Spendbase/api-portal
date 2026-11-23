@@ -3004,9 +3004,11 @@ function EuWebhookEvents() {
       <div id="card-otp" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card OTP</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired when a 3DS challenge needs the cardholder to confirm an online payment. Show{" "}
-          <code className={code}>validation_value</code> to the cardholder. When your team receives this webhook, the
-          SMS to the cardholder is not sent. No event is sent if the challenge is approved automatically.
+          Fired when a 3DS challenge needs the cardholder to confirm an online payment, and when a card is being added
+          to Apple Pay, Google Pay or Samsung Pay (<code className={code}>requestor</code> is{" "}
+          <code className={code}>TOKENIZATION</code>). Show <code className={code}>validation_value</code> to the
+          cardholder. When your team receives this webhook, the SMS or e-mail to the cardholder is not sent. No event is
+          sent if a 3DS challenge is approved automatically.
         </p>
         <WebhookHeaders group="Card" type="OTP" />
         <ResponseBlock status="Payload">{`{
@@ -3022,6 +3024,8 @@ function EuWebhookEvents() {
   user_id: string;              // Spendbase user ID of the cardholder
   transaction_id: string;       // 3DS directory server transaction ID (not a Spendbase transaction ID); "" if unknown
   timestamp: string;            // UTC RFC 3339
+  requestor?: string;           // "TOKENIZATION" for a wallet activation code; omitted for 3DS
+  wallet_type?: string;         // wallet activation only, see values below; omitted if unknown
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
@@ -3034,6 +3038,32 @@ function EuWebhookEvents() {
             ]}
           />
         </div>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="wallet_type"
+            values={[
+              ["APPLE_PAY", "Apple Pay."],
+              ["GOOGLE_PAY", "Google Pay."],
+              ["SAMSUNG_PAY", "Samsung Pay."],
+              ["OTHER", "Another wallet."],
+            ]}
+          />
+        </div>
+        <h3 id="card-otp-wallet" className="text-lg font-semibold">
+          Adding a card to Apple Pay or Google Pay
+        </h3>
+        <p className="text-muted-foreground leading-relaxed">
+          EU cards only. The cardholder adds the card in the wallet by typing in its number, expiry date and security
+          code (from the card details endpoint). The wallet then asks for a one-time code, and a Card OTP webhook with{" "}
+          <code className={code}>requestor</code> <code className={code}>TOKENIZATION</code> carries it to your system.
+          Pass <code className={code}>validation_value</code> to the cardholder, who enters it in the wallet to finish.
+          Such an event carries no payment: <code className={code}>amount</code> is <code className={code}>0</code>,
+          and <code className={code}>merchant_name</code>, <code className={code}>currencyIson</code> and{" "}
+          <code className={code}>transaction_id</code> are empty. Its <code className={code}>auth_method</code> is
+          the channel the cardholder picked in the wallet (<code className={code}>3</code> SMS,{" "}
+          <code className={code}>4</code> e-mail, other values none in particular), not the 3DS values above; you
+          deliver the code either way. If the cardholder asks the wallet for a new code, a new event follows.
+        </p>
       </div>
 
       <Separator />
