@@ -55,6 +55,7 @@ const ALL_SECTIONS: { label: string; id: string; group: string; page: string; re
   { label: "Authorization Expired", id: "authorization-expired", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
   { label: "Card OTP", id: "card-otp", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
   { label: "Card OTP Failed", id: "card-otp-failed", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
+  { label: "Card Token", id: "card-token", group: "Webhooks", page: "/docs/webhooks", region: "eu" },
   { label: "Card Decline", id: "card-decline", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Reversal", id: "card-reversal", group: "Webhooks", page: "/docs/webhooks" },
   { label: "Card Refund", id: "card-refund", group: "Webhooks", page: "/docs/webhooks" },

@@ -3112,6 +3112,45 @@ function EuWebhookEvents() {
 
       <Separator />
 
+      {/* Card Token */}
+      <div id="card-token" className="space-y-4">
+        <h2 className="text-2xl font-semibold">Card Token</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Fired when a card is added to Apple Pay, Google Pay or Samsung Pay (<code className={code}>event</code>{" "}
+          <code className={code}>CREATED</code>), and whenever that wallet token changes status (
+          <code className={code}>STATUS_CHANGED</code>): activated after the cardholder enters the code, suspended or
+          resumed (also when the card is locked or unlocked), or deleted. The token fields match the card token
+          endpoints. EU cards only.
+        </p>
+        <WebhookHeaders group="Card" type="CardToken" />
+        <ResponseBlock status="Payload">{`{
+  event: string;                 // CREATED | STATUS_CHANGED
+  cardId: string;                // Spendbase card ID
+  cardName: string;
+  userId: string;                // Spendbase user ID of the cardholder
+  tokenUniqueReference: string;  // token ID used by the card token endpoints
+  status: string;                // see values below
+  tokenSuffix: string;           // last 4 digits of the token (not of the card); "" if unknown
+  walletType: string;            // APPLE_PAY | GOOGLE_PAY | SAMSUNG_PAY | OTHER; "" if unknown
+  deviceName: string;
+  deviceType: string;
+  timestamp: string;             // UTC RFC 3339
+}`}</ResponseBlock>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <EnumValues
+            name="status"
+            values={[
+              ["INACTIVE", "Added, waiting for the cardholder to enter the one-time code."],
+              ["ACTIVE", "Usable for payments."],
+              ["SUSPENDED", "Paused; can be resumed."],
+              ["DEACTIVATED", "Removed from the wallet for good."],
+            ]}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
       {/* Card Decline */}
       <div id="card-decline" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Decline</h2>
