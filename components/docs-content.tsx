@@ -2329,6 +2329,60 @@ function EuOnlyTransactionFields() {
             <code className="font-mono">id</code> of the original transaction. Omitted otherwise.
           </li>
         </ul>
+        <p id="card-usage" className="font-medium text-foreground">
+          How the card was used
+        </p>
+        <p>
+          Card payments also say how the card was used, so contactless and Apple Pay / Google Pay payments can be told
+          apart. The same fields are on the Card Authorization, Decline, Settlement, Refund and Reversal webhooks. Each
+          is omitted on non-card transactions and on older card transactions that could not be filled in.
+        </p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>
+            <code className="font-mono">entryMode</code> (string): how the card details were read.{" "}
+            <code className="font-mono">contactless</code>, <code className="font-mono">chip</code>,{" "}
+            <code className="font-mono">magstripe</code>, <code className="font-mono">manual</code>,{" "}
+            <code className="font-mono">ecommerce</code>, <code className="font-mono">credential_on_file</code>,{" "}
+            <code className="font-mono">moto</code> (mail or phone order), <code className="font-mono">optical</code>{" "}
+            or <code className="font-mono">unknown</code>.
+          </li>
+          <li>
+            <code className="font-mono">channel</code> (string): <code className="font-mono">in_store</code>,{" "}
+            <code className="font-mono">online</code>, <code className="font-mono">atm</code>,{" "}
+            <code className="font-mono">mail_phone</code> or <code className="font-mono">unknown</code>.
+          </li>
+          <li>
+            <code className="font-mono">cardPresent</code> (boolean): the card, or the phone carrying it, was at the
+            terminal. Omitted when the entry mode does not tell.
+          </li>
+          <li>
+            <code className="font-mono">isContactless</code> (boolean): a tap, by card or by phone.
+          </li>
+          <li>
+            <code className="font-mono">isTokenized</code> (boolean): a token paid instead of the card number (a wallet,
+            or a merchant&apos;s card on file).
+          </li>
+          <li>
+            <code className="font-mono">isWalletPayment</code> (boolean): a digital wallet paid.
+          </li>
+          <li>
+            <code className="font-mono">walletType</code> (string): <code className="font-mono">APPLE_PAY</code>,{" "}
+            <code className="font-mono">GOOGLE_PAY</code>, <code className="font-mono">SAMSUNG_PAY</code> or{" "}
+            <code className="font-mono">OTHER</code>. Omitted when no wallet paid.
+          </li>
+          <li>
+            <code className="font-mono">tokenRequestorId</code> (string): the card network&apos;s id of the token
+            requestor. Omitted when no token paid.
+          </li>
+        </ul>
+        <p>
+          A phone tapped at a till is <code className="font-mono">contactless</code> with{" "}
+          <code className="font-mono">isWalletPayment: true</code>. Apple Pay on a website is{" "}
+          <code className="font-mono">ecommerce</code> with <code className="font-mono">isWalletPayment: true</code>. A
+          plastic card tapped at a till is <code className="font-mono">contactless</code> with{" "}
+          <code className="font-mono">isWalletPayment: false</code>. <code className="font-mono">paymentType</code> is
+          unchanged.
+        </p>
         <p>
           On an incoming bank transfer, <code className="font-mono">details.reference</code> (string) is the payer&apos;s
           note or payment reference. From 28 November 2026 it can be up to 1400 characters for incoming SEPA payments
@@ -2898,6 +2952,15 @@ function EuWebhookEvents() {
   authorisationType: string;        // see values below
   authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
   transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
+  // how the card was used, see "How the card was used" under Transactions
+  entryMode?: string;          // contactless | chip | magstripe | manual | ecommerce | credential_on_file | moto | optical | unknown
+  channel?: string;            // in_store | online | atm | mail_phone | unknown
+  cardPresent?: boolean;       // omitted when the entry mode does not tell
+  isContactless?: boolean;
+  isTokenized?: boolean;       // a token paid: a wallet or a merchant's card on file
+  isWalletPayment?: boolean;
+  walletType?: string;         // APPLE_PAY | GOOGLE_PAY | SAMSUNG_PAY | OTHER; omitted when no wallet paid
+  tokenRequestorId?: string;   // omitted when no token paid
   timestamp: string;                // UTC RFC 3339
   eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
@@ -2951,6 +3014,15 @@ function EuWebhookEvents() {
   transactionId: string;
   authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
   transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
+  // how the card was used, see "How the card was used" under Transactions
+  entryMode?: string;          // contactless | chip | magstripe | manual | ecommerce | credential_on_file | moto | optical | unknown
+  channel?: string;            // in_store | online | atm | mail_phone | unknown
+  cardPresent?: boolean;       // omitted when the entry mode does not tell
+  isContactless?: boolean;
+  isTokenized?: boolean;       // a token paid: a wallet or a merchant's card on file
+  isWalletPayment?: boolean;
+  walletType?: string;         // APPLE_PAY | GOOGLE_PAY | SAMSUNG_PAY | OTHER; omitted when no wallet paid
+  tokenRequestorId?: string;   // omitted when no token paid
   timestamp: string;                // UTC RFC 3339
   eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
@@ -3108,6 +3180,15 @@ function EuWebhookEvents() {
   transactionId: string;
   authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
   transactionTime: string | null;  // UTC RFC 3339, when it happened at the card network; null if unknown
+  // how the card was used, see "How the card was used" under Transactions
+  entryMode?: string;          // contactless | chip | magstripe | manual | ecommerce | credential_on_file | moto | optical | unknown
+  channel?: string;            // in_store | online | atm | mail_phone | unknown
+  cardPresent?: boolean;       // omitted when the entry mode does not tell
+  isContactless?: boolean;
+  isTokenized?: boolean;       // a token paid: a wallet or a merchant's card on file
+  isWalletPayment?: boolean;
+  walletType?: string;         // APPLE_PAY | GOOGLE_PAY | SAMSUNG_PAY | OTHER; omitted when no wallet paid
+  tokenRequestorId?: string;   // omitted when no token paid
   timestamp: string;               // UTC RFC 3339
   eventId: string;                 // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
@@ -3197,6 +3278,15 @@ function EuWebhookEvents() {
   transactionId: string;            // same as the original authorization
   authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
   transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
+  // how the card was used, see "How the card was used" under Transactions
+  entryMode?: string;          // contactless | chip | magstripe | manual | ecommerce | credential_on_file | moto | optical | unknown
+  channel?: string;            // in_store | online | atm | mail_phone | unknown
+  cardPresent?: boolean;       // omitted when the entry mode does not tell
+  isContactless?: boolean;
+  isTokenized?: boolean;       // a token paid: a wallet or a merchant's card on file
+  isWalletPayment?: boolean;
+  walletType?: string;         // APPLE_PAY | GOOGLE_PAY | SAMSUNG_PAY | OTHER; omitted when no wallet paid
+  tokenRequestorId?: string;   // omitted when no token paid
   timestamp: string;                // UTC RFC 3339
   eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
@@ -3227,6 +3317,15 @@ function EuWebhookEvents() {
   transactionId: string;
   authorizationCode: string | null; // issuer approval code (ISO 8583 DE38); null if the bank sent none
   transactionTime: string | null;   // UTC RFC 3339, when it happened at the card network; null if unknown
+  // how the card was used, see "How the card was used" under Transactions
+  entryMode?: string;          // contactless | chip | magstripe | manual | ecommerce | credential_on_file | moto | optical | unknown
+  channel?: string;            // in_store | online | atm | mail_phone | unknown
+  cardPresent?: boolean;       // omitted when the entry mode does not tell
+  isContactless?: boolean;
+  isTokenized?: boolean;       // a token paid: a wallet or a merchant's card on file
+  isWalletPayment?: boolean;
+  walletType?: string;         // APPLE_PAY | GOOGLE_PAY | SAMSUNG_PAY | OTHER; omitted when no wallet paid
+  tokenRequestorId?: string;   // omitted when no token paid
   timestamp: string;                // UTC RFC 3339
   eventId: string;                  // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
