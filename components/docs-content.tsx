@@ -3057,10 +3057,10 @@ function EuWebhookEvents() {
           code (from the card details endpoint). The wallet then asks for a one-time code, and a Card OTP webhook with{" "}
           <code className={code}>requestor</code> <code className={code}>TOKENIZATION</code> carries it to your system.
           Pass <code className={code}>validation_value</code> to the cardholder, who enters it in the wallet to finish.
-          Such an event carries no payment: <code className={code}>amount</code> is <code className={code}>0</code>,
-          and <code className={code}>merchant_name</code>, <code className={code}>currencyIson</code> and{" "}
-          <code className={code}>transaction_id</code> are empty, and <code className={code}>auth_method</code> is
-          always <code className={code}>4</code>. There is no payment to confirm: only pass the code on. If the
+          Such an event carries no payment: <code className={code}>amount</code> is <code className={code}>0</code>,{" "}
+          <code className={code}>merchant_name</code> and <code className={code}>currencyIson</code> are omitted,{" "}
+          <code className={code}>transaction_id</code> is <code className={code}>&quot;&quot;</code>, and{" "}
+          <code className={code}>auth_method</code> is always <code className={code}>4</code>. There is no payment to confirm: only pass the code on. If the
           cardholder asks the wallet for a new code, a new event follows.
         </p>
       </div>
