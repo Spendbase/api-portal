@@ -3059,10 +3059,9 @@ function EuWebhookEvents() {
           Pass <code className={code}>validation_value</code> to the cardholder, who enters it in the wallet to finish.
           Such an event carries no payment: <code className={code}>amount</code> is <code className={code}>0</code>,
           and <code className={code}>merchant_name</code>, <code className={code}>currencyIson</code> and{" "}
-          <code className={code}>transaction_id</code> are empty. Its <code className={code}>auth_method</code> is
-          the channel the cardholder picked in the wallet (<code className={code}>3</code> SMS,{" "}
-          <code className={code}>4</code> e-mail, other values none in particular), not the 3DS values above; you
-          deliver the code either way. If the cardholder asks the wallet for a new code, a new event follows.
+          <code className={code}>transaction_id</code> are empty, and <code className={code}>auth_method</code> is
+          always <code className={code}>4</code>. There is no payment to confirm: only pass the code on. If the
+          cardholder asks the wallet for a new code, a new event follows.
         </p>
       </div>
 
