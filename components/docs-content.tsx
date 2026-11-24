@@ -3119,8 +3119,7 @@ function EuWebhookEvents() {
           Fired when a card is added to Apple Pay, Google Pay or Samsung Pay (<code className={code}>event</code>{" "}
           <code className={code}>CREATED</code>), and whenever that wallet token changes status (
           <code className={code}>STATUS_CHANGED</code>): activated after the cardholder enters the code, suspended or
-          resumed (also when the card is locked or unlocked), or deleted. The token fields match the card token
-          endpoints. EU cards only.
+          resumed (also when the card is locked or unlocked), or deleted. EU cards only.
         </p>
         <WebhookHeaders group="Card" type="CardToken" />
         <ResponseBlock status="Payload">{`{
@@ -3128,13 +3127,14 @@ function EuWebhookEvents() {
   cardId: string;                // Spendbase card ID
   cardName: string;
   userId: string;                // Spendbase user ID of the cardholder
-  tokenUniqueReference: string;  // token ID used by the card token endpoints
+  tokenUniqueReference: string;  // identifies the wallet token; stable for its lifetime
   status: string;                // see values below
   tokenSuffix: string;           // last 4 digits of the token (not of the card); "" if unknown
   walletType: string;            // APPLE_PAY | GOOGLE_PAY | SAMSUNG_PAY | OTHER; "" if unknown
-  deviceName: string;
-  deviceType: string;
+  deviceName: string;            // "" if unknown
+  deviceType: string;            // "" if unknown
   timestamp: string;             // UTC RFC 3339
+  eventId: string;               // unique per event, same on every redelivery; see Delivery
 }`}</ResponseBlock>
         <div className="rounded-lg border border-border bg-card p-4">
           <EnumValues
