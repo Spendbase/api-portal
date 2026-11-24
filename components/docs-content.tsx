@@ -2384,6 +2384,12 @@ function EuOnlyTransactionFields() {
           unchanged.
         </p>
         <p>
+          Each field is omitted when the payment does not tell:{" "}
+          <code className="font-mono">isContactless</code> when the entry mode is unknown,{" "}
+          <code className="font-mono">isTokenized</code> and <code className="font-mono">isWalletPayment</code> when
+          the card network sent no token information.
+        </p>
+        <p>
           On an incoming bank transfer, <code className="font-mono">details.reference</code> (string) is the payer&apos;s
           note or payment reference. From 28 November 2026 it can be up to 1400 characters for incoming SEPA payments
           (previously up to 255). Do not assume a shorter maximum length when storing or displaying it.
