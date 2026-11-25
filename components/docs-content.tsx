@@ -35,6 +35,14 @@ function PatchBadge() {
   )
 }
 
+function DeleteBadge() {
+  return (
+    <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+      DELETE
+    </Badge>
+  )
+}
+
 function ScopeBadge({ scope }: { scope: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-mono text-violet-700 dark:text-violet-300">
@@ -649,6 +657,8 @@ export function QuickStartContent() {
 
         <Separator />
 
+        <h2 id="issue-a-card" className="text-2xl font-semibold">Issue a card</h2>
+
         <div className="space-y-10">
           <QuickStartStep id="qs-bank-account" n={1} title="Get your bank account">
             <p>
@@ -757,9 +767,119 @@ export function QuickStartContent() {
             </QuickStartStep>
           </RegionOnly>
         </div>
+
+        <RegionOnly region="eu">
+          <TokenizeCardGuide />
+        </RegionOnly>
         <PageNav />
       </div>
     </main>
+  )
+}
+
+// Adding a card to a wallet by hand (EU only): what the cardholder does, and the
+// webhooks and endpoints that follow it.
+function TokenizeCardGuide() {
+  const code = "bg-muted px-1 py-0.5 rounded text-xs"
+  return (
+    <div className="space-y-8">
+      <Separator />
+
+      <div className="space-y-3">
+        <h2 id="tokenize-a-card" className="text-2xl font-semibold">Tokenize a card</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          How a cardholder adds a card to a phone wallet, and what your system receives along the way. The wallet
+          verifies the cardholder with a one-time code, which Spendbase sends to you as a webhook, not by SMS or e-mail:
+          your system passes it on.
+        </p>
+        <Note warning>
+          <p>Only Google Pay is supported for now.</p>
+        </Note>
+      </div>
+
+      <div className="space-y-10">
+        <QuickStartStep id="qs-tokenize-card" n={1} title="Have a card">
+          <p>
+            You need an active card: complete <a href="#issue-a-card" className="underline">Issue a card</a> above first.
+          </p>
+          <p>
+            Set up your webhook endpoint for the{" "}
+            <RegionLink href="/docs/webhooks#card-otp">Card OTP</RegionLink> and{" "}
+            <RegionLink href="/docs/webhooks#card-token">Card Token</RegionLink> webhooks: the one-time code arrives
+            only as a webhook.
+          </p>
+        </QuickStartStep>
+
+        <QuickStartStep id="qs-tokenize-details" n={2} title="Show the card details to the cardholder">
+          <p>
+            Get the card number, expiry date and security code with{" "}
+            <RegionLink href="/docs/cards#get-card-details">Get card details</RegionLink>, or show them in{" "}
+            <RegionLink href="/docs/cards#get-card-frame">Get card frame</RegionLink> if your company is not PCI DSS
+            compliant.
+          </p>
+        </QuickStartStep>
+
+        <QuickStartStep id="qs-tokenize-wallet" n={3} title="Enter the card in Google Wallet">
+          <p>
+            In Google Wallet the cardholder adds a payment card and enters its details by hand. Once the details are
+            submitted, you receive a <RegionLink href="/docs/webhooks#card-token">Card Token</RegionLink> webhook with{" "}
+            <code className={code}>event</code> <code className={code}>CREATED</code> and{" "}
+            <code className={code}>status</code> <code className={code}>INACTIVE</code>. Save its{" "}
+            <code className={code}>tokenUniqueReference</code>.
+          </p>
+        </QuickStartStep>
+
+        <QuickStartStep id="qs-tokenize-email" n={4} title="Choose to verify by e-mail">
+          <p>
+            The wallet asks how to verify the cardholder. The cardholder chooses to get the code by e-mail.
+          </p>
+          <p>
+            Spendbase then sends you a <RegionLink href="/docs/webhooks#card-otp">Card OTP</RegionLink> webhook with{" "}
+            <code className={code}>requestor</code> <code className={code}>TOKENIZATION</code> and{" "}
+            <code className={code}>auth_method</code> <code className={code}>4</code>. The code is in{" "}
+            <code className={code}>validation_value</code>. No e-mail is sent to the cardholder.
+          </p>
+        </QuickStartStep>
+
+        <QuickStartStep id="qs-tokenize-code" n={5} title="Enter the code in the wallet">
+          <p>
+            Show <code className={code}>validation_value</code> to the cardholder, who enters it in Google Wallet. If
+            the cardholder asks the wallet for a new code, a new Card OTP webhook follows.
+          </p>
+          <p>
+            Once the wallet approves the code, you receive a{" "}
+            <RegionLink href="/docs/webhooks#card-token">Card Token</RegionLink> webhook with{" "}
+            <code className={code}>event</code> <code className={code}>STATUS_CHANGED</code> and{" "}
+            <code className={code}>status</code> <code className={code}>ACTIVE</code>. The card can now pay from the
+            phone.
+          </p>
+        </QuickStartStep>
+
+        <QuickStartStep id="qs-tokenize-manage" n={6} title="Manage the token">
+          <p>The token now shows in the card&apos;s tokens, and you can manage it through the API:</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>
+              <RegionLink href="/docs/cards#get-card-tokens">Get card tokens</RegionLink> and{" "}
+              <RegionLink href="/docs/cards#get-card-token">Get card token</RegionLink>
+            </li>
+            <li>
+              <RegionLink href="/docs/cards#suspend-card-token">Suspend card token</RegionLink> and{" "}
+              <RegionLink href="/docs/cards#resume-card-token">Resume card token</RegionLink>: pause and restore payments
+              from that phone without blocking the card
+            </li>
+            <li>
+              <RegionLink href="/docs/cards#delete-card-token">Delete card token</RegionLink>: remove the card from that
+              wallet for good
+            </li>
+          </ul>
+          <p>
+            Each change, whether made through the API, by the cardholder in the wallet or by locking the card, is also
+            sent as a Card Token webhook with <code className={code}>event</code>{" "}
+            <code className={code}>STATUS_CHANGED</code>.
+          </p>
+        </QuickStartStep>
+      </div>
+    </div>
   )
 }
 
@@ -2213,10 +2333,251 @@ export function CardsContent() {
               />
             </div>
           </div>
+
+          <RegionOnly region="eu">
+            <WalletTokensSection />
+          </RegionOnly>
         </div>
         <PageNav />
       </div>
     </main>
+  )
+}
+
+// Wallet tokens (EU only). Shapes: cards-adapter internal/controllers/card_tokens.go
+// (CardToken, CardTokensResponse, CardTokenStatusResponse).
+const CARD_TOKEN_OBJECT = `{
+  "activatedAt": "2026-11-25T14:17:04Z",
+  "deviceName": "Pixel 9",
+  "deviceType": "MOBILE_PHONE",
+  "status": "ACTIVE",
+  "tokenSuffix": "4321",
+  "tokenUniqueReference": "DSHRMC1EE0000000028eddb5e91b493ba79fd5f3ab79d488",
+  "walletName": "Google Pay",
+  "walletType": "GOOGLE_PAY"
+}`
+
+function CardTokenPathParams({ withToken }: { withToken?: boolean }) {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Path Parameters</h3>
+      <div className="space-y-2">
+        <Param name="cardId" type="string" required>
+          Spendbase card ID. The card must belong to your company.
+        </Param>
+        {withToken && (
+          <Param name="tokenUniqueReference" type="string" required>
+            The token&apos;s <code className="bg-muted px-1 py-0.5 rounded text-xs">tokenUniqueReference</code>, from{" "}
+            <a href="#get-card-tokens" className="underline">Get card tokens</a> or the{" "}
+            <RegionLink href="/docs/webhooks#card-token">Card Token</RegionLink> webhook. Letters and digits only.
+          </Param>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function CardTokenErrors({ withToken }: { withToken?: boolean }) {
+  const c = "bg-muted px-1 py-0.5 rounded"
+  return (
+    <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+      <p className="text-sm font-medium">Errors</p>
+      <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+        <li>
+          <code className={c}>400</code> — <code className={c}>invalid param: cardId</code>
+          {withToken && (
+            <>
+              {" "}or <code className={c}>invalid param: tokenUniqueReference</code>
+            </>
+          )}
+        </li>
+        <li>
+          <code className={c}>404</code> — the card is not your company&apos;s
+          {withToken && <>, or the token is not on that card</>}
+        </li>
+      </ul>
+    </div>
+  )
+}
+
+function CardTokenStatusResponse({ status }: { status: string }) {
+  return (
+    <ResponseBlock>{`{
+  "status": "${status}",
+  "tokenUniqueReference": "DSHRMC1EE0000000028eddb5e91b493ba79fd5f3ab79d488"
+}`}</ResponseBlock>
+  )
+}
+
+function WalletTokensSection() {
+  const c = "bg-muted px-1 py-0.5 rounded text-xs"
+  return (
+    <>
+      <Separator />
+
+      {/* Wallet tokens overview */}
+      <div id="wallet-tokens" className="space-y-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-semibold">Wallet Tokens</h2>
+          <Badge variant="outline" className="text-xs">EU</Badge>
+        </div>
+        <p className="text-muted-foreground leading-relaxed">
+          When a card is added to Apple Pay or Google Pay, the wallet gets its own token for the card. A card can have
+          several tokens, one per phone or watch. These endpoints list a card&apos;s tokens and suspend, resume or
+          delete one (a lost phone, a leaver) without blocking the card itself.
+        </p>
+        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1.5 leading-relaxed">
+          <li>
+            Step by step: <RegionLink href="/docs/quick-start#tokenize-a-card">Tokenize a card</RegionLink> in the
+            Quick Start.
+          </li>
+          <li>
+            Every new token and status change is also sent as the{" "}
+            <RegionLink href="/docs/webhooks#card-token">Card Token</RegionLink> webhook.
+          </li>
+          <li>
+            Only Apple Pay and Google Pay tokens are listed, and only for them is the webhook sent. Tokens a merchant
+            keeps for card-on-file payments are not listed.
+          </li>
+          <li>
+            Reading tokens needs the <code className={c}>cardsRead</code> scope; changing them needs{" "}
+            <code className={c}>cardsWrite</code>.
+          </li>
+        </ul>
+        <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <EnumValues
+            name="status"
+            values={[
+              ["INACTIVE", "Added, waiting for the cardholder to enter the one-time code."],
+              ["ACTIVE", "Usable for payments."],
+              ["SUSPENDED", "Paused; can be resumed."],
+              ["DEACTIVATED", "Removed from the wallet for good."],
+            ]}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Get card tokens */}
+      <div id="get-card-tokens" className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <GetBadge />
+          <code className="text-sm font-mono">/cards/card-tokens/:cardId</code>
+        </div>
+        <ScopeBadge scope="cardsRead" />
+        <h2 className="text-2xl font-semibold">Get card tokens</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Returns the wallet tokens of one card, whoever holds it. <code className={c}>tokens</code> is never null: a
+          card with no tokens returns <code className={c}>[]</code>.
+        </p>
+        <CardTokenPathParams />
+        <ResponseBlock>{`{
+  "cardId": "f40afb6c-44b3-40c0-aca1-4e6fbc8e42c4",
+  "tokens": [
+    ${CARD_TOKEN_OBJECT.split("\n").join("\n    ")}
+  ]
+}`}</ResponseBlock>
+        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+          <li>
+            <code className={c}>tokenUniqueReference</code> (string) — identifies the token in the other token
+            endpoints and in the Card Token webhook.
+          </li>
+          <li><code className={c}>status</code> (string) — see the values above.</li>
+          <li>
+            <code className={c}>tokenSuffix</code> (string) — last 4 digits of the token (the wallet&apos;s card number),
+            not of the card.
+          </li>
+          <li>
+            <code className={c}>walletType</code> (string) — <code className={c}>APPLE_PAY</code> or{" "}
+            <code className={c}>GOOGLE_PAY</code>.
+          </li>
+          <li><code className={c}>walletName</code> (string) — wallet display name.</li>
+          <li><code className={c}>deviceName</code>, <code className={c}>deviceType</code> (string) — the device the token is on.</li>
+          <li>
+            <code className={c}>activatedAt</code> (string) — when the token became usable. RFC 3339, UTC. Omitted until
+            then.
+          </li>
+          <li>Fields other than <code className={c}>tokenUniqueReference</code> and <code className={c}>status</code> are omitted when unknown.</li>
+        </ul>
+        <CardTokenErrors />
+      </div>
+
+      <Separator />
+
+      {/* Get card token */}
+      <div id="get-card-token" className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <GetBadge />
+          <code className="text-sm font-mono">/cards/card-token/:cardId/:tokenUniqueReference</code>
+        </div>
+        <ScopeBadge scope="cardsRead" />
+        <h2 className="text-2xl font-semibold">Get card token</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Returns one wallet token of the card, with the fields of{" "}
+          <a href="#get-card-tokens" className="underline">Get card tokens</a>.
+        </p>
+        <CardTokenPathParams withToken />
+        <ResponseBlock>{CARD_TOKEN_OBJECT}</ResponseBlock>
+        <CardTokenErrors withToken />
+      </div>
+
+      <Separator />
+
+      {/* Suspend card token */}
+      <div id="suspend-card-token" className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <PutBadge />
+          <code className="text-sm font-mono">/cards/suspend-token/:cardId/:tokenUniqueReference</code>
+        </div>
+        <ScopeBadge scope="cardsWrite" />
+        <h2 className="text-2xl font-semibold">Suspend card token</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Stops payments with this token (one phone or watch) without blocking the card. Undo it with{" "}
+          <a href="#resume-card-token" className="underline">Resume card token</a>. No request body.
+        </p>
+        <CardTokenPathParams withToken />
+        <CardTokenStatusResponse status="SUSPENDED" />
+        <CardTokenErrors withToken />
+      </div>
+
+      <Separator />
+
+      {/* Resume card token */}
+      <div id="resume-card-token" className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <PutBadge />
+          <code className="text-sm font-mono">/cards/resume-token/:cardId/:tokenUniqueReference</code>
+        </div>
+        <ScopeBadge scope="cardsWrite" />
+        <h2 className="text-2xl font-semibold">Resume card token</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Makes a suspended token usable for payments again. No request body.
+        </p>
+        <CardTokenPathParams withToken />
+        <CardTokenStatusResponse status="ACTIVE" />
+        <CardTokenErrors withToken />
+      </div>
+
+      <Separator />
+
+      {/* Delete card token */}
+      <div id="delete-card-token" className="space-y-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <DeleteBadge />
+          <code className="text-sm font-mono">/cards/card-token/:cardId/:tokenUniqueReference</code>
+        </div>
+        <ScopeBadge scope="cardsWrite" />
+        <h2 className="text-2xl font-semibold">Delete card token</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          Removes the card from that wallet for good; a deleted token cannot be resumed. The card itself stays active,
+          and the cardholder can add it to the wallet again. No request body.
+        </p>
+        <CardTokenPathParams withToken />
+        <CardTokenStatusResponse status="DEACTIVATED" />
+        <CardTokenErrors withToken />
+      </div>
+    </>
   )
 }
 
@@ -3194,10 +3555,17 @@ function EuWebhookEvents() {
       <div id="card-token" className="space-y-4">
         <h2 className="text-2xl font-semibold">Card Token</h2>
         <p className="text-muted-foreground leading-relaxed">
-          Fired when a card is added to Apple Pay, Google Pay or Samsung Pay (<code className={code}>event</code>{" "}
+          Fired when a card is added to Apple Pay or Google Pay (<code className={code}>event</code>{" "}
           <code className={code}>CREATED</code>), and whenever that wallet token changes status (
           <code className={code}>STATUS_CHANGED</code>): activated after the cardholder enters the code, suspended or
           resumed (also when the card is locked or unlocked), or deleted. EU cards only.
+        </p>
+        <p className="text-muted-foreground leading-relaxed">
+          It is sent for exactly the tokens the{" "}
+          <RegionLink href="/docs/cards#wallet-tokens">wallet token endpoints</RegionLink> return, so every{" "}
+          <code className={code}>tokenUniqueReference</code> it names can be looked up, suspended, resumed or deleted.
+          Tokens of other wallets, and tokens a merchant keeps for card-on-file payments, send no event. See{" "}
+          <RegionLink href="/docs/quick-start#tokenize-a-card">Tokenize a card</RegionLink> for the full flow.
         </p>
         <WebhookHeaders group="Card" type="CardToken" />
         <ResponseBlock status="Payload">{`{
@@ -3208,7 +3576,7 @@ function EuWebhookEvents() {
   tokenUniqueReference: string;  // identifies the wallet token; stable for its lifetime
   status: string;                // see values below
   tokenSuffix: string;           // last 4 digits of the token (not of the card); "" if unknown
-  walletType: string;            // APPLE_PAY | GOOGLE_PAY | SAMSUNG_PAY | OTHER; "" if unknown
+  walletType: string;            // APPLE_PAY | GOOGLE_PAY
   deviceName: string;            // "" if unknown
   deviceType: string;            // "" if unknown
   timestamp: string;             // UTC RFC 3339
