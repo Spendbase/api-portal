@@ -8,7 +8,11 @@ import { ChevronDown, ChevronRight, X } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { regionPath, useRegion, type Region } from "@/components/region"
 
-export const DOCS_SECTIONS: { title: string; path: string; items: { label: string; id: string; region?: Region }[] }[] = [
+// heading: a group title inside a section (e.g. Wallet Tokens), shown highlighted;
+// sub: an item of the group above it, shown indented under it.
+export type DocsItem = { label: string; id: string; region?: Region; heading?: boolean; sub?: boolean }
+
+export const DOCS_SECTIONS: { title: string; path: string; items: DocsItem[] }[] = [
   {
     title: "Getting Started",
     path: "/docs/getting-started",
@@ -21,7 +25,10 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
   {
     title: "Quick Start",
     path: "/docs/quick-start",
-    items: [],
+    items: [
+      { label: "Issue a Card", id: "issue-a-card" },
+      { label: "Tokenize a Card", id: "tokenize-a-card", region: "eu" },
+    ],
   },
   {
     title: "Accounts",
@@ -59,6 +66,12 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Add Cardholder", id: "add-cardholder", region: "eu" },
       { label: "Get Cardholder", id: "get-cardholder", region: "eu" },
       { label: "Get Team Cardholders", id: "get-team-cardholders" },
+      { label: "Wallet Tokens", id: "wallet-tokens", region: "eu", heading: true },
+      { label: "Get Card Tokens", id: "get-card-tokens", region: "eu", sub: true },
+      { label: "Get Card Token", id: "get-card-token", region: "eu", sub: true },
+      { label: "Suspend Card Token", id: "suspend-card-token", region: "eu", sub: true },
+      { label: "Resume Card Token", id: "resume-card-token", region: "eu", sub: true },
+      { label: "Delete Card Token", id: "delete-card-token", region: "eu", sub: true },
     ],
   },
   {
@@ -88,6 +101,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
       { label: "Authorization Expired", id: "authorization-expired", region: "eu" },
       { label: "Card OTP", id: "card-otp", region: "eu" },
       { label: "Card OTP Failed", id: "card-otp-failed", region: "eu" },
+      { label: "Card Token", id: "card-token", region: "eu" },
       { label: "Card Decline", id: "card-decline" },
       { label: "Card Reversal", id: "card-reversal" },
       { label: "Card Refund", id: "card-refund" },
@@ -113,6 +127,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: { label: strin
     path: "/docs/versioning",
     items: [
       { label: "Release Notes", id: "release-notes" },
+      { label: "2026-11-26 (EU)", id: "2026-11-26", region: "eu" },
       { label: "2026-11-18 (EU)", id: "2026-11-18", region: "eu" },
       { label: "2026-11-16 (EU)", id: "2026-11-16", region: "eu" },
       { label: "2026-11-04 (US)", id: "2026-11-04", region: "us" },
@@ -192,16 +207,22 @@ function SidebarNav({
               {open && (
                 <ul className="mt-1 mb-2">
                   {section.items.filter((item) => !item.region || item.region === region).map((item) => {
+                    const tone = active
+                      ? "text-foreground hover:bg-muted"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    // A group heading stands out from the links around it; its items
+                    // hang off a rule beneath it.
+                    const shape = item.heading
+                      ? "mt-3 px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-foreground hover:bg-muted"
+                      : item.sub
+                        ? `ml-3 border-l border-border pl-3 py-1.5 text-sm ${tone}`
+                        : `px-2 py-1.5 text-sm ${tone}`
                     return (
                       <li key={item.id}>
                         <Link
                           href={`${sectionPath}#${item.id}`}
                           onClick={onLinkClick}
-                          className={`flex items-center rounded-md px-2 py-1.5 text-sm transition-colors ${
-                            active
-                              ? "text-foreground hover:bg-muted"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                          }`}
+                          className={`flex items-center rounded-md transition-colors ${shape}`}
                         >
                           {item.label}
                         </Link>

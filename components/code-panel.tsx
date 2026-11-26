@@ -368,6 +368,61 @@ curl --cert client.crt --key client.key \\
   $BASE_URL/cards/get-cardholder/$CARDHOLDER_ID`,
   },
   {
+    title: "Get Card Tokens",
+    section: "cards",
+    region: "eu",
+    code: `curl --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/card-tokens/$CARD_ID`,
+  },
+  {
+    title: "Get Card Token",
+    section: "cards",
+    region: "eu",
+    code: `curl --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/card-token/$CARD_ID/$TOKEN_UNIQUE_REFERENCE`,
+  },
+  {
+    title: "Suspend Card Token",
+    section: "cards",
+    region: "eu",
+    code: `curl -X PUT --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/suspend-token/$CARD_ID/$TOKEN_UNIQUE_REFERENCE`,
+  },
+  {
+    title: "Resume Card Token",
+    section: "cards",
+    region: "eu",
+    code: `curl -X PUT --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/resume-token/$CARD_ID/$TOKEN_UNIQUE_REFERENCE`,
+  },
+  {
+    title: "Delete Card Token",
+    section: "cards",
+    region: "eu",
+    code: `curl -X DELETE --cert client.crt --key client.key \\
+  -H "X-Api-Key: $API_KEY" \\
+  -H "X-Signature: $SIGNATURE" \\
+  -H "X-Timestamp: $TIMESTAMP" \\
+  -H "X-Nonce: $NONCE" \\
+  $BASE_URL/cards/card-token/$CARD_ID/$TOKEN_UNIQUE_REFERENCE`,
+  },
+  {
     title: "Get Card Transactions",
     section: "transactions",
     code: `curl --cert client.crt --key client.key \\
