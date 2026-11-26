@@ -1718,7 +1718,7 @@ export function CardsContent() {
                 ["CANCELED_BY_ADMIN", "The card creation was manually cancelled. Most commonly occurs when the card was not activated for 24 hours."],
                 ["EXPIRED", "The card reached its expiry date."],
                 ["TERMINATED", "The card was deleted."],
-                ["LOCKED", "A lock was requested and is being applied."],
+                ["LOCKED", "A lock was requested and is being applied. The card limit can still be changed; it applies once the card is unlocked."],
                 ["SUSPENDED", "The card was locked (frozen) by the provider."],
                 ["LIMIT_EXCEED", "Unused."],
               ]}
@@ -2202,7 +2202,9 @@ export function CardsContent() {
             </RegionOnly>
             <Note>
               <p>
-                Only cards with status <code className="bg-muted px-1 py-0.5 rounded text-xs">DEFAULT</code> can get a limit: other statuses return{" "}
+                Only cards with status <code className="bg-muted px-1 py-0.5 rounded text-xs">DEFAULT</code> or{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">LOCKED</code> can get a limit. A limit set on a{" "}
+                <code className="bg-muted px-1 py-0.5 rounded text-xs">LOCKED</code> card takes effect once the card is unlocked. Other statuses return{" "}
                 <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code> <code className="bg-muted px-1 py-0.5 rounded text-xs">card is not active</code> (or <code className="bg-muted px-1 py-0.5 rounded text-xs">card is expired</code>). Setting
                 the same type and amount again returns <code className="bg-muted px-1 py-0.5 rounded text-xs">200</code> without changes.
               </p>
