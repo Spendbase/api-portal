@@ -474,6 +474,28 @@ export function GettingStartedContent() {
                 <code className="bg-muted px-1 py-0.5 rounded">429</code> can also come from the card provider when it
                 rate-limits requests.
               </li>
+              <li>
+                The limit is one counter shared by all endpoints: reads and writes count toward the same 100 requests.
+              </li>
+              <li>
+                The window is fixed, not rolling: it starts with your first request and resets 60 seconds later. There is
+                no burst allowance and no penalty period — once the window resets, requests are accepted again.
+              </li>
+              <li>
+                A <code className="bg-muted px-1 py-0.5 rounded">429</code> response includes{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">Retry-After</code> — the number of seconds until the
+                window resets. Wait that long before retrying. Other responses include{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">X-RateLimit-Limit</code>,{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">X-RateLimit-Remaining</code> and{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">X-RateLimit-Reset</code> (seconds until the window
+                resets).
+              </li>
+              <li>
+                A <code className="bg-muted px-1 py-0.5 rounded">429</code> with{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">{`{"error": "Too many requests"}`}</code> is returned
+                before the request is processed, so nothing was executed — it is safe to retry a write request after{" "}
+                <code className="bg-muted px-1 py-0.5 rounded">Retry-After</code>.
+              </li>
               <RegionOnly region="us">
                 <li>
                   Transfer money, Transfer with note: 5 requests per minute, 30 requests per hour.
