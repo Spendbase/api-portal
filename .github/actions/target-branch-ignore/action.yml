@@ -1,0 +1,52 @@
+name: Scanner config from the target branch
+description: >-
+  On a pull request, replace the given scanner config / ignore files with the
+  target branch's copies (or remove them where it has none), so a change cannot
+  weaken its own scan. Does nothing on other events. Run after the checkout.
+
+inputs:
+  files:
+    description: >-
+      Space-separated file names, root-relative. Copies with the same name
+      anywhere else in the tree are removed too.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Sparse-checkout list
+      id: list
+      if: github.event_name == 'pull_request'
+      shell: bash
+      env:
+        FILES: ${{ inputs.files }}
+      run: |
+        set -euo pipefail
+        {
+          echo "patterns<<EOF"
+          for f in ${FILES}; do echo "/${f}"; done
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Checkout the target branch's copies
+      if: github.event_name == 'pull_request'
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      with:
+        ref: ${{ github.base_ref }}
+        path: .security-base
+        persist-credentials: false
+        sparse-checkout-cone-mode: false
+        sparse-checkout: ${{ steps.list.outputs.patterns }}
+
+    - name: Apply them
+      if: github.event_name == 'pull_request'
+      shell: bash
+      env:
+        FILES: ${{ inputs.files }}
+      run: |
+        set -euo pipefail
+        for f in ${FILES}; do
+          find . -name "${f}" -not -path './.security-base/*' -not -path './.git/*' -delete
+          if [ -f ".security-base/${f}" ]; then cp ".security-base/${f}" "${f}"; fi
+        done
+        rm -rf .security-base

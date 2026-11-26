@@ -1,0 +1,16 @@
+# gitleaks: the default rules, minus values the docs show on purpose. A single
+# finding is silenced in .gitleaksignore by its fingerprint instead. On a pull
+# request this file is taken from the target branch (security.yml), so a
+# change cannot widen it for itself.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public values shown in the docs: base64 PEM public keys (webhook signature verification) and base64 ledger account ids"
+regexTarget = "secret"
+regexes = [
+  # base64 of "-----BEGIN PUBLIC KEY"
+  '''^LS0tLS1CRUdJTiBQVUJMSUMgS0VZ''',
+  # base64 of "EUMWEUR\0", the prefix of the example ledger account ids
+  '''^RVVNV0VVUg''',
+]
