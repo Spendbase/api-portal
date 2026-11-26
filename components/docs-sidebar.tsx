@@ -127,6 +127,7 @@ export const DOCS_SECTIONS: { title: string; path: string; items: DocsItem[] }[]
     path: "/docs/versioning",
     items: [
       { label: "Release Notes", id: "release-notes" },
+      { label: "2026-11-26 (EU)", id: "2026-11-26", region: "eu" },
       { label: "2026-11-18 (EU)", id: "2026-11-18", region: "eu" },
       { label: "2026-11-16 (EU)", id: "2026-11-16", region: "eu" },
       { label: "2026-11-04 (US)", id: "2026-11-04", region: "us" },

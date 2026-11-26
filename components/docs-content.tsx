@@ -2436,8 +2436,7 @@ function WalletTokensSection() {
             <RegionLink href="/docs/webhooks#card-token">Card Token</RegionLink> webhook.
           </li>
           <li>
-            Only Apple Pay and Google Pay tokens are listed, and only for them is the webhook sent. Tokens a merchant
-            keeps for card-on-file payments are not listed.
+            Only Apple Pay and Google Pay tokens are listed, and only for them is the webhook sent.
           </li>
           <li>
             Reading tokens needs the <code className={c}>cardsRead</code> scope; changing them needs{" "}
@@ -2696,7 +2695,7 @@ function EuOnlyTransactionFields() {
         <p>
           Card payments also say how the card was used, so contactless and Apple Pay / Google Pay payments can be told
           apart. The same fields are on the Card Authorization, Decline, Settlement, Refund and Reversal webhooks. Each
-          is omitted on non-card transactions and on older card transactions that could not be filled in.
+          is omitted on non-card transactions and on card transactions recorded before this release.
         </p>
         <ul className="list-disc pl-5 space-y-1">
           <li>
@@ -3564,7 +3563,7 @@ function EuWebhookEvents() {
           It is sent for exactly the tokens the{" "}
           <RegionLink href="/docs/cards#wallet-tokens">wallet token endpoints</RegionLink> return, so every{" "}
           <code className={code}>tokenUniqueReference</code> it names can be looked up, suspended, resumed or deleted.
-          Tokens of other wallets, and tokens a merchant keeps for card-on-file payments, send no event. See{" "}
+          Tokens of other wallets send no event. See{" "}
           <RegionLink href="/docs/quick-start#tokenize-a-card">Tokenize a card</RegionLink> for the full flow.
         </p>
         <WebhookHeaders group="Card" type="CardToken" />

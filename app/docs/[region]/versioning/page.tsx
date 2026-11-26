@@ -16,6 +16,84 @@ export default function VersioningPage() {
         </div>
 
         <RegionOnly region="eu">
+          <div id="2026-11-26" />
+          <section id="eu-wallet-tokens" className="space-y-4">
+            <h2 className="text-2xl font-semibold">EU only: Wallet tokens, how the card was used</h2>
+            <p className="text-muted-foreground">Version date: 2026-11-26</p>
+            <p className="text-muted-foreground leading-relaxed">
+              These changes apply to EU accounts only. The US Cards API and US webhooks are not affected.
+            </p>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Quick Start</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    New guide: <RegionLink href="/docs/quick-start#tokenize-a-card">Tokenize a card</RegionLink>. It
+                    covers adding a card to Google Wallet, the one-time code delivered by webhook, and the webhooks
+                    that follow. Only Google Pay is supported for now.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Cards</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    New <RegionLink href="/docs/cards#wallet-tokens">Wallet Tokens</RegionLink> endpoints:{" "}
+                    <RegionLink href="/docs/cards#get-card-tokens">Get card tokens</RegionLink>,{" "}
+                    <RegionLink href="/docs/cards#get-card-token">Get card token</RegionLink> (scope{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">cardsRead</code>), and{" "}
+                    <RegionLink href="/docs/cards#suspend-card-token">Suspend</RegionLink>,{" "}
+                    <RegionLink href="/docs/cards#resume-card-token">Resume</RegionLink> and{" "}
+                    <RegionLink href="/docs/cards#delete-card-token">Delete card token</RegionLink> (scope{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">cardsWrite</code>).
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Webhooks</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    <RegionLink href="/docs/webhooks#card-otp">Card OTP</RegionLink>: also sent when a card is being
+                    added to a wallet, with <code className="bg-muted px-1 py-0.5 rounded">requestor</code>{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">TOKENIZATION</code> and the new{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">wallet_type</code> field. See{" "}
+                    <RegionLink href="/docs/webhooks#card-otp-wallet">Adding a card to Apple Pay or Google Pay</RegionLink>.
+                  </li>
+                  <li>
+                    New <RegionLink href="/docs/webhooks#card-token">Card Token</RegionLink> event in the{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">Card</code> group: a wallet token was created (
+                    <code className="bg-muted px-1 py-0.5 rounded">CREATED</code>) or changed status (
+                    <code className="bg-muted px-1 py-0.5 rounded">STATUS_CHANGED</code>).
+                  </li>
+                  <li>
+                    Card Authorization, Decline, Settlement, Refund and Reversal webhooks carry new optional fields that
+                    say how the card was used, see below.
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                <p className="font-semibold text-sm">Transactions</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>
+                    Card transaction details say{" "}
+                    <RegionLink href="/docs/transactions#card-usage">how the card was used</RegionLink>:{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">entryMode</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">channel</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">cardPresent</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">isContactless</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">isTokenized</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">isWalletPayment</code>,{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">walletType</code> and{" "}
+                    <code className="bg-muted px-1 py-0.5 rounded">tokenRequestorId</code>. All optional: omitted on
+                    non-card transactions and on card transactions recorded before this release.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <Separator />
+
           <div id="2026-11-18" />
           <section id="eu-chargeback-webhooks" className="space-y-4">
             <h2 className="text-2xl font-semibold">EU only: Chargeback webhooks</h2>
