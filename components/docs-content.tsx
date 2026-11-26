@@ -1472,6 +1472,36 @@ export function AccountsContent() {
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">message</code>.
                 </p>
               </Note>
+              <Note warning>
+                <p>
+                  <strong>Only one transfer at a time per sub-account.</strong> Parallel transfers on the same
+                  sub-account are not allowed. While one transfer is unfinished (including one that answered{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code> or{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>), any other transfer that uses
+                  either of its sub-accounts, as source or destination, is rejected with{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code> (
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">… is busy with another transfer; try again shortly</code>)
+                  and nothing moves. Send transfers on one sub-account one after another: wait for the previous one to
+                  finish before you send the next.
+                </p>
+              </Note>
+              <Note warning>
+                <p>
+                  <strong>Transferring the whole balance needs manual approval from Spendbase.</strong> A transfer
+                  of the source sub-account&apos;s entire available balance, which leaves it at 0, is not completed
+                  automatically. It is held for review and rejected with{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>. The message carries a reference.
+                  Spendbase then approves and completes the transfer, or undoes it. Do not retry. The result arrives as
+                  two <RegionLink href="/docs/webhooks#balance-adjusted">Balance Adjusted</RegionLink> webhooks when the
+                  transfer is completed, or one{" "}
+                  <RegionLink href="/docs/webhooks#budget-transfer-failed">Budget Transfer Failed</RegionLink> webhook
+                  when it is undone. Until then, both sub-accounts are busy and other transfers on them get{" "}
+                  <code className="bg-muted px-1 py-0.5 rounded text-xs">400</code>. If the bank is slow to confirm,
+                  the call may answer <code className="bg-muted px-1 py-0.5 rounded text-xs">in_progress</code>{" "}
+                  instead of <code className="bg-muted px-1 py-0.5 rounded text-xs">409</code>; the transfer is held
+                  for review in the same way. To skip the review, leave a non-zero amount in the source sub-account.
+                </p>
+              </Note>
               <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                 <li>Both accounts must be active sub-accounts of your company.</li>
                 <li>
@@ -1517,9 +1547,9 @@ export function AccountsContent() {
               <div className="rounded-lg border border-border bg-card p-4 space-y-2">
                 <p className="text-sm font-medium">US — the reason is in <code className="bg-muted px-1 py-0.5 rounded">error</code></p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                  <li><code className="bg-muted px-1 py-0.5 rounded">400</code> — the transfer cannot be made as asked and nothing changed: for example the source sub-account does not have enough to spend, a sub-account is locked, <code className="bg-muted px-1 py-0.5 rounded">amount</code> has more than 2 decimal places, or an account ID is unknown. A sub-account that is busy with another transfer also answers <code className="bg-muted px-1 py-0.5 rounded">400</code>; try again a few seconds later. A transfer the bank refused part-way is undone automatically and also answers <code className="bg-muted px-1 py-0.5 rounded">400</code>, saying both sub-accounts are as they were.</li>
+                  <li><code className="bg-muted px-1 py-0.5 rounded">400</code> — the transfer cannot be made as asked and nothing changed: for example the source sub-account does not have enough to spend, a sub-account is locked, <code className="bg-muted px-1 py-0.5 rounded">amount</code> has more than 2 decimal places, or an account ID is unknown. A sub-account that is busy with another transfer also answers <code className="bg-muted px-1 py-0.5 rounded">400</code> (parallel transfers on one sub-account are not allowed); try again after the other transfer has finished. A transfer the bank refused part-way is undone automatically and also answers <code className="bg-muted px-1 py-0.5 rounded">400</code>, saying both sub-accounts are as they were.</li>
                   <li><code className="bg-muted px-1 py-0.5 rounded">404</code> — <code className="bg-muted px-1 py-0.5 rounded">source account not found</code> / <code className="bg-muted px-1 py-0.5 rounded">destination account not found</code></li>
-                  <li><code className="bg-muted px-1 py-0.5 rounded">409</code> — the transfer stopped part-way; our team has been alerted and will complete or undo it. Do not retry: both sub-accounts stay unavailable for transfers until it is resolved. The message carries a reference to quote to support.</li>
+                  <li><code className="bg-muted px-1 py-0.5 rounded">409</code> — the transfer stopped part-way; our team has been alerted and will complete or undo it. This is also the answer to a transfer of the source sub-account&apos;s whole balance, which waits for manual approval from Spendbase. Do not retry: both sub-accounts stay unavailable for transfers until it is resolved. The message carries a reference to quote to support.</li>
                   <li><code className="bg-muted px-1 py-0.5 rounded">429</code> — too many transfers for your company; the message says how many seconds to wait</li>
                   <li><code className="bg-muted px-1 py-0.5 rounded">503</code> — transfers are temporarily unavailable and nothing changed; try again shortly</li>
                 </ul>
