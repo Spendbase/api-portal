@@ -1,0 +1,176 @@
+name: Security
+
+# Security scans of the repository, in parallel, need nothing:
+#   gitleaks     — secrets in the commits
+#   osv-scanner  — malicious / backdoored npm packages (MAL-* advisories)
+#   security-passed — the one status check to require in branch rules
+#
+# Runs on its own for pull requests (and weekly, for new advisories) and is
+# called by deploy.yml on every push to main, before `pnpm install` runs in the
+# build: a malicious package's install script must never run next to the
+# Pages deploy.
+#
+# The jobs run no repository code and take no secret. On a pull request their
+# config / ignore files come from the target branch
+# (.github/actions/target-branch-ignore), so a change cannot weaken its own
+# scan.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_call:
+  # New advisories land for code that did not change.
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels its older run. Runs for a deploy
+# (called by deploy.yml) are never cancelled: each gets a group of its own.
+concurrency:
+  group: security-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  gitleaks:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          # gitleaks_<version>_checksums.txt of the release; bump together with the version.
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          set -euo pipefail
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o /tmp/gitleaks.tar.gz
+          echo "${GITLEAKS_SHA256}  /tmp/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+
+      # A pull request is judged on its own commits, with the allowlist of the
+      # branch it targets: otherwise it could add a secret together with the
+      # .gitleaks.toml / .gitleaksignore entry that hides it, and a secret on
+      # anybody's branch would fail everybody's pull request.
+      - name: Scan pull request commits for secrets
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          for f in .gitleaks.toml .gitleaksignore; do
+            if git cat-file -e "origin/${BASE_REF}:${f}" 2>/dev/null; then
+              git show "origin/${BASE_REF}:${f}" > "${f}"
+            else
+              rm -f "${f}"
+            fi
+          done
+          /tmp/gitleaks git --no-banner --redact --exit-code 1 --log-opts="origin/${BASE_REF}..HEAD" .
+
+      # A deploy (push, via deploy.yml) is judged on the pushed commits only, so
+      # an old finding in history cannot hold up the docs; the weekly run scans
+      # the whole history. A new branch (before = all zeros) scans it all too.
+      - name: Scan pushed commits for secrets
+        if: github.event_name == 'push'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ -n "${BEFORE}" ] && [ "${BEFORE}" != "0000000000000000000000000000000000000000" ] \
+             && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            /tmp/gitleaks git --no-banner --redact --exit-code 1 --log-opts="${BEFORE}..HEAD" .
+          else
+            /tmp/gitleaks git --no-banner --redact --exit-code 1 .
+          fi
+
+      - name: Scan repository history for secrets
+        if: github.event_name != 'pull_request' && github.event_name != 'push'
+        run: /tmp/gitleaks git --no-banner --redact --exit-code 1 .
+
+  osv-scanner:
+    # Fails on a malicious / backdoored dependency (MAL-* advisory) in
+    # pnpm-lock.yaml. Known CVEs are printed only: Dependabot handles those.
+    name: Malicious packages (osv-scanner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/target-branch-ignore
+        with:
+          files: osv-scanner.toml
+
+      - name: Install osv-scanner
+        env:
+          OSV_VERSION: v2.7.1
+          # osv-scanner_SHA256SUMS of the release; bump together with the version.
+          OSV_SHA256_ARM64: 983d22fbad9724514e3fcc6acc83b5fa64c5ffa6b0d9f510028f22c1b223ff81
+          OSV_SHA256_AMD64: fb7dab19a8bd9bbe5c3189f09d4b7ee1820c9553a23bac202648a56efd2f6ee8
+        run: |
+          set -euo pipefail
+          case "$(uname -m)" in
+            aarch64|arm64) arch=arm64; sum="${OSV_SHA256_ARM64}" ;;
+            *)             arch=amd64; sum="${OSV_SHA256_AMD64}" ;;
+          esac
+          curl -sSfL "https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner_linux_${arch}" -o /tmp/osv-scanner
+          echo "${sum}  /tmp/osv-scanner" | sha256sum -c -
+          chmod +x /tmp/osv-scanner
+
+      - name: Scan dependencies
+        run: |
+          set -uo pipefail
+          # --no-ignore: a lockfile named in .gitignore is scanned all the same.
+          code=0
+          /tmp/osv-scanner scan source --recursive --no-ignore --format json --output-file osv.json . || code=$?
+          # 0 = clean, 1 = vulnerabilities found; anything else means the scan
+          # itself did not run, and a check that did not run must not pass.
+          if [ "${code}" -ne 0 ] && [ "${code}" -ne 1 ]; then
+            echo "::error::osv-scanner exited with ${code}"
+            exit 1
+          fi
+          /tmp/osv-scanner scan source --recursive --no-ignore --format table . || true
+          mal="$(grep -Eo '"MAL-[0-9]{4}-[0-9]+"' osv.json | sort -u | tr '\n' ' ' || true)"
+          if [ -n "${mal}" ]; then
+            echo "::error title=Malicious dependency::${mal}"
+            exit 1
+          fi
+          echo "no malicious packages"
+
+  # ── Summary ─────────────────────────────────────────────────────────────────
+
+  security-passed:
+    # The single status check for branch rules: green when no job failed or
+    # was cancelled. Add every new job to needs.
+    name: security-passed
+    if: always()
+    needs:
+      - gitleaks
+      - osv-scanner
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every job passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: ${RESULTS}"
+          for r in ${RESULTS}; do
+            case "${r}" in
+              success|skipped) ;;
+              *) echo "::error::a check did not pass (${r})"; exit 1 ;;
+            esac
+          done
